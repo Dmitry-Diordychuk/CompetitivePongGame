@@ -1,0 +1,53 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+#root {
+	display: flex;
+	justify-content: center;
+}
+
+.App {
+	width: 1800px;
+}
+
+.post {
+	display: flex;
+	padding: 15px;
+	border: 2px solid green;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.input {
+	border: 15px solid green;
+	color: green;
+}
+
+.td-chat {
+	height: 300;
+	width: '75%';
+	height:'300';
+}
+
+select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	border: none;
+  }
+
+.div-chat {
+	height: 240px;
+	width: 100%;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	display: flex;
+  	flex-direction: column-reverse;
+}
+
+.td-opt {
+	align-content: center;
+}
