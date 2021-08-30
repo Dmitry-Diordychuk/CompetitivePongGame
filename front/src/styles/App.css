@@ -51,3 +51,39 @@ select {
 .td-opt {
 	align-content: center;
 }
+
+.chanButtn {
+	height: 10px;
+	width: 10px;
+	vertical-align: top;
+	background-color: hotpink;
+	position: flex;
+	float: right;
+}
+
+.td_chat_list {
+	width: 42vw;
+	overflow-y: hidden;
+	overflow-x: scroll;
+	vertical-align: 'bottom'; 
+}
+
+.td_div_chat_item_left {
+	width: 4vw;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	float: left;
+}
+
+.td_div_chat_item
+{
+	width: 5vw;
+}
+
+.new_chanel_button
+{
+	height: 20px;
+	background-color: rgb(65, 216, 123);
+	position: flex;
+	float: right;
+}
