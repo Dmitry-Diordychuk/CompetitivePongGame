@@ -1,3 +1,8 @@
+import {IsNotEmpty} from "class-validator";
+
 export class RoomHandleDto {
-    readonly room: string;
+    @IsNotEmpty()
+    readonly name: string;
+
+    readonly password: string;
 }

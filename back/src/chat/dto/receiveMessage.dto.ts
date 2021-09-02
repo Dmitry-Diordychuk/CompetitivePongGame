@@ -1,4 +1,9 @@
+import {IsNotEmpty} from "class-validator";
+
 export class ReceiveMessageDto {
-    readonly room: string
+    @IsNotEmpty()
+    readonly room_name: string
+
+    @IsNotEmpty()
     readonly message: string
 }

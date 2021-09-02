@@ -6,14 +6,15 @@ export class RoomEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({unique: true})
     name: string;
 
-    @Column({select: false})
+    @Column({select: false, nullable: true})
     password: string;
 
     @BeforeInsert()
     async hashPassword() {
-        this.password = await hash(this.password, 10);
+        if (this.password)
+            this.password = await hash(this.password, 10);
     }
 }

@@ -1,25 +1,30 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
+import {RoomEntity} from "@app/chat/room.entity";
 
 @Entity({name: 'users'})
 export class UsersEntity {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column()
+    @Column({unique: true})
     ft_id: number
 
-    @Column()
+    @Column({unique: true})
     username: string
 
-    @Column()
+    @Column({nullable: true})
     image: string
 
-    @Column()
+    @Column({default: 0})
     victories: number
 
-    @Column()
+    @Column({default: 0})
     losses: number
 
-    @Column()
+    @Column({default: 1})
     level: number
+
+    @ManyToMany(() => RoomEntity)
+    @JoinTable()
+    rooms: RoomEntity[];
 }
