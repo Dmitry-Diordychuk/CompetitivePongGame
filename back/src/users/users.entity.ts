@@ -22,6 +22,4 @@ export class UsersEntity {
 
     @Column()
     level: number
-
-    //@Column
 }
