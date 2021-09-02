@@ -1,9 +1,8 @@
-import {AuthenticatedSocketAdapter} from "@app/shared/adapter/authenticatedSocket.adapter";
-
 if (!process.env.IS_TS_NODE) {
   require('module-alias/register')
 }
 
+import {AuthenticatedSocketAdapter} from "@app/shared/adapter/authenticatedSocket.adapter";
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@app/app.module';
 

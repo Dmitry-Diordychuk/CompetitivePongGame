@@ -4,7 +4,6 @@ import {sign, verify} from "jsonwebtoken";
 import {JWT_SECRET} from "@app/config";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
-import {UserResponseInterface} from "@app/users/types/users.interface";
 
 
 @Injectable()
@@ -24,11 +23,14 @@ export class UsersService {
     }
 
     async getUserFromToken(token: string): Promise<UsersEntity> {
-        const payload : TokenPayloadInterface = verify(token, JWT_SECRET);
-        if (payload.id) {
-            return await this.getUserById(payload.id);
+        let payload;
+        try {
+            payload = verify(token, JWT_SECRET);
         }
-        return null;
+        catch {
+            return null
+        }
+        return await this.getUserById(payload.id);
     }
 
     async getUserById(id: number): Promise<UsersEntity> {
