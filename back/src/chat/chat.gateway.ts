@@ -36,14 +36,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @ConnectedSocket() socket: Socket,
         @MessageBody() receiveMessageDto: ReceiveMessageDto
     ) {
-        throw new WsException("Test");
-        // const token = this.chatService.getToken(socket);
-        // const user = await this.chatService.getUserFromToken(token);
-        // this.server.to(receiveMessageDto.room).emit('receive_message', {
-        //     token,
-        //     username: user.username,
-        //     message: receiveMessageDto.message
-        // })
+        const token = this.chatService.getToken(socket);
+        const user = await this.chatService.getUserFromToken(token);
+        this.server.to(receiveMessageDto.room).emit('receive_message', {
+            token,
+            username: user.username,
+            message: receiveMessageDto.message
+        })
     }
 
     @SubscribeMessage('join_room')
