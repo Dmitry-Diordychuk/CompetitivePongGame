@@ -4,6 +4,7 @@ import {sign, verify} from "jsonwebtoken";
 import {JWT_SECRET} from "@app/config";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
+import {ChannelEntity} from "@app/chat/channel.entity";
 
 
 @Injectable()
@@ -35,5 +36,10 @@ export class UsersService {
 
     async getUserById(id: number): Promise<UsersEntity> {
         return await this.userRepository.findOne(id);
+    }
+
+    async addRoom(user: UsersEntity, room: ChannelEntity): Promise<UsersEntity> {
+        user.rooms.push(room);
+        return this.userRepository.save(user);
     }
 }

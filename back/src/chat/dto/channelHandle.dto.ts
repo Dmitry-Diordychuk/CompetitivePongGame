@@ -1,6 +1,6 @@
 import {IsNotEmpty} from "class-validator";
 
-export class RoomHandleDto {
+export class ChannelHandleDto {
     @IsNotEmpty()
     readonly name: string;
 

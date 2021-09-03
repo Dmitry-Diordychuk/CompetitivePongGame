@@ -3,17 +3,17 @@ import {Socket} from "socket.io";
 import {WsException} from "@nestjs/websockets";
 import {UsersService} from "@app/users/users.service";
 import {UsersEntity} from "@app/users/users.entity";
-import {RoomEntity} from "@app/chat/room.entity";
+import {ChannelEntity} from "@app/chat/channel.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
-import {RoomHandleDto} from "@app/chat/dto/roomHandle.dto";
+import {ChannelHandleDto} from "@app/chat/dto/channelHandle.dto";
 import {compare} from "bcrypt";
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly userService: UsersService,
-        @InjectRepository(RoomEntity) private readonly roomRepository: Repository<RoomEntity>
+        @InjectRepository(ChannelEntity) private readonly roomRepository: Repository<ChannelEntity>
     ) {}
 
     getToken(socket: Socket): string {
@@ -44,11 +44,11 @@ export class ChatService {
         });
     }
 
-    async createGeneralRoom(): Promise<RoomEntity> {
+    async createGeneralRoom(): Promise<ChannelEntity> {
         const general = await this.findRoomByName('general');
 
         if (!general) {
-            const newRoom = new RoomEntity();
+            const newRoom = new ChannelEntity();
             newRoom.name = "general";
             newRoom.password = null;
             return await this.roomRepository.save(newRoom);
@@ -56,18 +56,18 @@ export class ChatService {
         return general;
     }
 
-    async createRoom(roomHandleDto: RoomHandleDto): Promise<RoomEntity> {
+    async createRoom(roomHandleDto: ChannelHandleDto): Promise<ChannelEntity> {
         const room = await this.findRoomByName(roomHandleDto.name);
 
         if (room)
             throw new WsException("Room " + roomHandleDto.name + " exist!");
 
-        const newRoom = new RoomEntity();
+        const newRoom = new ChannelEntity();
         Object.assign(newRoom, roomHandleDto);
         return await this.roomRepository.save(newRoom);
     }
 
-    async tryRoomPassword(room: RoomEntity, password: string): Promise<boolean> {
+    async tryRoomPassword(room: ChannelEntity, password: string): Promise<boolean> {
         if (room.password === null && password === null) {
             return true;
         }

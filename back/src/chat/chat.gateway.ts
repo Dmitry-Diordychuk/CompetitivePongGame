@@ -8,11 +8,12 @@ import {
 } from "@nestjs/websockets";
 import {Server, Socket} from 'socket.io'
 import {ChatService} from "@app/chat/chat.service";
-import {Logger, UseFilters, UsePipes} from "@nestjs/common";
-import {RoomHandleDto} from "@app/chat/dto/roomHandle.dto";
+import {Logger, UseFilters, UseGuards, UsePipes} from "@nestjs/common";
+import {ChannelHandleDto} from "@app/chat/dto/channelHandle.dto";
 import {ReceiveMessageDto} from "@app/chat/dto/receiveMessage.dto";
 import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.filter";
 import {WebSocketValidationPipe} from "@app/shared/pipes/WebSocketValidation.pipe";
+import {AuthGuard} from "@app/chat/guard/auth.guard";
 
 @UseFilters(new WebSocketExceptionFilter())
 @WebSocketGateway(3002)
@@ -31,12 +32,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             throw new WsException("Unexpected error during general room creation");
     }
 
+    @UseGuards(AuthGuard)
     async handleConnection(@ConnectedSocket() socket: Socket) {
     }
 
     handleDisconnect(client: any): any {
     }
 
+    @UseGuards(AuthGuard)
     @UsePipes(new WebSocketValidationPipe())
     @SubscribeMessage('send_message')
     async listenForMessage(
@@ -52,35 +55,37 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         })
     }
 
+    @UseGuards(AuthGuard)
     @UsePipes(new WebSocketValidationPipe())
-    @SubscribeMessage('join_room')
-    async handleJoinRoom(
+    @SubscribeMessage('join_channel')
+    async handleJoinChannel(
         @ConnectedSocket() socket: Socket,
-        @MessageBody() roomHandleDto: RoomHandleDto
+        @MessageBody() channelHandleDto: ChannelHandleDto
     )
     {
-        let room = await this.chatService.findRoomByName(roomHandleDto.name);
+        let channel = await this.chatService.findRoomByName(channelHandleDto.name);
 
-        if (!room) {
-            room = await this.chatService.createRoom(roomHandleDto);
+        if (!channel) {
+            channel = await this.chatService.createRoom(channelHandleDto);
         }
 
-        if (await this.chatService.tryRoomPassword(room, roomHandleDto.password)) {
-            socket.join(room.name);
-            socket.emit('joined_room', room.name);
+        if (await this.chatService.tryRoomPassword(channel, channelHandleDto.password)) {
+            socket.join(channel.name);
+            socket.emit('joined_channel', channel.name);
         } else {
             throw new WsException("Wrong password!");
         }
     }
 
+    @UseGuards(AuthGuard)
     @UsePipes(new WebSocketValidationPipe())
-    @SubscribeMessage('leave_room')
-    async handleLeaveRoom(
+    @SubscribeMessage('leave_channel')
+    async handleLeaveChannel(
         @ConnectedSocket() socket: Socket,
-        @MessageBody() roomHandleDto: RoomHandleDto
+        @MessageBody() channelHandleDto: ChannelHandleDto
     )
     {
-        socket.leave(roomHandleDto.name);
-        socket.emit('left_room', roomHandleDto.name)
+        socket.leave(channelHandleDto.name);
+        socket.emit('left_channel', channelHandleDto.name)
     }
 }
