@@ -2,7 +2,7 @@ import {IsNotEmpty} from "class-validator";
 
 export class ReceiveMessageDto {
     @IsNotEmpty()
-    readonly room_name: string
+    readonly channel: string
 
     @IsNotEmpty()
     readonly message: string

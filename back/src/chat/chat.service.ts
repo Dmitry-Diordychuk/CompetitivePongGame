@@ -6,14 +6,14 @@ import {UsersEntity} from "@app/users/users.entity";
 import {ChannelEntity} from "@app/chat/channel.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
-import {ChannelHandleDto} from "@app/chat/dto/channelHandle.dto";
+import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {compare} from "bcrypt";
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly userService: UsersService,
-        @InjectRepository(ChannelEntity) private readonly roomRepository: Repository<ChannelEntity>
+        @InjectRepository(ChannelEntity) private readonly channelRepository: Repository<ChannelEntity>
     ) {}
 
     getToken(socket: Socket): string {
@@ -36,45 +36,45 @@ export class ChatService {
         }
     }
 
-    async findRoomByName(name: string) {
-        return await this.roomRepository.findOne({
+    async findChannelByName(name: string) {
+        return await this.channelRepository.findOne({
             name: name
         }, {
             select: ['id', 'name', 'password']
         });
     }
 
-    async createGeneralRoom(): Promise<ChannelEntity> {
-        const general = await this.findRoomByName('general');
+    async createGeneralChannel(): Promise<ChannelEntity> {
+        const general = await this.findChannelByName('general');
 
         if (!general) {
-            const newRoom = new ChannelEntity();
-            newRoom.name = "general";
-            newRoom.password = null;
-            return await this.roomRepository.save(newRoom);
+            const newChannel = new ChannelEntity();
+            newChannel.name = "general";
+            newChannel.password = null;
+            return await this.channelRepository.save(newChannel);
         }
         return general;
     }
 
-    async createRoom(roomHandleDto: ChannelHandleDto): Promise<ChannelEntity> {
-        const room = await this.findRoomByName(roomHandleDto.name);
+    async createChannel(joinChannelDto: JoinChannelDto): Promise<ChannelEntity> {
+        const channel = await this.findChannelByName(joinChannelDto.name);
 
-        if (room)
-            throw new WsException("Room " + roomHandleDto.name + " exist!");
+        if (channel)
+            throw new WsException("Channel " + joinChannelDto.name + " exist!");
 
-        const newRoom = new ChannelEntity();
-        Object.assign(newRoom, roomHandleDto);
-        return await this.roomRepository.save(newRoom);
+        const newChannel = new ChannelEntity();
+        Object.assign(newChannel, joinChannelDto);
+        return await this.channelRepository.save(newChannel);
     }
 
-    async tryRoomPassword(room: ChannelEntity, password: string): Promise<boolean> {
-        if (room.password === null && password === null) {
+    async tryChannelPassword(channel: ChannelEntity, password: string): Promise<boolean> {
+        if (channel.password === null && password === null) {
             return true;
         }
-        if (room.password === null || password === null) {
+        if (channel.password === null || password === null) {
             return false;
         }
-        if (await compare(password, room.password, null)) {
+        if (await compare(password, channel.password, null)) {
             return true;
         }
         return false;
