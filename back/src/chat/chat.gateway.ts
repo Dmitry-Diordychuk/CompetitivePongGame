@@ -72,7 +72,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
         if (await this.chatService.tryChannelPassword(channel, joinChannelDto.password)) {
             socket.join(channel.name);
-            socket.emit('joined_channel', channel.name);
+            socket.emit('joined_channel', {"channel": channel.name});
         } else {
             throw new WsException("Wrong password!");
         }
@@ -87,6 +87,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     )
     {
         socket.leave(leaveChannelDto.name);
-        socket.emit('left_channel', leaveChannelDto.name)
+        socket.emit('left_channel', {"channel": leaveChannelDto.name})
     }
 }
