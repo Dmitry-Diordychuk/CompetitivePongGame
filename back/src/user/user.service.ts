@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {UsersEntity} from "@app/users/users.entity";
+import {UserEntity} from "@app/user/user.entity";
 import {sign, verify} from "jsonwebtoken";
 import {JWT_SECRET} from "@app/config";
 import {Repository} from "typeorm";
@@ -8,10 +8,10 @@ import {ChannelEntity} from "@app/chat/channel.entity";
 
 
 @Injectable()
-export class UsersService {
-    constructor(@InjectRepository(UsersEntity) private readonly userRepository: Repository<UsersEntity>) {}
+export class UserService {
+    constructor(@InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>) {}
 
-    generateJwt(user: UsersEntity): string {
+    generateJwt(user: UserEntity): string {
         const payload: TokenPayloadInterface = {
             id: user.id,
             ft_id: user.ft_id,
@@ -23,7 +23,7 @@ export class UsersService {
         );
     }
 
-    async getUserFromToken(token: string): Promise<UsersEntity> {
+    async getUserFromToken(token: string): Promise<UserEntity> {
         let payload;
         try {
             payload = verify(token, JWT_SECRET);
@@ -34,12 +34,12 @@ export class UsersService {
         return await this.getUserById(payload.id);
     }
 
-    async getUserById(id: number): Promise<UsersEntity> {
+    async getUserById(id: number): Promise<UserEntity> {
         return await this.userRepository.findOne(id);
     }
 
-    async addRoom(user: UsersEntity, room: ChannelEntity): Promise<UsersEntity> {
-        user.rooms.push(room);
+    async addRoom(user: UserEntity, room: ChannelEntity): Promise<UserEntity> {
+        user.connections.push(room);
         return this.userRepository.save(user);
     }
 }

@@ -1,9 +1,8 @@
 import {Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {ChannelEntity} from "@app/chat/channel.entity";
-import {channel} from "diagnostics_channel";
 
-@Entity({name: 'users'})
-export class UsersEntity {
+@Entity("users")
+export class UserEntity {
     @PrimaryGeneratedColumn()
     id: number
 
@@ -27,8 +26,8 @@ export class UsersEntity {
 
     @ManyToMany(() => ChannelEntity)
     @JoinTable()
-    rooms: ChannelEntity[];
+    connections: ChannelEntity[];
 
     @OneToMany(() => ChannelEntity, channel => channel.owner)
-    possession: ChannelEntity[];
+    possessions: ChannelEntity[];
 }

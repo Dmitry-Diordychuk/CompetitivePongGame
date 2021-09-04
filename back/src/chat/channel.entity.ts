@@ -1,8 +1,8 @@
 import {BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {hash} from "bcrypt"
-import {UsersEntity} from "@app/users/users.entity";
+import {UserEntity} from "@app/user/user.entity";
 
-@Entity({name: 'rooms'})
+@Entity("channels")
 export class ChannelEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -19,6 +19,6 @@ export class ChannelEntity {
             this.password = await hash(this.password, 10);
     }
 
-    @ManyToOne(() => UsersEntity, user => user.possession, {eager: true})
-    owner: UsersEntity;
+    @ManyToOne(() => UserEntity, user => user.possessions, {eager: true})
+    owner: UserEntity;
 }

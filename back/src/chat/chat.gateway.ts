@@ -4,7 +4,7 @@ import {
     OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit,
     SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer, WsException
+    WebSocketServer,
 } from "@nestjs/websockets";
 import {Server, Socket} from 'socket.io'
 import {ChatService} from "@app/chat/chat.service";
@@ -17,6 +17,8 @@ import {AuthGuard} from "@app/chat/guard/auth.guard";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 
 @UseFilters(new WebSocketExceptionFilter())
+@UseGuards(AuthGuard)
+@UsePipes(new WebSocketValidationPipe())
 @WebSocketGateway(3002)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
@@ -26,67 +28,57 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     private  logger: Logger = new Logger('ChatGateway');
 
-    afterInit(server: any): any {
+    async afterInit(server: any): Promise<any> {
         this.logger.log('Chat Initialized');
-        const general = this.chatService.createGeneralChannel();
-        if (!general)
-            throw new WsException("Unexpected error during general channel creation");
+        await this.chatService.createGeneralChannel();
     }
 
-    @UseGuards(AuthGuard)
+
     async handleConnection(@ConnectedSocket() socket: Socket) {
+        socket.join('general');
+        socket.emit('joined_channel', {"message": {"channel": "general"}});
     }
+
 
     handleDisconnect(client: any): any {
     }
 
-    @UseGuards(AuthGuard)
-    @UsePipes(new WebSocketValidationPipe())
+
     @SubscribeMessage('send_message')
     async listenForMessage(
         @ConnectedSocket() socket: Socket,
         @MessageBody() receiveMessageDto: ReceiveMessageDto
     ) {
-        const token = this.chatService.getToken(socket);
-        const user = await this.chatService.getUserFromToken(token);
+        const user = this.chatService.authorize(socket);
         this.server.to(receiveMessageDto.channel).emit('receive_message', {
-            token,
-            username: user.username,
-            message: receiveMessageDto.message
+            "message": {
+                ...user,
+                message: receiveMessageDto.message
+            }
         })
     }
 
-    @UseGuards(AuthGuard)
-    @UsePipes(new WebSocketValidationPipe())
+
     @SubscribeMessage('join_channel')
     async handleJoinChannel(
         @ConnectedSocket() socket: Socket,
         @MessageBody() joinChannelDto: JoinChannelDto
     )
     {
-        let channel = await this.chatService.findChannelByName(joinChannelDto.name);
-
-        if (!channel) {
-            channel = await this.chatService.createChannel(joinChannelDto);
-        }
-
-        if (await this.chatService.tryChannelPassword(channel, joinChannelDto.password)) {
-            socket.join(channel.name);
-            socket.emit('joined_channel', {"channel": channel.name});
-        } else {
-            throw new WsException("Wrong password!");
-        }
+        const message = await this.chatService.joinChannel(socket, joinChannelDto);
+        socket.join(joinChannelDto.name);
+        socket.emit('joined_channel', {message});
     }
 
-    @UseGuards(AuthGuard)
-    @UsePipes(new WebSocketValidationPipe())
+
     @SubscribeMessage('leave_channel')
     async handleLeaveChannel(
         @ConnectedSocket() socket: Socket,
         @MessageBody() leaveChannelDto: LeaveChannelDto
     )
     {
+        const message = await this.chatService.leaveChannel(socket, leaveChannelDto);
         socket.leave(leaveChannelDto.name);
-        socket.emit('left_channel', {"channel": leaveChannelDto.name})
+        socket.emit('left_channel', {message});
     }
 }

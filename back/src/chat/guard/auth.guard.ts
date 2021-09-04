@@ -1,13 +1,12 @@
 import {CanActivate, ExecutionContext, Injectable} from "@nestjs/common";
-import {Observable} from "rxjs";
 import {WsException} from "@nestjs/websockets";
 import {verify} from "jsonwebtoken";
 import {JWT_SECRET} from "@app/config";
-import {UsersService} from "@app/users/users.service";
+import {UserService} from "@app/user/user.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    constructor(private readonly userService: UsersService) {
+    constructor(private readonly userService: UserService) {
     }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
