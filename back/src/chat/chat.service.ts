@@ -9,6 +9,7 @@ import {getConnection, Repository} from "typeorm";
 import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {compare} from "bcrypt";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
+import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 
 
 @Injectable()
@@ -31,44 +32,6 @@ export class ChatService {
         return await this.getUserFromToken(token);
     }
 
-    async joinChannel(socket: Socket, joinChannelDto: JoinChannelDto): Promise<any> {
-        const user = await this.authorize(socket);
-
-        let channel = user.connections.find(ch => ch.name === joinChannelDto.name);
-
-        if (!channel) {
-            channel = await this.createChannel(user, joinChannelDto);
-        }
-
-        if (await this.tryChannelPassword(channel, joinChannelDto.password)) {
-            return {"channel": channel.name};
-        }
-        throw new WsException("Wrong password!");
-    }
-
-    async leaveChannel(socket: Socket, leaveChannelDto: LeaveChannelDto): Promise<any> {
-        const user = await this.authorize(socket);
-
-        const channels = await this.findAllChannels(user.id)
-
-        const target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
-
-        if (!target_channel) {
-            throw new WsException({"errors": "User is not in channel"})
-        }
-
-        // TODO: Уменьшить число запросов добавив запрос findAllChannels в этот запрос.
-        await getConnection()
-            .createQueryBuilder()
-            .relation(UserEntity, "connections")
-            .of(user)
-            .remove(target_channel)
-
-        console.log(target_channel);
-
-        return target_channel;
-    }
-
     async createGeneralChannel(): Promise<ChannelEntity> {
         const general = await this.findChannelByName('general');
 
@@ -80,6 +43,74 @@ export class ChatService {
             return await this.channelRepository.save(newChannel);
         }
         return general;
+    }
+
+    async createChannel(user: UserEntity, createChannelDto: CreateChannelDto): Promise<any> {
+        const channel = await this.findChannelByName(createChannelDto.name);
+
+        if (channel)
+            throw new WsException("Channel " + createChannelDto.name + " exist!");
+
+        const newChannel = new ChannelEntity();
+        Object.assign(newChannel, createChannelDto);
+        newChannel.owner = user;
+
+        user.connections = await this.findAllChannels(user.id);
+        user.connections.push(newChannel);
+
+        await this.userRepository.save(user);
+        await this.channelRepository.save(newChannel);
+        return {"channel": newChannel.name};
+    }
+
+    async joinChannel(user: UserEntity, joinChannelDto: JoinChannelDto): Promise<any> {
+        const channel = await this.findChannelByName(joinChannelDto.name);
+
+        if (!channel) {
+            throw new WsException("Channel doesn't exist");
+        }
+
+        if (await this.tryChannelPassword(channel, joinChannelDto.password)) {
+            return {"channel": channel.name};
+        }
+        throw new WsException("Wrong password");
+    }
+
+
+    async leaveChannel(socket: Socket, leaveChannelDto: LeaveChannelDto): Promise<any> {
+        const user = await this.authorize(socket);
+
+        const channels = await this.findAllChannels(user.id)
+        const target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
+
+        if (!target_channel) {
+            throw new WsException({"errors": "User is not in channel"})
+        }
+
+        user.connections = channels;
+        user.connections = user.connections.filter(connection =>
+            connection.id !== target_channel.id
+        );
+        await getConnection().manager.save(user);
+
+        if (target_channel.owner.id === user.id) {
+            await this.channelRepository.remove(target_channel);
+        }
+
+        return target_channel;
+    }
+
+    async addUserToChannelByName(user: UserEntity, channel_name: string): Promise<UserEntity> {
+        const channel = await this.channelRepository.findOne({
+            name: channel_name
+        });
+
+        if (!channel)
+            throw new WsException("Channel " + channel_name + " doesn't exist");
+
+        user.connections = await this.findAllChannels(user.id);
+        user.connections.push(channel);
+        return await getConnection().manager.save(user);
     }
 
     async findAllChannels(currentUserId: number): Promise<ChannelEntity[]> {
@@ -107,18 +138,6 @@ export class ChatService {
         });
     }
 
-    async createChannel(user: UserEntity, joinChannelDto: JoinChannelDto): Promise<ChannelEntity> {
-        const channel = await this.findChannelByName(joinChannelDto.name);
-
-        if (channel)
-            throw new WsException("Channel " + joinChannelDto.name + " exist!");
-
-        const newChannel = new ChannelEntity();
-        Object.assign(newChannel, joinChannelDto);
-        newChannel.owner = user;
-        return await this.channelRepository.save(newChannel);
-    }
-
     async tryChannelPassword(channel: ChannelEntity, password: string): Promise<boolean> {
         if (channel.password === null && password === null) {
             return true;
@@ -126,11 +145,6 @@ export class ChatService {
         if (channel.password === null || password === null) {
             return false;
         }
-        if (await compare(password, channel.password, null)) {
-            return true;
-        }
-        return false;
+        return !!(await compare(password, channel.password, null));
     }
-
-
 }

@@ -24,7 +24,7 @@ export class UserEntity {
     @Column({default: 1})
     level: number
 
-    @ManyToMany(() => ChannelEntity)
+    @ManyToMany(() => ChannelEntity, {cascade: true})
     @JoinTable()
     connections: ChannelEntity[];
 
