@@ -1,13 +1,14 @@
-import {HttpException, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {UserEntity} from "@app/user/user.entity";
 import {sign, verify} from "jsonwebtoken";
-import {APP_SECRET, APP_UID, JWT_SECRET} from "@app/config";
+import {APP_REDIRECT, APP_SECRET, APP_UID, JWT_SECRET} from "@app/config";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {ChannelEntity} from "@app/chat/channel.entity";
 import {HttpService} from "@nestjs/axios";
 import {firstValueFrom} from "rxjs";
 import {UserResponseInterface} from "@app/user/types/userResponse.interface";
+import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 
 
 @Injectable()
@@ -24,7 +25,7 @@ export class UserService {
             client_id: APP_UID,
             client_secret: APP_SECRET,
             code: code,
-            redirect_uri: encodeURI("http://localhost:3001/api/user")
+            redirect_uri: encodeURI(APP_REDIRECT)
         };
 
         let token = "";
@@ -81,21 +82,27 @@ export class UserService {
         newUser.ft_id = ftId;
         newUser.image = img;
         newUser.ft_profile = ftProfile;
-        newUser.level = 1;
-        newUser.losses = 0;
-        newUser.victories = 0;
         return await this.userRepository.save(newUser);
     }
 
     async getCurrentUser(currentUserId: number) {
-        await this.getUserById(currentUserId);
+        const user = await this.getUserById(currentUserId);
+
+        if (!user) {
+            throw new HttpException("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return user;
+    }
+
+    async updateCurrentUser(currentUserId: number, updateUserDto: UpdateUserDto) {
+        const user = await this.getCurrentUser(currentUserId);
+        Object.assign(user, updateUserDto);
+        return await this.userRepository.save(user);
     }
 
     buildUserResponse(user: UserEntity): UserResponseInterface {
         delete user.ft_id;
-        delete user.victories;
-        delete user.losses;
-        delete user.level;
         delete user.ft_profile;
         return {
             user: {

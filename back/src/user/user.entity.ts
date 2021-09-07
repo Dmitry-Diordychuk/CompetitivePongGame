@@ -18,14 +18,14 @@ export class UserEntity {
     @Column({nullable: false})
     ft_profile: string
 
-    @Column({default: 0})
-    victories: number
-
-    @Column({default: 0})
-    losses: number
-
-    @Column({default: 1})
-    level: number
+    // @Column({default: 0})
+    // victories: number
+    //
+    // @Column({default: 0})
+    // losses: number
+    //
+    // @Column({default: 1})
+    // level: number
 
     @ManyToMany(() => ChannelEntity, {cascade: true})
     @JoinTable()
