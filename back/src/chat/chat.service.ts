@@ -55,7 +55,7 @@ export class ChatService {
         Object.assign(newChannel, createChannelDto);
         newChannel.owner = user;
 
-        user.connections = await this.findAllChannels(user.id);
+        user.connections = await this.userService.getChannelsById(user.id);
         user.connections.push(newChannel);
 
         await this.userRepository.save(user);
@@ -80,7 +80,7 @@ export class ChatService {
     async leaveChannel(socket: Socket, leaveChannelDto: LeaveChannelDto): Promise<any> {
         const user = await this.authorize(socket);
 
-        const channels = await this.findAllChannels(user.id)
+        const channels = await this.userService.getChannelsById(user.id)
         const target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
 
         if (!target_channel) {
@@ -108,17 +108,9 @@ export class ChatService {
         if (!channel)
             throw new WsException("Channel " + channel_name + " doesn't exist");
 
-        user.connections = await this.findAllChannels(user.id);
+        user.connections = await this.userService.getChannelsById(user.id);
         user.connections.push(channel);
         return await getConnection().manager.save(user);
-    }
-
-    async findAllChannels(currentUserId: number): Promise<ChannelEntity[]> {
-        const user = await this.userRepository.findOne({
-            relations: ['connections'],
-            where: { id: currentUserId }
-        });
-        return user.connections;
     }
 
     async getUserFromToken(token: string): Promise<UserEntity> {

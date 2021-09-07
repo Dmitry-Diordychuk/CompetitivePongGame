@@ -6,14 +6,17 @@ export class UserEntity {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column({unique: true})
+    @Column({nullable: false})
     ft_id: number
 
     @Column({unique: true})
     username: string
 
-    @Column({nullable: true})
+    @Column({nullable: false})
     image: string
+
+    @Column({nullable: false})
+    ft_profile: string
 
     @Column({default: 0})
     victories: number
