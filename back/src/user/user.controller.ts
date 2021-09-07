@@ -3,7 +3,7 @@ import {UserService} from "@app/user/user.service";
 import {User} from "@app/user/decorators/user.decorator";
 import {ChannelEntity} from "@app/chat/channel.entity";
 import {UserResponseInterface} from "@app/user/types/userResponse.interface";
-import {AuthGuard} from "@app/user/guards/auth.guard";
+import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 
 @Controller("api/user")
@@ -38,8 +38,6 @@ export class UserController {
     async getUserChannels(
         @User('id') currentUserId: number
     ) {
-        console.log(currentUserId);
-        const channels: ChannelEntity[] = await this.userService.getChannelsById(currentUserId);
-        console.log(channels);
+        const channels: ChannelEntity[] = await this.userService.getChannelsByUserId(currentUserId);
     }
 }

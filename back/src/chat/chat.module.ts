@@ -1,6 +1,6 @@
 import {Module} from "@nestjs/common";
 import {ChatService} from "@app/chat/chat.service";
-import {ChatController} from "@app/chat/chat.controller";
+import {ChannelController} from "@app/chat/channel.controller";
 import {ChatGateway} from "@app/chat/chat.gateway";
 import {UserService} from "@app/user/user.service";
 import {TypeOrmModule} from "@nestjs/typeorm";
@@ -10,7 +10,7 @@ import {HttpModule} from "@nestjs/axios";
 
 @Module({
     imports: [TypeOrmModule.forFeature([UserEntity, ChannelEntity]), HttpModule],
-    controllers: [ChatController],
+    controllers: [ChannelController],
     providers: [ChatService, ChatGateway, UserService],
 })
 export class ChatModule {}

@@ -10,6 +10,7 @@ import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {compare} from "bcrypt";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
+import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
 
 
 @Injectable()
@@ -55,7 +56,7 @@ export class ChatService {
         Object.assign(newChannel, createChannelDto);
         newChannel.owner = user;
 
-        user.connections = await this.userService.getChannelsById(user.id);
+        user.connections = await this.userService.getChannelsByUserId(user.id);
         user.connections.push(newChannel);
 
         await this.userRepository.save(user);
@@ -80,7 +81,7 @@ export class ChatService {
     async leaveChannel(socket: Socket, leaveChannelDto: LeaveChannelDto): Promise<any> {
         const user = await this.authorize(socket);
 
-        const channels = await this.userService.getChannelsById(user.id)
+        const channels = await this.userService.getChannelsByUserId(user.id)
         const target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
 
         if (!target_channel) {
@@ -108,7 +109,7 @@ export class ChatService {
         if (!channel)
             throw new WsException("Channel " + channel_name + " doesn't exist");
 
-        user.connections = await this.userService.getChannelsById(user.id);
+        user.connections = await this.userService.getChannelsByUserId(user.id);
         user.connections.push(channel);
         return await getConnection().manager.save(user);
     }
@@ -138,5 +139,12 @@ export class ChatService {
             return false;
         }
         return !!(await compare(password, channel.password, null));
+    }
+
+    async getUserChannels(user_id: number): Promise<ChannelsResponseInterface> {
+        // TODO: owner отредактировать
+        const channels = await this.userService.getChannelsByUserId(user_id);
+        const channelsCounter = channels.length;
+        return {channels, channelsCounter};
     }
 }
