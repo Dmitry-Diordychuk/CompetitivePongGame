@@ -1,4 +1,5 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
+import {AchievementEntity} from "@app/achievement/achievement.entity";
 
 @Entity('profiles')
 export class ProfileEntity {
@@ -19,4 +20,8 @@ export class ProfileEntity {
 
     @Column({nullable: false})
     image: string
+
+    @ManyToMany(() => AchievementEntity, {nullable: true})
+    @JoinTable()
+    achievements: AchievementEntity[]
 }
