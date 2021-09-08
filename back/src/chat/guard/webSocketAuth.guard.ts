@@ -5,7 +5,7 @@ import {JWT_SECRET} from "@app/config";
 import {UserService} from "@app/user/user.service";
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class WebSocketAuthGuard implements CanActivate {
     constructor(private readonly userService: UserService) {
     }
 

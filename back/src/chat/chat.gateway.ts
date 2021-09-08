@@ -12,12 +12,12 @@ import {Logger, UseGuards, UsePipes} from "@nestjs/common";
 import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {ReceiveMessageDto} from "@app/chat/dto/receiveMessage.dto";
 import {WebSocketValidationPipe} from "@app/shared/pipes/WebSocketValidation.pipe";
-import {AuthGuard} from "@app/chat/guard/auth.guard";
+import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 
 //@UseFilters(new WebSocketExceptionFilter())
-@UseGuards(AuthGuard)
+@UseGuards(WebSocketAuthGuard)
 @UsePipes(new WebSocketValidationPipe())
 @WebSocketGateway(3002)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

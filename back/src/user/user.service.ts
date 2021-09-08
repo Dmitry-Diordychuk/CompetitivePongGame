@@ -105,7 +105,7 @@ export class UserService {
     }
 
     async updateCurrentUser(currentUserId: number, updateUserDto: UpdateUserDto) {
-        const user = await this.userRepository.findOne({ relations: ["profile"] });
+        const user = await this.userRepository.findOne(currentUserId, { relations: ["profile"] });
 
         if (!user) {
             throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
@@ -121,19 +121,20 @@ export class UserService {
     }
 
     buildUserResponse(user: UserEntity): UserResponseInterface {
-        delete user.ft_id;
+        const image = user.profile.image;
         delete user.profile;
+        delete user.ft_id;
         return {
             user: {
-                id: user.id,
                 ...user,
+                image: image,
                 token: this.generateJwt(user)
             }
         }
     }
 
     async getUserById(id: number): Promise<UserEntity> {
-        return await this.userRepository.findOne(id);
+        return await this.userRepository.findOne(id, { relations: ["profile"] });
     }
 
     async getUserByFtId(ftId: number): Promise<UserEntity> {
