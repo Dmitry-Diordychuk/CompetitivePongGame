@@ -5,7 +5,7 @@ import {ExpressRequestInterface} from "@app/shared/types/expressRequest.interfac
 export class AuthGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest<ExpressRequestInterface>();
-        console.log(request);
+
         if (request.user) {
             return true;
         }

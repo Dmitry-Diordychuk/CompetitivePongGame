@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {Socket} from "socket.io";
 import {WsException} from "@nestjs/websockets";
 import {UserService} from "@app/user/user.service";
@@ -11,6 +11,7 @@ import {compare} from "bcrypt";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
+import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
 
 
 @Injectable()
@@ -141,10 +142,38 @@ export class ChatService {
         return !!(await compare(password, channel.password, null));
     }
 
-    async getUserChannels(user_id: number): Promise<ChannelsResponseInterface> {
-        // TODO: owner отредактировать
+    async getChannel(channel_id: number): Promise<ChannelResponseInterface> {
+        const channel = await this.channelRepository.findOne(channel_id);
+
+        if (!channel) {
+            throw new HttpException("Channel doesn't exit", HttpStatus.NOT_FOUND);
+        }
+
+        if (channel.owner) {
+            delete channel.owner.ft_id;
+            delete channel.owner.ft_profile;
+            delete channel.owner.image;
+        }
+
+        return {channel};
+    }
+
+
+    async getUserOpenChannels(user_id: number): Promise<ChannelsResponseInterface> {
         const channels = await this.userService.getChannelsByUserId(user_id);
         const channelsCounter = channels.length;
-        return {channels, channelsCounter};
+
+        channels.forEach(function (ch) {
+            if (ch.owner) {
+                delete ch.owner.ft_id;
+                delete ch.owner.ft_profile;
+                delete ch.owner.image;
+            }
+        });
+
+        return {
+            channels,
+            channelsCounter
+        };
     }
 }
