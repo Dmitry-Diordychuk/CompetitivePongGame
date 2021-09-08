@@ -5,9 +5,10 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import ormconfig from "@app/ormconfig";
 import {UserModule} from "@app/user/user.module";
 import {ChatModule} from "@app/chat/chat.module";
+import {ProfileModule} from "@app/profile/profile.module";
 
 @Module({
-  imports: [TypeOrmModule.forRoot(ormconfig), UserModule, ChatModule],
+  imports: [TypeOrmModule.forRoot(ormconfig), UserModule, ChatModule, ProfileModule],
   controllers: [AppController],
   providers: [AppService]
 })

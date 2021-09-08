@@ -1,5 +1,6 @@
-import {Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
 import {ChannelEntity} from "@app/chat/channel.entity";
+import {ProfileEntity} from "@app/profile/profile.entity";
 
 @Entity("users")
 export class UserEntity {
@@ -12,25 +13,14 @@ export class UserEntity {
     @Column({unique: true})
     username: string
 
-    @Column({nullable: false})
-    image: string
-
-    @Column({nullable: false})
-    ft_profile: string
-
-    // @Column({default: 0})
-    // victories: number
-    //
-    // @Column({default: 0})
-    // losses: number
-    //
-    // @Column({default: 1})
-    // level: number
-
     @ManyToMany(() => ChannelEntity, {cascade: true})
     @JoinTable()
     connections: ChannelEntity[];
 
     @OneToMany(() => ChannelEntity, channel => channel.owner)
     possessions: ChannelEntity[];
+
+    @OneToOne(() => ProfileEntity, {cascade: true, nullable: false})
+    @JoinColumn()
+    profile: ProfileEntity;
 }

@@ -151,8 +151,6 @@ export class ChatService {
 
         if (channel.owner) {
             delete channel.owner.ft_id;
-            delete channel.owner.ft_profile;
-            delete channel.owner.image;
         }
 
         return {channel};
@@ -166,8 +164,6 @@ export class ChatService {
         channels.forEach(function (ch) {
             if (ch.owner) {
                 delete ch.owner.ft_id;
-                delete ch.owner.ft_profile;
-                delete ch.owner.image;
             }
         });
 

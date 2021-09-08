@@ -9,6 +9,7 @@ import {HttpService} from "@nestjs/axios";
 import {firstValueFrom} from "rxjs";
 import {UserResponseInterface} from "@app/user/types/userResponse.interface";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
+import {ProfileEntity} from "@app/profile/profile.entity";
 
 
 @Injectable()
@@ -80,8 +81,16 @@ export class UserService {
         const newUser = new UserEntity();
         newUser.username = username;
         newUser.ft_id = ftId;
-        newUser.image = img;
-        newUser.ft_profile = ftProfile;
+
+        const newProfile = new ProfileEntity();
+        newProfile.ft_profile = ftProfile;
+        newProfile.image = img;
+        newProfile.level = 1;
+        newProfile.losses = 0;
+        newProfile.victories = 0;
+
+        newUser.profile = newProfile;
+
         return await this.userRepository.save(newUser);
     }
 
@@ -96,14 +105,24 @@ export class UserService {
     }
 
     async updateCurrentUser(currentUserId: number, updateUserDto: UpdateUserDto) {
-        const user = await this.getCurrentUser(currentUserId);
-        Object.assign(user, updateUserDto);
+        const user = await this.userRepository.findOne({ relations: ["profile"] });
+
+        if (!user) {
+            throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
+        }
+
+        if (updateUserDto.username && updateUserDto.username != "") {
+            user.username = updateUserDto.username;
+        }
+        if (updateUserDto.image) {
+            user.profile.image = updateUserDto.image;
+        }
         return await this.userRepository.save(user);
     }
 
     buildUserResponse(user: UserEntity): UserResponseInterface {
         delete user.ft_id;
-        delete user.ft_profile;
+        delete user.profile;
         return {
             user: {
                 id: user.id,
