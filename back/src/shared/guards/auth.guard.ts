@@ -9,7 +9,7 @@ export class AuthGuard implements CanActivate {
         if (request.user) {
             return true;
         }
-
+        console.log(request);
         throw new HttpException('Not authorized', HttpStatus.UNAUTHORIZED);
     }
 }

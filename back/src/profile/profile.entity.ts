@@ -21,7 +21,7 @@ export class ProfileEntity {
     @Column({nullable: false})
     image: string
 
-    @ManyToMany(() => AchievementEntity, {nullable: true})
+    @ManyToMany(() => AchievementEntity, {eager: true, nullable: true})
     @JoinTable()
     achievements: AchievementEntity[]
 }

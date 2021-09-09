@@ -140,7 +140,7 @@ export class UserService {
     async getUserByFtId(ftId: number): Promise<UserEntity> {
         return await this.userRepository.findOne({
             ft_id: ftId
-        })
+        }, { relations: ["profile"] });
     }
 
     async getChannelsByUserId(currentUserId): Promise<ChannelEntity[]> {
