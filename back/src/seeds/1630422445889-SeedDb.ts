@@ -4,6 +4,12 @@ export class SeedDb1630422445889 implements MigrationInterface {
     name = 'SeedDb1630422445889'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        // Profiles
+        await queryRunner.query(`INSERT INTO profiles (id, ft_profile, image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+        await queryRunner.query(`INSERT INTO profiles (id, ft_profile, image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+        await queryRunner.query(`INSERT INTO profiles (id, ft_profile, image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+
+        // Users
         /*
         Token формируется из
         id
@@ -13,41 +19,60 @@ export class SeedDb1630422445889 implements MigrationInterface {
         Алгоритм HS256
         Тип JWT
          */
-        // Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZnRfaWQiOjQyLCJ1c2VybmFtZSI6ImtkdXN0aW4ifQ.PfB_iGFWHoOMuuM6vkLyabPurAmkppyXEZxIocOFIC0
-        await queryRunner.query(`INSERT INTO users (ft_id, username, image) VALUES (42, 'kdustin', 'mock', 1, 1, 1);`);
+        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJmdF9pZCI6IjEiLCJ1c2VybmFtZSI6IkFfdXNlciJ9.y9PIFkhmxRLk33kSCb7anXConFNsJE6HNf6191KC0NQ
+        await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (101, 1, 'A_user', 101);`);
 
-        // Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZnRfaWQiOjIxLCJ1c2VybmFtZSI6ImtzaWx2ZXIifQ.LkAJdh4ngJM5By9Q_rx04aeTnw_k5EF4sCMxLHueZnw
-        await queryRunner.query(`INSERT INTO users (ft_id, username, image) VALUES (21, 'ksilver', 'mock', 1, 1, 1);`);
+        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJmdF9pZCI6IjIiLCJ1c2VybmFtZSI6IkJfdXNlciJ9.6VKBZGIAfDKJTLSNmxNRGIgV4ivYZkFVHjsfIUK609k
+        await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (102, 2, 'B_user', 102);`);
 
-        // Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZnRfaWQiOjI0LCJ1c2VybmFtZSI6Inl1bGlhIn0.V7tqdkWE-aMW4Nc-QSg8XPFcT9iGQ1nl88S2Bcx9dS8
-        await queryRunner.query(`INSERT INTO users (ft_id, username, image) VALUES (24, 'yulia', 'mock', 1, 1, 1);`);
+        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJmdF9pZCI6IjMiLCJ1c2VybmFtZSI6IkNfdXNlciJ9.OHAcnZfygngJeGYxFMU-SIh9bMe9iF7ZhPQeOIOp3Yc
+        await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (103, 3, 'C_user', 103);`);
 
-        // Add channels
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_1', null, 1);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_2', null, 1);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_3', null, 1);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_4', null, 2);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_5', null, 2);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_6', null, 3);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_7', null, 3);`);
+
+        // Achievements
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (101, 'achievement_1', 'make something_1');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (102, 'achievement_2', 'make something_2');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (103, 'A_achievement', 'make something_3');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (104, 'B_achievement', 'make something_4');`);
+
+
+        // Add achievements to profiles
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 101);`);
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 102);`);
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 103);`);
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 104);`);
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (102, 104);`);
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (103, 103);`);
+        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (103, 104);`);
+
+
+        // Channels
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_1', null, 101);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_2', null, 101);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_3', null, 101);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('A_channel', null, 102);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('B_channel', null, 102);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('C_channel', null, 103);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('X_channel', null, 103);`);
+
 
         // Add connections
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (1, 1);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (1, 2);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (1, 3);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (2, 4);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (2, 5);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (3, 6);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (3, 7);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (101, 1);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (101, 2);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (101, 3);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (102, 4);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (102, 5);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (103, 6);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (103, 7);`);
 
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (1, 4);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (1, 7);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (2, 1);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (2, 2);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (2, 6);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (3, 3);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (3, 4);`);
-        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (3, 5);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (101, 4);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (101, 7);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (102, 1);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (102, 2);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (102, 6);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (103, 3);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (103, 4);`);
+        await queryRunner.query(`INSERT INTO users_connections_channels ("usersId", "channelsId") VALUES (103, 5);`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {

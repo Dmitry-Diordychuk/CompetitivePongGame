@@ -13,6 +13,9 @@ export class UserEntity {
     @Column({unique: true})
     username: string
 
+    @Column({ nullable: true })
+    twoFactorAuthenticationsSecret?: string;
+
     @ManyToMany(() => ChannelEntity, {cascade: true})
     @JoinTable()
     connections: ChannelEntity[];

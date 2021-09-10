@@ -122,13 +122,14 @@ export class UserService {
 
     buildUserResponse(user: UserEntity): UserResponseInterface {
         const image = user.profile.image;
+        const token = this.generateJwt(user);
         delete user.profile;
         delete user.ft_id;
         return {
             user: {
                 ...user,
                 image: image,
-                token: this.generateJwt(user)
+                token: token
             }
         }
     }
@@ -173,4 +174,6 @@ export class UserService {
         }
         return await this.getUserById(payload.id);
     }
+
+
 }
