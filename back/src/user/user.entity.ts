@@ -13,6 +13,9 @@ export class UserEntity {
     @Column({unique: true})
     username: string
 
+    @Column({ default: false })
+    isTwoFactorAuthenticationEnable: boolean;
+
     @Column({ nullable: true })
     twoFactorAuthenticationsSecret?: string;
 

@@ -3,6 +3,8 @@ import {UserEntity} from "@app/user/user.entity";
 import {authenticator} from "otplib";
 import {APP_NAME} from "@app/config";
 import {UserService} from "@app/user/user.service";
+import {toFileStream} from 'qrcode';
+import {Response} from "express";
 
 @Injectable()
 export class TwoFactorAuthenticationService {
@@ -10,7 +12,7 @@ export class TwoFactorAuthenticationService {
         private readonly userService: UserService
     ) {}
 
-    public async generateTwoFactorAuthenticationSecret(user: UserEntity) {
+    async generateTwoFactorAuthenticationSecret(user: UserEntity) {
         const secret = authenticator.generateSecret();
 
         const otpAuthUrl = authenticator.keyuri(
@@ -18,11 +20,15 @@ export class TwoFactorAuthenticationService {
             encodeURIComponent(APP_NAME),
             secret)
 
-        //await this.userService.setTwoFactorAuthenticationSecret(secret, user.id);
+        await this.userService.setTwoFactorAuthenticationSecret(secret, user.id);
 
         return {
             secret,
             otpAuthUrl
         }
+    }
+
+    async pipeQrCodeStream(stream: Response, otpAuthUrl: string) {
+        return toFileStream(stream, otpAuthUrl);
     }
 }

@@ -175,5 +175,9 @@ export class UserService {
         return await this.getUserById(payload.id);
     }
 
-
+    async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
+        return this.userRepository.update(userId, {
+            twoFactorAuthenticationsSecret: secret
+        })
+    }
 }
