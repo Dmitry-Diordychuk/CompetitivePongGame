@@ -74,6 +74,10 @@ export class UserService {
             return await this.register(ftId, username, img, ftProfileUrl);
         }
 
+        // if (user.isTwoFactorAuthenticationEnable) {
+        //     return;
+        // }
+
         return user;
     }
 
@@ -120,11 +124,17 @@ export class UserService {
         return await this.userRepository.save(user);
     }
 
-    buildUserResponse(user: UserEntity): UserResponseInterface {
+    buildUserResponse(user: UserEntity, isSecondFactorAuthenticated: boolean = false): UserResponseInterface {
+
+        if (!user) {
+            return;
+        }
+
         const image = user.profile.image;
-        const token = this.generateJwt(user);
+        const token = this.generateJwt(user, isSecondFactorAuthenticated);
         delete user.profile;
         delete user.ft_id;
+        delete user.twoFactorAuthenticationsSecret;
         return {
             user: {
                 ...user,
@@ -152,11 +162,12 @@ export class UserService {
         return user.connections;
     }
 
-    generateJwt(user: UserEntity): string {
+    generateJwt(user: UserEntity, isSecondFactorAuthenticated: boolean = false): string {
         const payload: TokenPayloadInterface = {
             id: user.id,
             ft_id: user.ft_id,
-            username: user.username
+            username: user.username,
+            isSecondFactorAuthenticated
         }
         return sign(
             payload,

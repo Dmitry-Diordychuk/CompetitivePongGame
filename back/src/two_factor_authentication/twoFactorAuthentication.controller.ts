@@ -29,10 +29,10 @@ export class TwoFactorAuthenticationController {
     @Post('turn-on')
     async turnOnTwoFactorAuthentication(
         @User() user: UserEntity,
-        @Body() twoFactorAuthenticationsCode: TwoFactorAuthenticationsCodeDto
+        @Body() twoFactorAuthenticationsCodeDto: TwoFactorAuthenticationsCodeDto
     ) {
         const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
-            twoFactorAuthenticationsCode.code, user
+            twoFactorAuthenticationsCodeDto.code, user
         );
 
         if (!isCodeValid) {
@@ -40,5 +40,23 @@ export class TwoFactorAuthenticationController {
         }
 
         await this.userService.turnOnTwoFactorAuthentication(user.id);
+    }
+
+    @HttpCode(200)
+    @UseGuards(AuthGuard)
+    @Post('authenticate')
+    async authenticate(
+        @User() user: UserEntity,
+        @Body() twoFactorAuthenticationCodeDto: TwoFactorAuthenticationsCodeDto
+    ) {
+        const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
+            twoFactorAuthenticationCodeDto.code, user
+        );
+
+        if (!isCodeValid) {
+            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        return this.userService.buildUserResponse(user, true);
     }
 }

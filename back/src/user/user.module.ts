@@ -15,9 +15,12 @@ import {HttpModule} from "@nestjs/axios";
 })
 export class UserModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AuthMiddleware).forRoutes({
-            path: '*',
-            method: RequestMethod.ALL
-        })
+        consumer
+            .apply(AuthMiddleware)
+            .exclude('api/2fa/authenticate')
+            .forRoutes({
+                path: '*',
+                method: RequestMethod.ALL
+            })
     }
 }

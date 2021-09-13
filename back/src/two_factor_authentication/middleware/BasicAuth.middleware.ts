@@ -4,7 +4,7 @@ import {JWT_SECRET} from "@app/config";
 import {UserService} from "@app/user/user.service";
 
 @Injectable()
-export class AuthMiddleware implements NestMiddleware {
+export class BasicAuthMiddleware implements NestMiddleware {
     constructor(private readonly userService: UserService) {
     }
 
@@ -22,10 +22,6 @@ export class AuthMiddleware implements NestMiddleware {
             req.user = await this.userService.getUserById(decode["id"]);
 
             if (!req.user || decode["ft_id"] != req.user.ft_id || decode["username"] != req.user.username) {
-                req.user = null;
-            }
-
-            if (req.user.isTwoFactorAuthenticationEnable && !decode.isSecondFactorAuthenticated) {
                 req.user = null;
             }
 
