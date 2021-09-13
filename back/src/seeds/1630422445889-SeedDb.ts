@@ -19,13 +19,13 @@ export class SeedDb1630422445889 implements MigrationInterface {
         Алгоритм HS256
         Тип JWT
          */
-        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJmdF9pZCI6IjEiLCJ1c2VybmFtZSI6IkFfdXNlciJ9.y9PIFkhmxRLk33kSCb7anXConFNsJE6HNf6191KC0NQ
+        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0X2lkIjoiMSIsInVzZXJuYW1lIjoiQV91c2VyIn0.uIUje5AHnK4fi1b21vvzN1XO_eP20slTPPchWFj3g0E
         await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (101, 1, 'A_user', 101);`);
 
-        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJmdF9pZCI6IjIiLCJ1c2VybmFtZSI6IkJfdXNlciJ9.6VKBZGIAfDKJTLSNmxNRGIgV4ivYZkFVHjsfIUK609k
+        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0X2lkIjoiMiIsInVzZXJuYW1lIjoiQl91c2VyIn0.yZvTcANIHFMlWwyTluOwCGbR3jHe-hQfGc-OsCK_UvM
         await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (102, 2, 'B_user', 102);`);
 
-        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJmdF9pZCI6IjMiLCJ1c2VybmFtZSI6IkNfdXNlciJ9.OHAcnZfygngJeGYxFMU-SIh9bMe9iF7ZhPQeOIOp3Yc
+        // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0X2lkIjoiMyIsInVzZXJuYW1lIjoiQ191c2VyIn0.ijI9lgVwE0aVKHtrVexVsD3IM43TVJUoeZwzOFx6C0M
         await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (103, 3, 'C_user', 103);`);
 
 

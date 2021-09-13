@@ -11,11 +11,11 @@ export class ProfileService {
         @InjectRepository(ProfileEntity) private readonly profileRepository: Repository<ProfileEntity>
     ) {}
 
-    async getCurrentUserProfile(currentUserId: number): Promise<UserEntity> {
+    async getCurrentUserWithProfile(currentUserId: number): Promise<UserEntity> {
         return await this.userRepository.findOne(currentUserId, { relations: ["profile"] });
     }
 
-    async getProfileById(profileId: number): Promise<UserEntity> {
+    async getUserWithProfileById(profileId: number): Promise<UserEntity> {
         const profile = await this.profileRepository.findOne(profileId);
 
         if (!profile) {
