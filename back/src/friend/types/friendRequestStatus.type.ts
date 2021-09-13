@@ -1,0 +1,1 @@
+export type FriendRequestStatusType = 'pending' | 'accepted' | 'decline';
