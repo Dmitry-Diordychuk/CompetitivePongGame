@@ -15,6 +15,8 @@ import {WebSocketValidationPipe} from "@app/shared/pipes/WebSocketValidation.pip
 import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
+import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
+import {UserEntity} from "@app/user/user.entity";
 
 //@UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
@@ -34,8 +36,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
 
 
-    async handleConnection(@ConnectedSocket() socket: Socket) {
-        const user = await this.chatService.authorize(socket);
+    async handleConnection(
+        @ConnectedSocket() socket: Socket
+    ) {
+        const user = socket.handshake.headers.user;
+        // @ts-ignore
         await this.chatService.addUserToChannelByName(user, 'general');
         socket.join('general');
         socket.emit('joined_channel', {"message": {"channel": "general"}});
@@ -48,13 +53,12 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     @SubscribeMessage('send_message')
     async listenForMessage(
-        @ConnectedSocket() socket: Socket,
+        @WSUser() user: UserEntity,
         @MessageBody() receiveMessageDto: ReceiveMessageDto
     ) {
-        const user = this.chatService.authorize(socket);
         this.server.to(receiveMessageDto.channel).emit('receive_message', {
             "message": {
-                ...user,
+                username: user.username,
                 message: receiveMessageDto.message
             }
         })
@@ -63,9 +67,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @SubscribeMessage('create_channel')
     async handleCreateChannel(
         @ConnectedSocket() socket: Socket,
+        @WSUser() user: UserEntity,
         @MessageBody() createChannelDto: CreateChannelDto
     ) {
-        const user = await this.chatService.authorize(socket);
         const message = await this.chatService.createChannel(user, createChannelDto);
         socket.join(createChannelDto.name);
         socket.emit('created_channel', {message});
@@ -74,9 +78,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @SubscribeMessage('join_channel')
     async handleJoinChannel(
         @ConnectedSocket() socket: Socket,
+        @WSUser() user: UserEntity,
         @MessageBody() joinChannelDto: JoinChannelDto
     ) {
-        const user = await this.chatService.authorize(socket);
         const message = await this.chatService.joinChannel(user, joinChannelDto);
         socket.join(joinChannelDto.name);
         socket.emit('joined_channel', {message});
