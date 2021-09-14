@@ -181,9 +181,16 @@ export class UserService {
             payload = verify(token, JWT_SECRET);
         }
         catch {
-            return null
+            return null;
         }
-        return await this.getUserById(payload.id);
+
+        const user = await this.getUserById(payload.id);
+
+        if (!user || user.ft_id != payload.ft_id || user.username != payload.username) {
+            return null;
+        }
+
+        return user;
     }
 
     async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
