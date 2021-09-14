@@ -1,6 +1,7 @@
 import {Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {AchievementEntity} from "@app/achievement/achievement.entity";
 import {FriendRequestEntity} from "@app/friend/friendRequest.entity";
+import {MatchEntity} from "@app/match/match.entity";
 
 @Entity('profiles')
 export class ProfileEntity {
@@ -31,4 +32,10 @@ export class ProfileEntity {
 
     @OneToMany(() => FriendRequestEntity, (friendRequest) => friendRequest.receiver)
     receivedFriendRequests: FriendRequestEntity[];
+
+    @OneToMany(() => MatchEntity, (match) => match.winner)
+    winMatches: MatchEntity[];
+
+    @OneToMany(() => MatchEntity, (match) => match.loser)
+    lossMatches: MatchEntity[];
 }

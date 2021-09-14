@@ -53,4 +53,12 @@ export class FriendController {
     ): Promise<FriendRequestsInterface> {
         return await this.friendService.getCurrentUserReceivedFriendRequests(currentUserId);
     }
+
+    @UseGuards(AuthGuard)
+    @Get('all')
+    async getCurrentUserFriends(
+        @User('id') currentUserId: number
+    ): Promise<FriendRequestsInterface> {
+        return await this.friendService.getCurrentUserFriends(currentUserId);
+    }
 }

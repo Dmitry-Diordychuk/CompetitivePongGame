@@ -110,7 +110,28 @@ export class FriendService {
         const friendRequests = await this.friendRequestRepository.find({
             relations: ["creator", "receiver"],
             where: [
-                {receiver: user}
+                { receiver: user, status: FriendRequestStatus.Pending }
+            ]
+        });
+
+        const counter = friendRequests.length;
+
+        const friendRequestResponse = friendRequests.map(req => this.buildFriendRequestResponse(req));
+
+        return {
+            requests: friendRequestResponse,
+            requestsCounter: counter
+        }
+    }
+
+    async getCurrentUserFriends(currentUserId: number) {
+        const user = await this.profileService.getCurrentUserWithProfile(currentUserId);
+
+        const friendRequests = await this.friendRequestRepository.find({
+            relations: ["creator", "receiver"],
+            where: [
+                { receiver: user, status: FriendRequestStatus.Accepted },
+                { creator: user, status: FriendRequestStatus.Accepted }
             ]
         });
 
