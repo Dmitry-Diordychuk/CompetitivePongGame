@@ -1,12 +1,12 @@
 import {Module} from "@nestjs/common";
 import {TypeOrmModule} from "@nestjs/typeorm";
-import {AchievementController} from "@app/achievement/achievement.controller";
-import {AchievementService} from "@app/achievement/achievement.service";
-import {AchievementEntity} from "@app/achievement/achievement.entity";
+import {MatchService} from "@app/match/match.service";
+import {MatchController} from "@app/match/match.controller";
+import {MatchEntity} from "@app/match/match.entity";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([AchievementEntity])],
-    controllers: [AchievementController],
-    providers: [AchievementService]
+    imports: [TypeOrmModule.forFeature([MatchEntity])],
+    controllers: [MatchController],
+    providers: [MatchService]
 })
 export class MatchModule {}
