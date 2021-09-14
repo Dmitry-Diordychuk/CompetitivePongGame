@@ -5,7 +5,8 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {ProfileService} from "@app/profile/profile.service";
 import {FriendRequestEntity} from "@app/friend/friendRequest.entity";
 import {Repository} from "typeorm";
-import {FriendRequestStatus} from "@app/friend/types/friendRequestStatus.type";
+import {FriendRequestStatus, FriendRequestStatusType} from "@app/friend/types/friendRequestStatus.type";
+import {FriendRequestsInterface} from "@app/friend/types/friendRequests.interface";
 
 @Injectable()
 export class FriendService {
@@ -72,12 +73,55 @@ export class FriendService {
             creator: creator,
             receiver: receiver
         }, {relations: ["creator", "receiver"]});
-        console.log(friendRequest);
         if (!friendRequest) {
             throw new HttpException("There is no such friend request", HttpStatus.BAD_REQUEST);
         }
 
         return friendRequest;
+    }
+
+    async responseToFriendRequest(
+        statusResponse: FriendRequestStatusType,
+        friendRequestId: number,
+        userId: number
+    ): Promise<FriendRequestEntity> {
+        const friendRequest = await this.friendRequestRepository.findOne(friendRequestId, { relations: ["creator", "receiver"] });
+
+        if (!friendRequest) {
+            throw new HttpException("There is no such friend request", HttpStatus.BAD_REQUEST);
+        }
+
+        if (friendRequest.status != FriendRequestStatus.Pending) {
+            throw new HttpException("Friend request status was already changed", HttpStatus.BAD_REQUEST);
+        }
+
+        if (friendRequest.receiver.id != userId) {
+            throw new HttpException("Current user isn't friend request receiver", HttpStatus.BAD_REQUEST);
+        }
+
+        friendRequest.status = statusResponse;
+
+        return await this.friendRequestRepository.save(friendRequest);
+    }
+
+    async getCurrentUserReceivedFriendRequests(currentUserId: number): Promise<FriendRequestsInterface> {
+        const user = await this.profileService.getCurrentUserWithProfile(currentUserId);
+
+        const friendRequests = await this.friendRequestRepository.find({
+            relations: ["creator", "receiver"],
+            where: [
+                {receiver: user}
+            ]
+        });
+
+        const counter = friendRequests.length;
+
+        const friendRequestResponse = friendRequests.map(req => this.buildFriendRequestResponse(req));
+
+        return {
+            requests: friendRequestResponse,
+            requestsCounter: counter
+        }
     }
 
     buildFriendRequestResponse(friendRequest: FriendRequestEntity): FriendRequestInterface {
