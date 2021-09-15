@@ -17,6 +17,7 @@ import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
 import {UserEntity} from "@app/user/user.entity";
+import {PrivateMessageDto} from "@app/chat/dto/privateMessage.dto";
 
 //@UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
@@ -40,10 +41,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @ConnectedSocket() socket: Socket
     ) {
         const user = socket.handshake.headers.user;
+
         // @ts-ignore
         await this.chatService.addUserToChannelByName(user, 'general');
         socket.join('general');
         socket.emit('joined_channel', {"message": {"channel": "general"}});
+
+        // @ts-ignore
+        socket.join(user.id.toString());
+        // @ts-ignore
+        socket.emit('joined_channel', {"message": {"channel": user.id.toString()}});
     }
 
 
@@ -63,6 +70,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             }
         })
     }
+
 
     @SubscribeMessage('create_channel')
     async handleCreateChannel(
@@ -91,10 +99,23 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     async handleLeaveChannel(
         @ConnectedSocket() socket: Socket,
         @MessageBody() leaveChannelDto: LeaveChannelDto
-    )
-    {
+    ) {
         const message = await this.chatService.leaveChannel(socket, leaveChannelDto);
         socket.leave(leaveChannelDto.name);
         socket.emit('left_channel', {message});
+    }
+
+    @SubscribeMessage('send_private_message')
+    async listenForPrivateMessage(
+        @WSUser() user: UserEntity,
+        @MessageBody() privateMessageDto: PrivateMessageDto
+    ) {
+            this.server.to(privateMessageDto.to.toString()).emit('receive_private_message', {
+            "message": {
+                user_id: user.id,
+                username: user.username,
+                message: privateMessageDto.message
+            }
+        })
     }
 }
