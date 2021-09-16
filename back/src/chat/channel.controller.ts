@@ -27,7 +27,7 @@ export class ChannelController {
         return await this.chatService.getChannel(channel_id);
     }
 
-    @Put('admin/:userId')
+    @Put('admin')
     async makeUserChannelAdmin(
         @Param('id') userId: number,
         @User('id') currentUserId: number,

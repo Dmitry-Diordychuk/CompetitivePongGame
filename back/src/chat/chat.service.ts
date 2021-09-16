@@ -201,31 +201,33 @@ export class ChatService {
     }
 
     async makeAdmin(currentUserId, userId: number, channelId: number) {
-        if (currentUserId == userId) {
-            throw new WsException("User is owner");
+        if (currentUserId === userId) {
+            throw new HttpException("User is owner", HttpStatus.BAD_REQUEST);
         }
 
-        const channel = await this.channelRepository.findOne(channelId, { relations: ["owner"] });
+        const channel = await this.channelRepository.findOne(channelId, { relations: ["owner", "admins"] });
 
         if (channel.owner.id !== currentUserId) {
-            throw new WsException("Current user isn't channel owner");
+            throw new HttpException("Current user isn't channel owner", HttpStatus.BAD_REQUEST);
         }
 
         const user = await this.userRepository.findOne(userId);
 
         if (!user) {
-            throw new WsException("Such user doesn't exist");
+            throw new HttpException("Such user doesn't exist", HttpStatus.BAD_REQUEST);
         }
 
         const userChannels = await this.userService.getChannelsByUserId(user.id);
 
-        const isUserInChannel = userChannels.filter(ch => ch.id === channel.id) != null;
-
-        if (!isUserInChannel) {
-            throw new WsException("User isn't in the channel");
+        if (!userChannels.find(ch => ch.id === channel.id)) {
+            throw new HttpException("User isn't in the channel", HttpStatus.BAD_REQUEST);
         }
 
+        if (channel.admins.find(u => u.id === user.id)) {
+            throw new HttpException("User already admin", HttpStatus.BAD_REQUEST);
+        }
         channel.admins.push(user);
+
         return await this.channelRepository.save(channel);
     }
 }
