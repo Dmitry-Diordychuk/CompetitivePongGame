@@ -1,9 +1,11 @@
 import {IsNotEmpty, IsString} from "class-validator";
 
-export class JoinChannelDto {
+export class UpdateChannelDto {
     @IsNotEmpty()
     @IsString()
     readonly name: string;
 
-    readonly password: string;
+    readonly oldPassword: string;
+
+    readonly newPassword: string;
 }

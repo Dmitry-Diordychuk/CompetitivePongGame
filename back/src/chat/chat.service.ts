@@ -12,6 +12,7 @@ import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
 import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
+import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
 
 
 @Injectable()
@@ -79,9 +80,7 @@ export class ChatService {
     }
 
 
-    async leaveChannel(socket: Socket, leaveChannelDto: LeaveChannelDto): Promise<any> {
-        const user = await this.authorize(socket);
-
+    async leaveChannel(user: UserEntity, leaveChannelDto: LeaveChannelDto): Promise<any> {
         const channels = await this.userService.getChannelsByUserId(user.id)
         const target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
 
@@ -100,6 +99,16 @@ export class ChatService {
         }
 
         return target_channel;
+    }
+
+    async updateChannel(user: UserEntity, updateChannelDto: UpdateChannelDto) {
+        const channelCreator = await this.channelRepository.findOne({
+            name: updateChannelDto.name
+        }, { relations: ["owner"] });
+
+        if (channelCreator.owner === user) {
+            console.log("in if")
+        }
     }
 
     async addUserToChannelByName(user: UserEntity, channel_name: string): Promise<UserEntity> {

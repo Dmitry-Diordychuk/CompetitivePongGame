@@ -3,8 +3,7 @@ import {plainToClass} from "class-transformer";
 import {validate, ValidationError} from "class-validator";
 import {Socket} from "socket.io";
 import {WsException} from "@nestjs/websockets";
-import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
-import {ReceiveMessageDto} from "@app/chat/dto/receiveMessage.dto";
+import {UserEntity} from "@app/user/user.entity";
 
 
 export class WebSocketValidationPipe implements PipeTransform {
@@ -15,7 +14,10 @@ export class WebSocketValidationPipe implements PipeTransform {
 
         if (value instanceof Socket) {
             return value;
-        } else if (value instanceof JoinChannelDto || ReceiveMessageDto) {
+        } else if (value instanceof UserEntity) {
+            return value;
+        } else {
+            console.log(value);
             const object = plainToClass(metadata.metatype, value);
 
             const errors: ValidationError[] = await validate(object);

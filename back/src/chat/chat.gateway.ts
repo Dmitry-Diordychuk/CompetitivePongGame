@@ -8,20 +8,21 @@ import {
 } from "@nestjs/websockets";
 import {Server, Socket} from 'socket.io'
 import {ChatService} from "@app/chat/chat.service";
-import {Logger, UseGuards, UsePipes} from "@nestjs/common";
+import {Logger, UseFilters, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
 import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {ReceiveMessageDto} from "@app/chat/dto/receiveMessage.dto";
-import {WebSocketValidationPipe} from "@app/shared/pipes/WebSocketValidation.pipe";
 import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
 import {UserEntity} from "@app/user/user.entity";
 import {PrivateMessageDto} from "@app/chat/dto/privateMessage.dto";
+import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
+import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.filter";
 
-//@UseFilters(new WebSocketExceptionFilter())
+@UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
-@UsePipes(new WebSocketValidationPipe())
+@UsePipes(new ValidationPipe())
 @WebSocketGateway(3002)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
@@ -83,6 +84,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         socket.emit('created_channel', {message});
     }
 
+
     @SubscribeMessage('join_channel')
     async handleJoinChannel(
         @ConnectedSocket() socket: Socket,
@@ -91,18 +93,30 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         const message = await this.chatService.joinChannel(user, joinChannelDto);
         socket.join(joinChannelDto.name);
-        socket.emit('joined_channel', {message});
+        socket.to(joinChannelDto.name).emit('joined_channel', {message});
+    }
+
+
+    @SubscribeMessage('update_channel')
+    async handleUpdateChannel(
+        @ConnectedSocket() socket: Socket,
+        @WSUser() user: UserEntity,
+        @MessageBody() updateChannelDto: UpdateChannelDto
+    ) {
+        const message = await this.chatService.updateChannel(user, updateChannelDto);
+        socket.to(updateChannelDto.name).emit('joined_channel', {message: ""});
     }
 
 
     @SubscribeMessage('leave_channel')
     async handleLeaveChannel(
         @ConnectedSocket() socket: Socket,
+        @WSUser() user: UserEntity,
         @MessageBody() leaveChannelDto: LeaveChannelDto
     ) {
-        const message = await this.chatService.leaveChannel(socket, leaveChannelDto);
+        const message = await this.chatService.leaveChannel(user, leaveChannelDto);
         socket.leave(leaveChannelDto.name);
-        socket.emit('left_channel', {message});
+        socket.to(leaveChannelDto.name).emit('left_channel', {message});
     }
 
     @SubscribeMessage('send_private_message')

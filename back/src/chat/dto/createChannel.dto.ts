@@ -5,6 +5,5 @@ export class CreateChannelDto {
     @IsString()
     readonly name: string;
 
-    @IsString()
     readonly password: string;
 }
