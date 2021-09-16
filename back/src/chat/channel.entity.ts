@@ -1,4 +1,13 @@
-import {AfterUpdate, BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {
+    AfterUpdate,
+    BeforeInsert,
+    Column,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    PrimaryGeneratedColumn
+} from "typeorm";
 import {hash} from "bcrypt"
 import {UserEntity} from "@app/user/user.entity";
 
@@ -22,4 +31,8 @@ export class ChannelEntity {
 
     @ManyToOne(() => UserEntity, user => user.possessions, {eager: true})
     owner: UserEntity;
+
+    @ManyToMany(() => UserEntity)
+    @JoinTable()
+    admins: UserEntity[];
 }
