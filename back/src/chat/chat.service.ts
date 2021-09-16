@@ -13,6 +13,7 @@ import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
 import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
 import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
+import {hash} from "bcrypt"
 
 
 @Injectable()
@@ -114,14 +115,13 @@ export class ChatService {
         if (channel.owner.id !== user.id) {
             throw new WsException("User isn't channel owner");
         }
-        console.log(channel.password, updateChannelDto.oldPassword);
+
         if (!await this.isChannelPassword(channel, updateChannelDto.oldPassword)) {
             throw new WsException("Wrong password");
         }
 
-        await this.channelRepository.update(channel.id, {
-            password: updateChannelDto.newPassword
-        });
+        channel.password = await hash(updateChannelDto.newPassword, 10);
+        await this.channelRepository.save(channel);
 
         return {
             "channel": channel.name,
@@ -198,5 +198,34 @@ export class ChatService {
             channels,
             channelsCounter
         };
+    }
+
+    async makeAdmin(currentUserId, userId: number, channelId: number) {
+        if (currentUserId == userId) {
+            throw new WsException("User is owner");
+        }
+
+        const channel = await this.channelRepository.findOne(channelId, { relations: ["owner"] });
+
+        if (channel.owner.id !== currentUserId) {
+            throw new WsException("Current user isn't channel owner");
+        }
+
+        const user = await this.userRepository.findOne(userId);
+
+        if (!user) {
+            throw new WsException("Such user doesn't exist");
+        }
+
+        const userChannels = await this.userService.getChannelsByUserId(user.id);
+
+        const isUserInChannel = userChannels.filter(ch => ch.id === channel.id) != null;
+
+        if (!isUserInChannel) {
+            throw new WsException("User isn't in the channel");
+        }
+
+        channel.admins.push(user);
+        return await this.channelRepository.save(channel);
     }
 }

@@ -1,5 +1,4 @@
 import {
-    AfterUpdate,
     BeforeInsert,
     Column,
     Entity,
@@ -23,10 +22,10 @@ export class ChannelEntity {
     password: string;
 
     @BeforeInsert()
-    @AfterUpdate()
     async hashPassword() {
-        if (this.password)
+        if (this.password) {
             this.password = await hash(this.password, 10);
+        }
     }
 
     @ManyToOne(() => UserEntity, user => user.possessions, {eager: true})
