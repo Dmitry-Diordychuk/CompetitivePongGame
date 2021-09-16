@@ -1,4 +1,4 @@
-import {BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {AfterUpdate, BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {hash} from "bcrypt"
 import {UserEntity} from "@app/user/user.entity";
 
@@ -14,6 +14,7 @@ export class ChannelEntity {
     password: string;
 
     @BeforeInsert()
+    @AfterUpdate()
     async hashPassword() {
         if (this.password)
             this.password = await hash(this.password, 10);

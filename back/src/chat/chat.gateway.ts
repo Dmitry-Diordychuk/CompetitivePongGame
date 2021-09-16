@@ -22,7 +22,7 @@ import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.fil
 
 @UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
-@UsePipes(new ValidationPipe())
+@UsePipes(new ValidationPipe({}))
 @WebSocketGateway(3002)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
@@ -99,12 +99,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     @SubscribeMessage('update_channel')
     async handleUpdateChannel(
-        @ConnectedSocket() socket: Socket,
         @WSUser() user: UserEntity,
         @MessageBody() updateChannelDto: UpdateChannelDto
     ) {
-        const message = await this.chatService.updateChannel(user, updateChannelDto);
-        socket.to(updateChannelDto.name).emit('joined_channel', {message: ""});
+        await this.chatService.updateChannel(user, updateChannelDto);
     }
 
 

@@ -1,8 +1,8 @@
-import {IsNotEmpty, Matches} from "class-validator";
+import {IsIn, IsNotEmpty} from "class-validator";
 import {FriendRequestStatusType} from "@app/friend/types/friendRequestStatus.type";
 
 export class FriendRequestChangeStatusDto {
     @IsNotEmpty()
-    @Matches('((\\baccepted\\b)|(\\bdeclined\\b))')
+    @IsIn(["accepted", "declined"])
     status: FriendRequestStatusType;
 }

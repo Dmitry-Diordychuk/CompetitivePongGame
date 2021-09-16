@@ -51,8 +51,9 @@ export class ChatService {
     async createChannel(user: UserEntity, createChannelDto: CreateChannelDto): Promise<any> {
         const channel = await this.findChannelByName(createChannelDto.name);
 
-        if (channel)
+        if (channel) {
             throw new WsException("Channel " + createChannelDto.name + " exist!");
+        }
 
         const newChannel = new ChannelEntity();
         Object.assign(newChannel, createChannelDto);
@@ -73,7 +74,7 @@ export class ChatService {
             throw new WsException("Channel doesn't exist");
         }
 
-        if (await this.tryChannelPassword(channel, joinChannelDto.password)) {
+        if (await this.isChannelPassword(channel, joinChannelDto.password)) {
             return {"channel": channel.name};
         }
         throw new WsException("Wrong password");
@@ -102,12 +103,29 @@ export class ChatService {
     }
 
     async updateChannel(user: UserEntity, updateChannelDto: UpdateChannelDto) {
-        const channelCreator = await this.channelRepository.findOne({
+        const channel = await this.channelRepository.findOne({
             name: updateChannelDto.name
-        }, { relations: ["owner"] });
+        }, { relations: ["owner"], select: ["id", "password"] });
 
-        if (channelCreator.owner === user) {
-            console.log("in if")
+        if (!channel) {
+            throw new WsException("There is no such channel");
+        }
+
+        if (channel.owner.id !== user.id) {
+            throw new WsException("User isn't channel owner");
+        }
+        console.log(channel.password, updateChannelDto.oldPassword);
+        if (!await this.isChannelPassword(channel, updateChannelDto.oldPassword)) {
+            throw new WsException("Wrong password");
+        }
+
+        await this.channelRepository.update(channel.id, {
+            password: updateChannelDto.newPassword
+        });
+
+        return {
+            "channel": channel.name,
+            "status": "password updated"
         }
     }
 
@@ -141,13 +159,13 @@ export class ChatService {
         });
     }
 
-    async tryChannelPassword(channel: ChannelEntity, password: string): Promise<boolean> {
+    async isChannelPassword(channel: ChannelEntity, password: string): Promise<boolean> {
         if (channel.password === null && password === null) {
             return true;
-        }
-        if (channel.password === null || password === null) {
+        } else if (channel.password === null || password === null) {
             return false;
         }
+
         return !!(await compare(password, channel.password, null));
     }
 
