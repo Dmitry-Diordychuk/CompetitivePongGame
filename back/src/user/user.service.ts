@@ -37,18 +37,6 @@ export class UserService {
             throw new HttpException("Unauthorized", 401);
         }
 
-        /*
-          data: {
-                access_token: '37ad683e6f3fb009684efc9b742041c53ee722dbea3bd8aa8a74f4f39d965d64',
-                token_type: 'bearer',
-                expires_in: 6693,
-                refresh_token: '78b1affd6ebd7de4b4888ec13747579ce72fe10bf43088345a77b149d14dafaa',
-                scope: 'public',
-                created_at: 1631019538
-            }
-         */
-
-
         const config = {
             headers: {
                 Authorization: "Bearer " + token
@@ -74,20 +62,16 @@ export class UserService {
             return await this.register(ftId, username, img, ftProfileUrl);
         }
 
-        // if (user.isTwoFactorAuthenticationEnable) {
-        //     return;
-        // }
-
         return user;
     }
 
     async register(ftId: number, username: string, img: string, ftProfile: string) {
         const newUser = new UserEntity();
         newUser.username = username;
-        newUser.ft_id = ftId;
+        newUser.ftId = ftId;
 
         const newProfile = new ProfileEntity();
-        newProfile.ft_profile = ftProfile;
+        newProfile.ftProfile = ftProfile;
         newProfile.image = img;
         newProfile.level = 1;
         newProfile.losses = 0;
@@ -116,11 +100,26 @@ export class UserService {
         }
 
         if (updateUserDto.username && updateUserDto.username != "") {
+            if (user.username == updateUserDto.username) {
+                throw new HttpException("This username same as previous", HttpStatus.BAD_REQUEST);
+            }
+
+            const isUsernameOccupied = await this.userRepository.findOne({username: updateUserDto.username});
+            if (isUsernameOccupied) {
+                throw new HttpException("This username already in use", HttpStatus.CONFLICT);
+            }
+
             user.username = updateUserDto.username;
         }
+
         if (updateUserDto.image) {
+            if (user.profile.image == updateUserDto.image) {
+                throw new HttpException("This image same as previous", HttpStatus.BAD_REQUEST);
+            }
+
             user.profile.image = updateUserDto.image;
         }
+
         return await this.userRepository.save(user);
     }
 
@@ -133,7 +132,7 @@ export class UserService {
         const image = user.profile.image;
         const token = this.generateJwt(user, isSecondFactorAuthenticated);
         delete user.profile;
-        delete user.ft_id;
+        delete user.ftId;
         delete user.twoFactorAuthenticationsSecret;
         return {
             user: {
@@ -150,7 +149,7 @@ export class UserService {
 
     async getUserByFtId(ftId: number): Promise<UserEntity> {
         return await this.userRepository.findOne({
-            ft_id: ftId
+            ftId: ftId
         }, { relations: ["profile"] });
     }
 
@@ -165,7 +164,7 @@ export class UserService {
     generateJwt(user: UserEntity, isSecondFactorAuthenticated: boolean = false): string {
         const payload: TokenPayloadInterface = {
             id: user.id,
-            ft_id: user.ft_id,
+            ft_id: user.ftId,
             username: user.username,
             isSecondFactorAuthenticated
         }
@@ -186,7 +185,7 @@ export class UserService {
 
         const user = await this.getUserById(payload.id);
 
-        if (!user || user.ft_id != payload.ft_id || user.username != payload.username) {
+        if (!user || user.ftId != payload.ft_id || user.username != payload.username) {
             return null;
         }
 

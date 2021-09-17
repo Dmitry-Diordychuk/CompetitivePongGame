@@ -18,7 +18,7 @@ export class ProfileEntity {
     level: number
 
     @Column({nullable: false})
-    ft_profile: string
+    ftProfile: string
 
     @Column({nullable: false})
     image: string

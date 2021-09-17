@@ -16,7 +16,7 @@ export class TwoFactorAuthenticationService {
         const secret = authenticator.generateSecret();
 
         const otpAuthUrl = authenticator.keyuri(
-            encodeURIComponent(user.ft_id),
+            encodeURIComponent(user.ftId),
             encodeURIComponent(APP_NAME),
             secret)
 
@@ -33,6 +33,7 @@ export class TwoFactorAuthenticationService {
     }
 
     isTwoFactorAuthenticationCodeValid(twoFactorAuthenticationCode: string, user: UserEntity) {
+        // TODO: проверить двухфакторную аутенификацию. И какие поля скрывать.
         return authenticator.verify({
             token: twoFactorAuthenticationCode,
             secret: user.twoFactorAuthenticationsSecret

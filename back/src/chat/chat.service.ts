@@ -176,10 +176,6 @@ export class ChatService {
             throw new HttpException("Channel doesn't exit", HttpStatus.NOT_FOUND);
         }
 
-        if (channel.owner) {
-            delete channel.owner.ft_id;
-        }
-
         return {channel};
     }
 
@@ -187,12 +183,6 @@ export class ChatService {
     async getUserOpenChannels(user_id: number): Promise<ChannelsResponseInterface> {
         const channels = await this.userService.getChannelsByUserId(user_id);
         const channelsCounter = channels.length;
-
-        channels.forEach(function (ch) {
-            if (ch.owner) {
-                delete ch.owner.ft_id;
-            }
-        });
 
         return {
             channels,

@@ -7,16 +7,16 @@ export class UserEntity {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column({nullable: false})
-    ft_id: number
+    @Column({nullable: false, select: false})
+    ftId: number
 
     @Column({unique: true})
     username: string
 
-    @Column({ default: false })
+    @Column({ default: false, select: false })
     isTwoFactorAuthenticationEnable: boolean;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, select: false })
     twoFactorAuthenticationsSecret?: string;
 
     @ManyToMany(() => ChannelEntity, {cascade: true})
