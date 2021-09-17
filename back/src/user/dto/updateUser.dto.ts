@@ -8,6 +8,6 @@ export class UpdateUserDto {
 
     @IsOptional()
     @IsString()
-    @Length(6, 100)
+    @Length(1, 1000)
     image: string
 }

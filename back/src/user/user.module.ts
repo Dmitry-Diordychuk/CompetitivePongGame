@@ -4,8 +4,9 @@ import {UserService} from "@app/user/user.service";
 import {TypeOrmModule} from "@nestjs/typeorm";
 import {UserEntity} from "@app/user/user.entity";
 import {ChannelEntity} from "@app/chat/channel.entity";
-import {AuthMiddleware} from "@app/user/middleware/auth.middleware";
+import {SecondFactorAuthMiddleware} from "@app/user/middleware/secondFactorAuth.middleware";
 import {HttpModule} from "@nestjs/axios";
+import {AuthMiddleware} from "@app/user/middleware/auth.middleware";
 
 @Module({
     imports: [TypeOrmModule.forFeature([UserEntity, ChannelEntity]), HttpModule],
@@ -17,6 +18,12 @@ export class UserModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(AuthMiddleware)
+            .forRoutes({
+                path: '*',
+                method: RequestMethod.ALL
+            })
+        consumer
+            .apply(SecondFactorAuthMiddleware)
             .exclude('api/2fa/authenticate')
             .forRoutes({
                 path: '*',

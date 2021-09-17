@@ -144,7 +144,12 @@ export class UserService {
     }
 
     async getUserById(id: number): Promise<UserEntity> {
-        return await this.userRepository.findOne(id, { relations: ["profile"] });
+        return await this.userRepository.findOne(
+            id,
+            {
+                relations: ["profile"],
+                select: ["id", "username", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
+        });
     }
 
     async getUserByFtId(ftId: number): Promise<UserEntity> {
@@ -164,7 +169,7 @@ export class UserService {
     generateJwt(user: UserEntity, isSecondFactorAuthenticated: boolean = false): string {
         const payload: TokenPayloadInterface = {
             id: user.id,
-            ft_id: user.ftId,
+            ftId: user.ftId,
             username: user.username,
             isSecondFactorAuthenticated
         }
@@ -174,18 +179,21 @@ export class UserService {
         );
     }
 
-    async getUserFromToken(token: string): Promise<UserEntity> {
-        let payload;
+    decodeJwt(token: string): TokenPayloadInterface | null {
         try {
-            payload = verify(token, JWT_SECRET);
+            return verify(token, JWT_SECRET);
         }
         catch {
             return null;
         }
+    }
+
+    async getUserFromToken(token: string): Promise<UserEntity> {
+        const payload = this.decodeJwt(token);
 
         const user = await this.getUserById(payload.id);
 
-        if (!user || user.ftId != payload.ft_id || user.username != payload.username) {
+        if (!user || user.ftId != payload.ftId || user.username != payload.username) {
             return null;
         }
 

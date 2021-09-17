@@ -1,6 +1,6 @@
 interface TokenPayloadInterface {
     id: number
-    ft_id: number
+    ftId: number
     username: string
     isSecondFactorAuthenticated: boolean
 }

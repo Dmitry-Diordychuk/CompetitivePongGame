@@ -32,11 +32,10 @@ export class TwoFactorAuthenticationService {
         return toFileStream(stream, otpAuthUrl);
     }
 
-    isTwoFactorAuthenticationCodeValid(twoFactorAuthenticationCode: string, user: UserEntity) {
-        // TODO: проверить двухфакторную аутенификацию. И какие поля скрывать.
+    isTwoFactorAuthenticationCodeValid(twoFactorAuthenticationCode: string, secret: string) {
         return authenticator.verify({
             token: twoFactorAuthenticationCode,
-            secret: user.twoFactorAuthenticationsSecret
+            secret: secret
         })
     }
 }

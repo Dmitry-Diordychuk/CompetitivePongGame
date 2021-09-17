@@ -38,6 +38,7 @@ export class UserController {
     async getUserChannels(
         @User('id') currentUserId: number
     ) {
+        // TODO: что тут происходит?
         const channels: ChannelEntity[] = await this.userService.getChannelsByUserId(currentUserId);
     }
 }

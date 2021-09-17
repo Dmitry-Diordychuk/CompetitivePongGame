@@ -32,7 +32,8 @@ export class TwoFactorAuthenticationController {
         @Body() twoFactorAuthenticationsCodeDto: TwoFactorAuthenticationsCodeDto
     ) {
         const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
-            twoFactorAuthenticationsCodeDto.code, user
+            twoFactorAuthenticationsCodeDto.code,
+            user.twoFactorAuthenticationsSecret
         );
 
         if (!isCodeValid) {
@@ -50,7 +51,8 @@ export class TwoFactorAuthenticationController {
         @Body() twoFactorAuthenticationCodeDto: TwoFactorAuthenticationsCodeDto
     ) {
         const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
-            twoFactorAuthenticationCodeDto.code, user
+            twoFactorAuthenticationCodeDto.code,
+            user.twoFactorAuthenticationsSecret
         );
 
         if (!isCodeValid) {
