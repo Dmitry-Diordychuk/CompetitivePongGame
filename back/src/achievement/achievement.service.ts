@@ -15,8 +15,8 @@ export class AchievementService {
         const achievements = await this.achievementRepository.find();
         const counter = achievements.length;
         return {
-            achievements: achievements,
-            achievementCounter: counter
+            achievements,
+            counter
         }
     }
 

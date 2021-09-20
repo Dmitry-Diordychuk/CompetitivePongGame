@@ -179,14 +179,13 @@ export class ChatService {
         return {channel};
     }
 
-
     async getUserOpenChannels(user_id: number): Promise<ChannelsResponseInterface> {
         const channels = await this.userService.getChannelsByUserId(user_id);
-        const channelsCounter = channels.length;
+        const counter = channels.length;
 
         return {
             channels,
-            channelsCounter
+            counter
         };
     }
 

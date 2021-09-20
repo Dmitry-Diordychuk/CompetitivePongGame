@@ -76,8 +76,7 @@ export class UserController {
         const friends = await this.userService.removeUserFromCurrentUserFriendList(currentUserId, friendId);
         return this.userService.buildUsersResponse(friends);
     }
-
-    //TODO: counter поменять во всех multiple
+    
     @UseGuards(AuthGuard)
     @Get('/blacklist')
     async getCurrentUserBlacklist(
