@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Put, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
 import {ChatService} from "@app/chat/chat.service";
 import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {User} from "@app/user/decorators/user.decorator";
@@ -20,6 +20,7 @@ export class ChannelController {
         return await this.chatService.getUserOpenChannels(currentUserId);
     }
 
+    @UsePipes(new ParseIntPipe())
     @Get(':id')
     async getChannelInfo(
         @Param('id') channel_id: number

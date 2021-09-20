@@ -131,10 +131,116 @@ export class UserService {
         return user.friends;
     }
 
+    async addUserToCurrentUserFriendList(currentUserId: number, friendId: number): Promise<UserEntity[]> {
+        console.log(typeof currentUserId, typeof friendId);
+        if (currentUserId === friendId) {
+            console.log("Here");
+            throw new HttpException("You can't add to the friend list yourself", HttpStatus.BAD_REQUEST);
+        }
+
+        let user = await this.userRepository.findOne(currentUserId, {
+            relations: ["friends", "blacklist"]
+        });
+
+        const friend = await this.userRepository.findOne(friendId);
+
+        if (!friend) {
+            throw new HttpException("Invalid user id", HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.friends.find(u => u.id === friend.id)) {
+            throw new HttpException("User already in the friend list", HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.blacklist.find(u => u.id === friend.id)) {
+            throw new HttpException("User is in the blacklist", HttpStatus.BAD_REQUEST);
+        }
+
+        user.friends.push(friend);
+
+        user = await this.userRepository.save(user);
+
+        return user.friends;
+    }
+
+    async removeUserFromCurrentUserFriendList(currentUserId, friendId): Promise<UserEntity[]> {
+        let user = await this.userRepository.findOne(currentUserId, {
+            relations: ["friends"]
+        });
+
+        const friend = await this.userRepository.findOne(friendId);
+
+        if (!friend) {
+            throw new HttpException("Invalid user id", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!user.friends.find(u => u.id === friend.id)) {
+            throw new HttpException("User is not in the friend list", HttpStatus.BAD_REQUEST);
+        }
+
+        user.friends = user.friends.filter(u => u.id !== friend.id);
+
+        user = await this.userRepository.save(user);
+
+        return user.friends;
+    }
+
     async getCurrentUserBlacklist(currentUserId: number): Promise<UserEntity[]> {
         const user = await this.userRepository.findOne(currentUserId, {
             relations: ["blacklist"]
         });
+        return user.blacklist;
+    }
+
+    async addUserToCurrentUserBlackList(currentUserId, targetUserId): Promise<UserEntity[]> {
+        if (currentUserId === targetUserId) {
+            throw new HttpException("You can't add to the blacklist yourself", HttpStatus.BAD_REQUEST);
+        }
+
+        let user = await this.userRepository.findOne(currentUserId, {
+            relations: ["blacklist", "friends"]
+        });
+
+        const targetUser = await this.userRepository.findOne(targetUserId);
+
+        if (!targetUser) {
+            throw new HttpException("Invalid user id", HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.blacklist.find(u => u.id === targetUser.id)) {
+            throw new HttpException("User already in the blacklist", HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.friends.find(u => u.id === targetUser.id)) {
+            throw new HttpException("User is in the friend list", HttpStatus.BAD_REQUEST);
+        }
+
+        user.blacklist.push(targetUser);
+
+        user = await this.userRepository.save(user);
+
+        return user.blacklist;
+    }
+
+    async removeUserFromCurrentUserBlackList(currentUserId, targetUserId): Promise<UserEntity[]> {
+        let user = await this.userRepository.findOne(currentUserId, {
+            relations: ["blacklist"]
+        });
+
+        const targetUser = await this.userRepository.findOne(targetUserId);
+
+        if (!targetUser) {
+            throw new HttpException("Invalid user id", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!user.blacklist.find(u => u.id === targetUser.id)) {
+            throw new HttpException("User is not in the blacklist", HttpStatus.BAD_REQUEST);
+        }
+
+        user.blacklist = user.blacklist.filter(u => u.id !== targetUser.id);
+
+        user = await this.userRepository.save(user);
+
         return user.blacklist;
     }
 

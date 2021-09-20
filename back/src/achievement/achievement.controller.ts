@@ -1,4 +1,4 @@
-import {Controller, Get, Param} from "@nestjs/common";
+import {Controller, Get, Param, ParseIntPipe, UsePipes} from "@nestjs/common";
 import {AchievementService} from "@app/achievement/achievement.service";
 
 @Controller("api/achievement")
@@ -10,6 +10,7 @@ export class AchievementController {
         return await this.achievementService.getAllAchievements();
     }
 
+    @UsePipes(new ParseIntPipe())
     @Get(':id')
     async getAchievementById(@Param('id') achievement_id: number) {
         return await this.achievementService.getAchievementById(achievement_id);
