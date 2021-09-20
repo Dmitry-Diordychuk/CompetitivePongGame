@@ -5,9 +5,15 @@ export class SeedDb1630422445889 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Profiles
-        await queryRunner.query(`INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
-        await queryRunner.query(`INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
-        await queryRunner.query(`INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+        await queryRunner.query(
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+        );
+        await queryRunner.query(
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+        );
+        await queryRunner.query(
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+        );
 
         // Users
         /*
@@ -28,7 +34,7 @@ export class SeedDb1630422445889 implements MigrationInterface {
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0X2lkIjoiMyIsInVzZXJuYW1lIjoiQ191c2VyIn0.ijI9lgVwE0aVKHtrVexVsD3IM43TVJUoeZwzOFx6C0M
         await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (103, 3, 'C_user', 103);`);
 
-
+        // TODO: номерные каналы ограничены?
         // Achievements
         await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (101, 'achievement_1', 'make something_1');`);
         await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (102, 'achievement_2', 'make something_2');`);

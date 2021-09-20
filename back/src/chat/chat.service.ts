@@ -87,13 +87,13 @@ export class ChatService {
 
         let target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
 
-        target_channel = await this.channelRepository.findOne(target_channel, {
-            relations: ["visitors"]
-        });
-
         if (!target_channel) {
             throw new WsException({"errors": "User is not in channel"})
         }
+
+        target_channel = await this.channelRepository.findOne(target_channel.id, {
+            relations: ["visitors"]
+        });
 
         user.connections = channels;
         user.connections = user.connections.filter(connection =>
