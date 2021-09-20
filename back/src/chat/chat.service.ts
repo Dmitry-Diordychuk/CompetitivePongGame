@@ -84,7 +84,12 @@ export class ChatService {
 
     async leaveChannel(user: UserEntity, leaveChannelDto: LeaveChannelDto): Promise<any> {
         const channels = await this.userService.getChannelsByUserId(user.id)
-        const target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
+
+        let target_channel = channels.find(ch => ch.name == leaveChannelDto.name);
+
+        target_channel = await this.channelRepository.findOne(target_channel, {
+            relations: ["visitors"]
+        });
 
         if (!target_channel) {
             throw new WsException({"errors": "User is not in channel"})
@@ -97,7 +102,18 @@ export class ChatService {
         await getConnection().manager.save(user);
 
         if (target_channel.owner.id === user.id) {
-            await this.channelRepository.remove(target_channel);
+            if (target_channel.admins.length !== 0) {
+                target_channel.owner = target_channel.admins[0];
+                target_channel.admins.shift();
+                await this.channelRepository.save(target_channel);
+
+            } else if (target_channel.visitors !== 1) {
+                target_channel.owner = target_channel.visitors.find(visitor => visitor !== target_channel.owner);
+                await this.channelRepository.save(target_channel);
+
+            } else {
+                await this.channelRepository.remove(target_channel);
+            }
         }
 
         return target_channel;
