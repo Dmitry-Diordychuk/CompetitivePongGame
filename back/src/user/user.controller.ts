@@ -1,7 +1,6 @@
 import {Body, Controller, Get, Put, Query, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
 import {UserService} from "@app/user/user.service";
 import {User} from "@app/user/decorators/user.decorator";
-import {ChannelEntity} from "@app/chat/channel.entity";
 import {UserResponseInterface} from "@app/user/types/userResponse.interface";
 import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
@@ -34,11 +33,19 @@ export class UserController {
         return this.userService.buildUserResponse(user);
     }
 
-    @Get('/channels')
-    async getUserChannels(
+    @Get('/friends')
+    async getCurrentUserFriends(
         @User('id') currentUserId: number
     ) {
-        // TODO: что тут происходит?
-        const channels: ChannelEntity[] = await this.userService.getChannelsByUserId(currentUserId);
+        const friends = await this.userService.getCurrentUserFriends(currentUserId);
+        return this.userService.buildUsersResponse(friends);
+    }
+
+    @Get('/blacklist')
+    async getCurrentUserBlacklist(
+        @User('id') currentUserId: number
+    ) {
+        const blacklist = await this.userService.getCurrentUserBlacklist(currentUserId);
+        return this.userService.buildUsersResponse(blacklist);
     }
 }

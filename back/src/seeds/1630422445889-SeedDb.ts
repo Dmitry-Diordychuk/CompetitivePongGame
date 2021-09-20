@@ -5,9 +5,9 @@ export class SeedDb1630422445889 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Profiles
-        await queryRunner.query(`INSERT INTO profiles (id, ft_profile, image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
-        await queryRunner.query(`INSERT INTO profiles (id, ft_profile, image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
-        await queryRunner.query(`INSERT INTO profiles (id, ft_profile, image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+        await queryRunner.query(`INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+        await queryRunner.query(`INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
+        await queryRunner.query(`INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`);
 
         // Users
         /*
@@ -20,13 +20,13 @@ export class SeedDb1630422445889 implements MigrationInterface {
         Тип JWT
          */
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0X2lkIjoiMSIsInVzZXJuYW1lIjoiQV91c2VyIn0.uIUje5AHnK4fi1b21vvzN1XO_eP20slTPPchWFj3g0E
-        await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (101, 1, 'A_user', 101);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (101, 1, 'A_user', 101);`);
 
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0X2lkIjoiMiIsInVzZXJuYW1lIjoiQl91c2VyIn0.yZvTcANIHFMlWwyTluOwCGbR3jHe-hQfGc-OsCK_UvM
-        await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (102, 2, 'B_user', 102);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (102, 2, 'B_user', 102);`);
 
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0X2lkIjoiMyIsInVzZXJuYW1lIjoiQ191c2VyIn0.ijI9lgVwE0aVKHtrVexVsD3IM43TVJUoeZwzOFx6C0M
-        await queryRunner.query(`INSERT INTO users (id, ft_id, username, "profileId") VALUES (103, 3, 'C_user', 103);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (103, 3, 'C_user', 103);`);
 
 
         // Achievements

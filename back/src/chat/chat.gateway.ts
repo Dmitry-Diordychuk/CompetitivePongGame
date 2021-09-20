@@ -66,6 +66,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         this.server.to(receiveMessageDto.channel).emit('receive_message', {
             "message": {
+                channel: receiveMessageDto.channel,
                 username: user.username,
                 message: receiveMessageDto.message
             }

@@ -29,4 +29,12 @@ export class UserEntity {
     @OneToOne(() => ProfileEntity, {cascade: true, nullable: false})
     @JoinColumn()
     profile: ProfileEntity;
+
+    @ManyToMany(() => UserEntity)
+    @JoinTable()
+    friends: UserEntity[];
+
+    @ManyToMany(() => UserEntity)
+    @JoinTable()
+    blacklist: UserEntity[];
 }

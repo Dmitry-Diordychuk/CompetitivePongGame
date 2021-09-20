@@ -8,7 +8,6 @@ import {ChatModule} from "@app/chat/chat.module";
 import {ProfileModule} from "@app/profile/profile.module";
 import {AchievementModule} from "@app/achievement/achievement.module";
 import {TwoFactorAuthenticationModule} from "@app/two_factor_authentication/twoFactorAuthentication.module";
-import {FriendModule} from "@app/friend/friend.module";
 import {MatchModule} from "@app/match/match.module";
 
 @Module({
@@ -19,7 +18,6 @@ import {MatchModule} from "@app/match/match.module";
       ProfileModule,
       AchievementModule,
       TwoFactorAuthenticationModule,
-      FriendModule,
       MatchModule
   ],
   controllers: [AppController],

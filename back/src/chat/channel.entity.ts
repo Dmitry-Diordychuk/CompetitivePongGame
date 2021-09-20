@@ -34,4 +34,12 @@ export class ChannelEntity {
     @ManyToMany(() => UserEntity, {eager: true})
     @JoinTable()
     admins: UserEntity[];
+
+    @ManyToMany(() => UserEntity)
+    @JoinTable()
+    banList: UserEntity[];
+
+    @ManyToMany(() => UserEntity)
+    @JoinTable()
+    muteList: UserEntity[];
 }

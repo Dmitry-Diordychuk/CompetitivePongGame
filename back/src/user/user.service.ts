@@ -10,6 +10,7 @@ import {firstValueFrom} from "rxjs";
 import {UserResponseInterface} from "@app/user/types/userResponse.interface";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 import {ProfileEntity} from "@app/profile/profile.entity";
+import {UsersResponseInterface} from "@app/user/types/usersResponse.interface";
 
 
 @Injectable()
@@ -65,7 +66,7 @@ export class UserService {
         return user;
     }
 
-    async register(ftId: number, username: string, img: string, ftProfile: string) {
+    async register(ftId: number, username: string, img: string, ftProfile: string): Promise<UserEntity> {
         const newUser = new UserEntity();
         newUser.username = username;
         newUser.ftId = ftId;
@@ -82,7 +83,7 @@ export class UserService {
         return await this.userRepository.save(newUser);
     }
 
-    async getCurrentUser(currentUserId: number) {
+    async getCurrentUser(currentUserId: number): Promise<UserEntity> {
         const user = await this.getUserById(currentUserId);
 
         if (!user) {
@@ -92,7 +93,7 @@ export class UserService {
         return user;
     }
 
-    async updateCurrentUser(currentUserId: number, updateUserDto: UpdateUserDto) {
+    async updateCurrentUser(currentUserId: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
         const user = await this.userRepository.findOne(currentUserId, { relations: ["profile"] });
 
         if (!user) {
@@ -123,6 +124,20 @@ export class UserService {
         return await this.userRepository.save(user);
     }
 
+    async getCurrentUserFriends(currentUserId: number): Promise<UserEntity[]> {
+        const user = await this.userRepository.findOne(currentUserId, {
+            relations: ["friends"]
+        });
+        return user.friends;
+    }
+
+    async getCurrentUserBlacklist(currentUserId: number): Promise<UserEntity[]> {
+        const user = await this.userRepository.findOne(currentUserId, {
+            relations: ["blacklist"]
+        });
+        return user.blacklist;
+    }
+
     buildUserResponse(user: UserEntity, isSecondFactorAuthenticated: boolean = false): UserResponseInterface {
 
         if (!user) {
@@ -140,6 +155,14 @@ export class UserService {
                 image: image,
                 token: token
             }
+        }
+    }
+
+    buildUsersResponse(users: UserEntity[]): UsersResponseInterface {
+        const counter = users.length;
+        return {
+            users,
+            counter
         }
     }
 
@@ -201,7 +224,7 @@ export class UserService {
     }
 
     async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
-        return this.userRepository.update(userId, {
+        return await this.userRepository.update(userId, {
             twoFactorAuthenticationsSecret: secret
         })
     }
