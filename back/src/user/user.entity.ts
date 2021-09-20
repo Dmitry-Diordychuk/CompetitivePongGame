@@ -34,7 +34,7 @@ export class UserEntity {
     @JoinTable()
     friends: UserEntity[];
 
-    @ManyToMany(() => UserEntity)
+    @ManyToMany(() => ChannelEntity, channel => channel.visitors)
     @JoinTable()
     blacklist: UserEntity[];
 }

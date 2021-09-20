@@ -31,6 +31,9 @@ export class ChannelEntity {
     @ManyToOne(() => UserEntity, user => user.possessions, {eager: true})
     owner: UserEntity;
 
+    @ManyToMany(() => UserEntity, user => user.connections)
+    visitors
+
     @ManyToMany(() => UserEntity, {eager: true})
     @JoinTable()
     admins: UserEntity[];

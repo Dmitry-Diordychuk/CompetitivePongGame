@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
+import {Body, Controller, Get, Param, ParseIntPipe, Put, UseGuards, UsePipes} from '@nestjs/common';
 import {ChatService} from "@app/chat/chat.service";
 import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {User} from "@app/user/decorators/user.decorator";
