@@ -1,5 +1,6 @@
-import {Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {ProfileEntity} from "@app/profile/profile.entity";
+import {CommentEntity} from "@app/match/comment.entity";
 
 @Entity("matches")
 export class MatchEntity {
@@ -17,4 +18,8 @@ export class MatchEntity {
 
     @ManyToOne(() => ProfileEntity, profile => profile.lossMatches)
     loser: ProfileEntity;
+
+    @ManyToMany(() => CommentEntity)
+    @JoinTable()
+    comments: CommentEntity[]
 }
