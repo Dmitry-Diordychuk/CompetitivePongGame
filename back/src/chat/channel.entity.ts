@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import {hash} from "bcrypt"
 import {UserEntity} from "@app/user/user.entity";
+import {SanctionEntity} from "@app/sanction/sanction.entity";
 
 @Entity("channels")
 export class ChannelEntity {
@@ -31,18 +32,14 @@ export class ChannelEntity {
     @ManyToOne(() => UserEntity, user => user.possessions, {eager: true})
     owner: UserEntity;
 
-    @ManyToMany(() => UserEntity, user => user.connections)
-    visitors
+    @ManyToMany(() => UserEntity, user => user.connections, {eager: true})
+    visitors: UserEntity[];
 
     @ManyToMany(() => UserEntity, {eager: true})
     @JoinTable()
     admins: UserEntity[];
 
-    @ManyToMany(() => UserEntity)
+    @ManyToMany(() => SanctionEntity)
     @JoinTable()
-    banList: UserEntity[];
-
-    @ManyToMany(() => UserEntity)
-    @JoinTable()
-    muteList: UserEntity[];
+    sanctions: SanctionEntity[];
 }

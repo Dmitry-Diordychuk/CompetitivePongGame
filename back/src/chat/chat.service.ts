@@ -14,6 +14,8 @@ import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interf
 import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
 import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
 import {hash} from "bcrypt"
+import {SanctionDto} from "@app/chat/dto/sanction.dto";
+import {SanctionEntity} from "@app/sanction/sanction.entity";
 
 
 @Injectable()
@@ -107,7 +109,7 @@ export class ChatService {
                 target_channel.admins.shift();
                 await this.channelRepository.save(target_channel);
 
-            } else if (target_channel.visitors !== 1) {
+            } else if (target_channel.visitors.length !== 1) {
                 target_channel.owner = target_channel.visitors.find(visitor => visitor !== target_channel.owner);
                 await this.channelRepository.save(target_channel);
 
@@ -233,6 +235,57 @@ export class ChatService {
         }
         channel.admins.push(user);
 
+        return await this.channelRepository.save(channel);
+    }
+
+    async isAdminOrOwner(channel: ChannelEntity, userId) {
+        let admin;
+
+        if (channel.owner.id === userId) {
+            admin = channel.owner;
+        } else {
+            admin = channel.admins.find(u => u.id === userId);
+        }
+
+        return admin;
+    }
+
+    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto): Promise<ChannelEntity> {
+        const channel = await this.channelRepository.findOne(sanctionDto.channelId,
+            { relations: ["visitors", "sanctions"] }
+        );
+        console.log(channel);
+        if (!channel) {
+            throw new HttpException("Channel doesn't exist", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!await this.isAdminOrOwner(channel, currentUserId)) {
+            throw new HttpException("You're not allowed", HttpStatus.BAD_REQUEST);
+        }
+
+        if (currentUserId === sanctionDto.userId) {
+            throw new HttpException("You can't ban yourself", HttpStatus.BAD_REQUEST);
+        }
+
+        if (channel.admins.find(u => u.id === sanctionDto.userId)) {
+            throw new HttpException("You can't ban other admin", HttpStatus.BAD_REQUEST);
+        }
+
+        const targetUser = channel.visitors.find(u => u.id === sanctionDto.userId);
+
+        if (!targetUser) {
+            throw new HttpException("There is no such user in the chat visitors list", HttpStatus.BAD_REQUEST);
+        }
+
+        if ((Date.now() - sanctionDto.expiryAt.getTime()) < 0) {
+            throw new HttpException("Expiry time already passed", HttpStatus.BAD_REQUEST);
+        }
+
+        const sanction = new SanctionEntity();
+        sanction.target = targetUser;
+        sanction.expiry_at = sanctionDto.expiryAt;
+
+        channel.sanctions.push(sanction);
         return await this.channelRepository.save(channel);
     }
 }
