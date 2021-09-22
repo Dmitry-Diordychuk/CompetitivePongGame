@@ -15,5 +15,5 @@ export class SanctionDto {
 
     @IsNotEmpty()
     @IsDateString()
-    expiryAt: Date;
+    expiryAt: string;
 }

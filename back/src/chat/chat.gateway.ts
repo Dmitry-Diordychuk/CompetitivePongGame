@@ -68,11 +68,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() receiveMessageDto: ReceiveMessageDto
     ) {
-        // const date = await this.chatService.getMuteDate(user, receiveMessageDto.channel);
-        // if (date) {
-        //     throw new WsException("You have been muted until " + date);
-        // }
-        console.log(receiveMessageDto);
+        await this.chatService.isMuted(user, receiveMessageDto.channel);
+
         this.server.to(receiveMessageDto.channel).emit('receive_message', {
             "message": {
                 channel: receiveMessageDto.channel,

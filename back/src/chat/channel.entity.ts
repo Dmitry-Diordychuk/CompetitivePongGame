@@ -39,7 +39,7 @@ export class ChannelEntity {
     @JoinTable()
     admins: UserEntity[];
 
-    @ManyToMany(() => SanctionEntity)
+    @ManyToMany(() => SanctionEntity, {eager: true, cascade: true})
     @JoinTable()
     sanctions: SanctionEntity[];
 }

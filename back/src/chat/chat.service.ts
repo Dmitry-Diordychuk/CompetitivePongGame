@@ -23,7 +23,8 @@ export class ChatService {
     constructor(
         private readonly userService: UserService,
         @InjectRepository(ChannelEntity) private readonly channelRepository: Repository<ChannelEntity>,
-        @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>
+        @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
+        @InjectRepository(SanctionEntity) private readonly sanctionRepository: Repository<SanctionEntity>
     ) {}
 
     async authorize(socket: Socket): Promise<UserEntity> {
@@ -254,7 +255,7 @@ export class ChatService {
         const channel = await this.channelRepository.findOne(sanctionDto.channelId,
             { relations: ["visitors", "sanctions"] }
         );
-        console.log(channel);
+
         if (!channel) {
             throw new HttpException("Channel doesn't exist", HttpStatus.BAD_REQUEST);
         }
@@ -277,15 +278,51 @@ export class ChatService {
             throw new HttpException("There is no such user in the chat visitors list", HttpStatus.BAD_REQUEST);
         }
 
-        if ((Date.now() - sanctionDto.expiryAt.getTime()) < 0) {
+        const expiryDate = new Date(sanctionDto.expiryAt);
+        if ((expiryDate.getTime() - Date.now()) < 0) {
             throw new HttpException("Expiry time already passed", HttpStatus.BAD_REQUEST);
         }
 
         const sanction = new SanctionEntity();
         sanction.target = targetUser;
-        sanction.expiry_at = sanctionDto.expiryAt;
+        sanction.expiry_at = expiryDate;
+        sanction.type = sanctionDto.type;
 
         channel.sanctions.push(sanction);
+        await this.sanctionRepository.save(sanction);
         return await this.channelRepository.save(channel);
+    }
+
+    async isMuted(user: UserEntity, channelName: string) {
+        const channel = await this.channelRepository.findOne({
+            name: channelName
+        });
+
+        if (!channel) {
+            throw new WsException("Channel doesn't exist");
+        }
+
+        const sanction = channel.sanctions.find(u => u.target.id === user.id);
+        // TODO: посмотреть удаляется ли sanction
+        if (!sanction) {
+            return;
+        }
+
+        if ((sanction.expiry_at.getTime() - Date.now()) < 0) {
+            channel.sanctions = channel.sanctions.filter(s => s.id !== sanction.id);
+            await this.channelRepository.save(channel);
+            return;
+        }
+
+        if (sanction.type === "mute") {
+            throw new WsException("You have been muted until " + sanction.expiry_at);
+        }
+    }
+
+    async getUserChannels(user: UserEntity): Promise<ChannelEntity[]> {
+        return await this.channelRepository
+            .createQueryBuilder("channels")
+            .innerJoin("channels.visitors", "visitors", 'visitors.id = :userid', {userid: user.id})
+            .getMany()
     }
 }

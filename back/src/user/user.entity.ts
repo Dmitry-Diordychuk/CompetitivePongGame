@@ -1,7 +1,18 @@
-import {Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {
+    Column,
+    Entity,
+    JoinColumn,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn
+} from "typeorm";
 import {ChannelEntity} from "@app/chat/channel.entity";
 import {ProfileEntity} from "@app/profile/profile.entity";
 import {CommentEntity} from "@app/match/comment.entity";
+import {SanctionEntity} from "@app/sanction/sanction.entity";
 
 @Entity("users")
 export class UserEntity {
@@ -41,6 +52,9 @@ export class UserEntity {
 
     @OneToMany(() => CommentEntity, comment => comment.author)
     comments: CommentEntity[];
+
+    @OneToMany(() => SanctionEntity, sanction => sanction.target)
+    sanctions: SanctionEntity[];
 
     // TODO: Check user online or offline maybe not here.
 }
