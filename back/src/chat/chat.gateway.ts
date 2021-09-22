@@ -52,6 +52,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         socket.join(user.id.toString());
         // @ts-ignore
         socket.emit('joined_channel', {"message": {"channel": user.id.toString()}});
+
+        // @ts-ignore
+        const channels = await this.chatService.getUserChannels(user);
+        channels.forEach(ch => socket.join(ch.name));
     }
 
 
@@ -64,6 +68,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() receiveMessageDto: ReceiveMessageDto
     ) {
+        // const date = await this.chatService.getMuteDate(user, receiveMessageDto.channel);
+        // if (date) {
+        //     throw new WsException("You have been muted until " + date);
+        // }
+        console.log(receiveMessageDto);
         this.server.to(receiveMessageDto.channel).emit('receive_message', {
             "message": {
                 channel: receiveMessageDto.channel,
@@ -117,6 +126,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         socket.leave(leaveChannelDto.name);
         socket.to(leaveChannelDto.name).emit('left_channel', {message});
     }
+
 
     @SubscribeMessage('send_private_message')
     async listenForPrivateMessage(
