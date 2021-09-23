@@ -78,10 +78,23 @@ export class ChatService {
             throw new WsException("Channel doesn't exist");
         }
 
-        if (await this.isChannelPassword(channel, joinChannelDto.password)) {
-            return {"channel": channel.name};
+        if (!await this.isChannelPassword(channel, joinChannelDto.password)) {
+            throw new WsException("Wrong password");
         }
-        throw new WsException("Wrong password");
+
+        const sanction = channel.sanctions.find(s => s.target.id === user.id);
+        if (sanction && sanction.type === 'ban') {
+            if ((sanction.expiry_at.getTime() - Date.now()) < 0) {
+                channel.sanctions = channel.sanctions.filter(s => s.id !== sanction.id);
+            } else {
+                throw new WsException("You have been banned till " + sanction.expiry_at);
+            }
+        }
+
+        channel.visitors.push(user);
+        await this.channelRepository.save(channel);
+
+        return {"channel": channel.name};
     }
 
 
@@ -174,7 +187,8 @@ export class ChatService {
         return await this.channelRepository.findOne({
             name: name
         }, {
-            select: ['id', 'name', 'password']
+            select: ['id', 'name', 'password'],
+            relations: ["sanctions"]
         });
     }
 
@@ -251,36 +265,38 @@ export class ChatService {
         return admin;
     }
 
-    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto): Promise<ChannelEntity> {
-        const channel = await this.channelRepository.findOne(sanctionDto.channelId,
+    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto): Promise<SanctionEntity> {
+        const channel = await this.channelRepository.findOne({
+                name: sanctionDto.channel
+            },
             { relations: ["visitors", "sanctions"] }
         );
 
         if (!channel) {
-            throw new HttpException("Channel doesn't exist", HttpStatus.BAD_REQUEST);
+            throw new WsException("Channel doesn't exist");
         }
 
         if (!await this.isAdminOrOwner(channel, currentUserId)) {
-            throw new HttpException("You're not allowed", HttpStatus.BAD_REQUEST);
+            throw new WsException("You're not allowed");
         }
 
         if (currentUserId === sanctionDto.userId) {
-            throw new HttpException("You can't ban yourself", HttpStatus.BAD_REQUEST);
+            throw new WsException("You can't ban yourself");
         }
 
         if (channel.admins.find(u => u.id === sanctionDto.userId)) {
-            throw new HttpException("You can't ban other admin", HttpStatus.BAD_REQUEST);
+            throw new WsException("You can't ban other admin");
         }
 
         const targetUser = channel.visitors.find(u => u.id === sanctionDto.userId);
 
         if (!targetUser) {
-            throw new HttpException("There is no such user in the chat visitors list", HttpStatus.BAD_REQUEST);
+            throw new WsException("There is no such user in the chat visitors list");
         }
 
         const expiryDate = new Date(sanctionDto.expiryAt);
         if ((expiryDate.getTime() - Date.now()) < 0) {
-            throw new HttpException("Expiry time already passed", HttpStatus.BAD_REQUEST);
+            throw new WsException("Expiry time already passed");
         }
 
         const sanction = new SanctionEntity();
@@ -289,8 +305,8 @@ export class ChatService {
         sanction.type = sanctionDto.type;
 
         channel.sanctions.push(sanction);
-        await this.sanctionRepository.save(sanction);
-        return await this.channelRepository.save(channel);
+        await this.channelRepository.save(channel);
+        return sanction;
     }
 
     async isMuted(user: UserEntity, channelName: string) {
@@ -302,27 +318,63 @@ export class ChatService {
             throw new WsException("Channel doesn't exist");
         }
 
-        const sanction = channel.sanctions.find(u => u.target.id === user.id);
+        const sanction = channel.sanctions.find(s => s.target.id === user.id);
         // TODO: посмотреть удаляется ли sanction
         if (!sanction) {
-            return;
+            return false;
         }
 
         if ((sanction.expiry_at.getTime() - Date.now()) < 0) {
             channel.sanctions = channel.sanctions.filter(s => s.id !== sanction.id);
             await this.channelRepository.save(channel);
-            return;
+            return false;
         }
 
         if (sanction.type === "mute") {
             throw new WsException("You have been muted until " + sanction.expiry_at);
         }
+        return false;
+    }
+
+    async isBanned(user: UserEntity, channel: ChannelEntity) {
+        const sanction = channel.sanctions.find(s => s.target.id === user.id);
+        if (!sanction) {
+            return false;
+        }
+
+        if ((sanction.expiry_at.getTime() - Date.now()) < 0) {
+            channel.sanctions = channel.sanctions.filter(s => s.id !== sanction.id);
+            await this.channelRepository.save(channel);
+            return false;
+        }
+
+        return sanction.type === "ban";
     }
 
     async getUserChannels(user: UserEntity): Promise<ChannelEntity[]> {
         return await this.channelRepository
             .createQueryBuilder("channels")
+            .leftJoinAndSelect('channels.sanctions', 'sanctions')
+            .leftJoinAndSelect('sanctions.target', 'targets')
             .innerJoin("channels.visitors", "visitors", 'visitors.id = :userid', {userid: user.id})
             .getMany()
+    }
+
+    async isInChannel(user: UserEntity, channelName: string) {
+        const channels = await this.getUserChannels(user);
+        for (let ch of channels) {
+            if (ch.name === channelName) {
+                return true;
+            }
+        }
+        throw new WsException("User is not in the channel");
+    }
+
+    async removeUserFromChannel(targetUserId: number, channelName: string): Promise<ChannelEntity> {
+        const channel = await this.channelRepository.findOne({
+            name: channelName
+        });
+        channel.visitors = channel.visitors.filter(u => u.id !== targetUserId);
+        return await this.channelRepository.save(channel);
     }
 }

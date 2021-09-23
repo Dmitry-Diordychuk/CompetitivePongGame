@@ -1,9 +1,10 @@
-import {IsDateString, IsIn, IsNotEmpty, IsNumber} from "class-validator";
+import {IsAlpha, IsDateString, IsIn, IsNotEmpty, IsNumber, IsString} from "class-validator";
 
 export class SanctionDto {
     @IsNotEmpty()
-    @IsNumber()
-    channelId: number
+    @IsString()
+    //@IsAlpha()
+    channel: string
 
     @IsNotEmpty()
     @IsNumber()

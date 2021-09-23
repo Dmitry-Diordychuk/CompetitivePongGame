@@ -38,6 +38,7 @@ export class AuthenticatedSocketAdapter extends IoAdapter {
 
             return allowFunction(null, true);
         }
+
         return super.createIOServer(port, options);
     }
 }

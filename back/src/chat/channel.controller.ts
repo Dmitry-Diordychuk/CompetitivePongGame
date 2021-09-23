@@ -15,7 +15,6 @@ import {User} from "@app/user/decorators/user.decorator";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
 import {MakeAdminDto} from "@app/chat/dto/makeAdmin.dto";
 import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
-import {SanctionDto} from "@app/chat/dto/sanction.dto";
 
 @Controller("api/channel")
 export class ChannelController {
@@ -47,17 +46,6 @@ export class ChannelController {
         @Body() makeAdminDto: MakeAdminDto
     ): Promise<ChannelResponseInterface> {
         const channel = await this.chatService.makeAdmin(currentUserId, makeAdminDto.userId, makeAdminDto.channelId);
-        return {channel};
-    }
-
-    @UseGuards(AuthGuard)
-    @UsePipes(new ValidationPipe())
-    @Put('apply-sanction')
-    async applySanctionOnUser(
-        @User('id') currentUserId: number,
-        @Body() sanctionDto: SanctionDto
-    ): Promise<ChannelResponseInterface> {
-        const channel = await this.chatService.applySanctionOnUser(currentUserId, sanctionDto);
         return {channel};
     }
 }

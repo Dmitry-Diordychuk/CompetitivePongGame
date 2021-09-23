@@ -19,6 +19,7 @@ import {UserEntity} from "@app/user/user.entity";
 import {PrivateMessageDto} from "@app/chat/dto/privateMessage.dto";
 import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
 import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.filter";
+import {SanctionDto} from "@app/chat/dto/sanction.dto";
 
 @UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
@@ -27,12 +28,14 @@ import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.fil
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
+    userIdSocketIdMap: Map<number, string>;
 
     constructor(private readonly chatService: ChatService) {}
 
     private  logger: Logger = new Logger('ChatGateway');
 
     async afterInit(server: any): Promise<any> {
+        this.userIdSocketIdMap = new Map();
         this.logger.log('Chat Initialized');
         await this.chatService.createGeneralChannel();
     }
@@ -43,23 +46,36 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         const user = socket.handshake.headers.user;
 
+        this.userIdSocketIdMap.set(user["id"], socket.id);
+
         // @ts-ignore
         await this.chatService.addUserToChannelByName(user, 'general');
         socket.join('general');
         socket.emit('joined_channel', {"message": {"channel": "general"}});
 
-        // @ts-ignore
-        socket.join(user.id.toString());
-        // @ts-ignore
-        socket.emit('joined_channel', {"message": {"channel": user.id.toString()}});
+        socket.join(user["id"].toString());
+        socket.emit('joined_channel', {"message": {"channel": user["id"].toString()}});
 
         // @ts-ignore
         const channels = await this.chatService.getUserChannels(user);
-        channels.forEach(ch => socket.join(ch.name));
+
+        for (let ch of channels) {
+            console.log(ch);
+            // @ts-ignore
+            if (!await this.chatService.isBanned(user, ch)) {
+                socket.join(ch.name)
+            } else {
+                console.log(ch.name);
+            }
+        }
     }
 
 
-    handleDisconnect(client: any): any {
+    handleDisconnect(
+        @ConnectedSocket() socket: Socket
+    ) {
+        const user = socket.handshake.headers.user;
+        this.userIdSocketIdMap.delete(user["id"]);
     }
 
 
@@ -68,15 +84,18 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() receiveMessageDto: ReceiveMessageDto
     ) {
-        await this.chatService.isMuted(user, receiveMessageDto.channel);
-
-        this.server.to(receiveMessageDto.channel).emit('receive_message', {
-            "message": {
-                channel: receiveMessageDto.channel,
-                username: user.username,
-                message: receiveMessageDto.message
-            }
-        })
+        if (
+            await this.chatService.isInChannel(user, receiveMessageDto.channel) &&
+            !await this.chatService.isMuted(user, receiveMessageDto.channel)
+        ) {
+            this.server.to(receiveMessageDto.channel).emit('receive_message', {
+                "message": {
+                    channel: receiveMessageDto.channel,
+                    username: user.username,
+                    message: receiveMessageDto.message
+                }
+            })
+        }
     }
 
 
@@ -120,8 +139,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @MessageBody() leaveChannelDto: LeaveChannelDto
     ) {
         const message = await this.chatService.leaveChannel(user, leaveChannelDto);
-        socket.leave(leaveChannelDto.name);
         socket.to(leaveChannelDto.name).emit('left_channel', {message});
+        socket.leave(leaveChannelDto.name);
     }
 
 
@@ -137,5 +156,28 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
                 message: privateMessageDto.message
             }
         })
+    }
+
+
+    @SubscribeMessage('apply-sanction')
+    async applySanction(
+        @WSUser() user: UserEntity,
+        @MessageBody() sanctionDto: SanctionDto
+    ) {
+        const sanction = await this.chatService.applySanctionOnUser(user.id, sanctionDto);
+
+        this.server.to(sanction.target.id.toString()).emit('sanction', {
+            "sanction": {
+                type: sanction.type,
+                expiry: sanction.expiry_at,
+                created: sanction.create_at
+            }
+        });
+
+        if (sanction.type === "ban") {
+            const socketId = this.userIdSocketIdMap.get(sanction.target.id);
+            this.server.in(socketId).socketsLeave(sanctionDto.channel);
+            await this.chatService.removeUserFromChannel(sanction.target.id, sanctionDto.channel);
+        }
     }
 }
