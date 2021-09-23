@@ -1,9 +1,9 @@
-import {IsAlpha, IsDateString, IsIn, IsNotEmpty, IsNumber, IsString} from "class-validator";
+import {IsDateString, IsIn, IsNotEmpty, IsNumber, IsString, Matches} from "class-validator";
 
 export class SanctionDto {
     @IsNotEmpty()
     @IsString()
-    //@IsAlpha()
+    @Matches('(?!^\\d+$)^.+$')
     channel: string
 
     @IsNotEmpty()

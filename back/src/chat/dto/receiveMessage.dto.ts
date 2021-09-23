@@ -1,10 +1,9 @@
-import {IsAlpha, IsNotEmpty, IsString, Length} from "class-validator";
+import {IsNotEmpty, IsString, Length, Matches} from "class-validator";
 
 export class ReceiveMessageDto {
     @IsNotEmpty()
     @IsString()
-    //TODO: регулярное выражение
-    //@IsAlpha()
+    @Matches('(?!^\\d+$)^.+$')
     @Length(1, 1000)
     readonly channel: string
 

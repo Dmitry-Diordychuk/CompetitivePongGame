@@ -1,9 +1,9 @@
-import {IsAlpha, IsNotEmpty, IsOptional, IsString, Length} from "class-validator";
+import {IsNotEmpty, IsOptional, IsString, Length, Matches} from "class-validator";
 
 export class JoinChannelDto {
     @IsNotEmpty()
     @IsString()
-    //@IsAlpha()
+    @Matches('(?!^\\d+$)^.+$')
     @Length(1, 1000)
     readonly name: string;
 
