@@ -190,14 +190,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         if (this.usersOnlineId.find(uid => uid === +isUserOnlineDto.userId)) {
             this.server.emit('status', {
                 "info": {
-                    user_id: isUserOnlineDto.userId,
+                    userId: isUserOnlineDto.userId,
                     status: true
                 }
             });
         } else {
             this.server.emit('status', {
                 "info": {
-                    user_id: isUserOnlineDto.userId,
+                    userId: +isUserOnlineDto.userId,
                     status: false
                 }
             });
