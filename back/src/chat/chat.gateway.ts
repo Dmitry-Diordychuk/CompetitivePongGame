@@ -20,6 +20,7 @@ import {PrivateMessageDto} from "@app/chat/dto/privateMessage.dto";
 import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
 import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.filter";
 import {SanctionDto} from "@app/chat/dto/sanction.dto";
+import {IsUserOnlineDto} from "@app/chat/dto/isUserOnline.dto";
 
 @UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
@@ -29,6 +30,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @WebSocketServer()
     server: Server;
     userIdSocketIdMap: Map<number, string>;
+    usersOnlineId: number[];
 
     constructor(private readonly chatService: ChatService) {}
 
@@ -36,6 +38,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     async afterInit(server: any): Promise<any> {
         this.userIdSocketIdMap = new Map();
+        this.usersOnlineId = [];
         this.logger.log('Chat Initialized');
         await this.chatService.createGeneralChannel();
     }
@@ -47,6 +50,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         const user = socket.handshake.headers.user;
 
         this.userIdSocketIdMap.set(user["id"], socket.id);
+        this.usersOnlineId.push(user["id"]);
 
         // @ts-ignore
         await this.chatService.addUserToChannelByName(user, 'general');
@@ -60,12 +64,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         const channels = await this.chatService.getUserChannels(user);
 
         for (let ch of channels) {
-            console.log(ch);
             // @ts-ignore
             if (!await this.chatService.isBanned(user, ch)) {
                 socket.join(ch.name)
-            } else {
-                console.log(ch.name);
             }
         }
     }
@@ -76,6 +77,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         const user = socket.handshake.headers.user;
         this.userIdSocketIdMap.delete(user["id"]);
+        this.usersOnlineId = this.usersOnlineId.filter(uid => uid !== user["id"]);
     }
 
 
@@ -178,6 +180,27 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             const socketId = this.userIdSocketIdMap.get(sanction.target.id);
             this.server.in(socketId).socketsLeave(sanctionDto.channel);
             await this.chatService.removeUserFromChannel(sanction.target.id, sanctionDto.channel);
+        }
+    }
+
+    @SubscribeMessage('is-online')
+    async isUserOnline(
+        @MessageBody() isUserOnlineDto: IsUserOnlineDto
+    ) {
+        if (this.usersOnlineId.find(uid => uid === +isUserOnlineDto.userId)) {
+            this.server.emit('status', {
+                "info": {
+                    user_id: isUserOnlineDto.userId,
+                    status: true
+                }
+            });
+        } else {
+            this.server.emit('status', {
+                "info": {
+                    user_id: isUserOnlineDto.userId,
+                    status: false
+                }
+            });
         }
     }
 }

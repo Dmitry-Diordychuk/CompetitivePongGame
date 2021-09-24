@@ -319,7 +319,6 @@ export class ChatService {
         }
 
         const sanction = channel.sanctions.find(s => s.target.id === user.id);
-        // TODO: посмотреть удаляется ли sanction
         if (!sanction) {
             return false;
         }

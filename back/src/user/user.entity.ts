@@ -54,5 +54,4 @@ export class UserEntity {
 
     @OneToMany(() => SanctionEntity, sanction => sanction.target)
     sanctions: SanctionEntity[];
-    // TODO: Check user online or offline maybe not here.
 }
