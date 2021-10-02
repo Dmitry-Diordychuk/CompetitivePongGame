@@ -1,7 +1,7 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {UserEntity} from "@app/user/user.entity";
 import {sign, verify} from "jsonwebtoken";
-import {APP_REDIRECT, APP_SECRET, APP_UID, JWT_SECRET} from "@app/config";
+import {APP_REDIRECT, APP_SECRET, APP_UID, JWT_EXPIRATION_TIME, JWT_SECRET} from "@app/config";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {ChannelEntity} from "@app/chat/channel.entity";
@@ -54,7 +54,9 @@ export class UserService {
 
         const ftId = profile["id"];
 
-        const user = await this.getUserByFtId(ftId);
+        const user = await this.userRepository.findOne({
+            ftId: ftId
+        }, { relations: ["profile"], select: ["ftId"] });
 
         if (!user) {
             const username = profile["login"];
@@ -243,9 +245,8 @@ export class UserService {
 
         return user.blacklist;
     }
-
+    // TODO: Intra error 42
     buildUserResponse(user: UserEntity, isSecondFactorAuthenticated: boolean = false): UserResponseInterface {
-
         if (!user) {
             return;
         }
@@ -281,12 +282,6 @@ export class UserService {
         });
     }
 
-    async getUserByFtId(ftId: number): Promise<UserEntity> {
-        return await this.userRepository.findOne({
-            ftId: ftId
-        }, { relations: ["profile"] });
-    }
-
     async getChannelsByUserId(currentUserId): Promise<ChannelEntity[]> {
         const user = await this.userRepository.findOne({
             relations: ['connections'],
@@ -304,7 +299,8 @@ export class UserService {
         }
         return sign(
             payload,
-            JWT_SECRET
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRATION_TIME }
         );
     }
 
@@ -312,7 +308,8 @@ export class UserService {
         try {
             return verify(token, JWT_SECRET);
         }
-        catch {
+        catch (err) {
+            console.log(err);
             return null;
         }
     }
