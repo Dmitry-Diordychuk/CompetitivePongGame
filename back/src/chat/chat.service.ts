@@ -59,7 +59,7 @@ export class ChatService {
             throw new WsException("Channel " + createChannelDto.name + " exist!");
         }
 
-        const newChannel = new ChannelEntity();
+        let newChannel = new ChannelEntity();
         Object.assign(newChannel, createChannelDto);
         newChannel.owner = user;
 
@@ -67,12 +67,15 @@ export class ChatService {
         user.connections.push(newChannel);
 
         await this.userRepository.save(user);
-        await this.channelRepository.save(newChannel);
-        return {"channel": newChannel.name};
+        newChannel = await this.channelRepository.save(newChannel);
+        return {
+            "id": newChannel.id,
+            "channel": newChannel.name
+        };
     }
 
     async joinChannel(user: UserEntity, joinChannelDto: JoinChannelDto): Promise<any> {
-        const channel = await this.findChannelByName(joinChannelDto.name);
+        let channel = await this.findChannelByName(joinChannelDto.name);
 
         if (!channel) {
             throw new WsException("Channel doesn't exist");
@@ -92,9 +95,12 @@ export class ChatService {
         }
 
         channel.visitors.push(user);
-        await this.channelRepository.save(channel);
+        channel = await this.channelRepository.save(channel);
 
-        return {"channel": channel.name};
+        return {
+            "id": channel.id,
+            "channel": channel.name
+        };
     }
 
 
