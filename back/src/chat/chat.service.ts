@@ -220,11 +220,19 @@ export class ChatService {
 
     async getUserOpenChannels(user_id: number): Promise<ChannelsResponseInterface> {
         const channels = await this.userService.getChannelsByUserId(user_id);
-        const counter = channels.length;
-
         return {
             channels,
-            counter
+            counter: channels.length
+        };
+    }
+
+    async getAllPublicChannels(): Promise<ChannelsResponseInterface> {
+        const channels: ChannelEntity[] = await this.channelRepository.find({
+            password: null
+        });
+        return {
+            channels,
+            counter: channels.length
         };
     }
 

@@ -22,8 +22,13 @@ export class ChannelController {
         private readonly chatService: ChatService,
     ) {}
 
+    @Get('all/public')
+    async getAllPublicChannels(): Promise<ChannelsResponseInterface> {
+        return await this.chatService.getAllPublicChannels();
+    }
+
     @UseGuards(AuthGuard)
-    @Get('all')
+    @Get('all/current')
     async getUserChannels(
         @User('id') currentUserId: number,
     ): Promise<ChannelsResponseInterface> {
