@@ -44,27 +44,30 @@ export class UserService {
             }
         }
 
-        let profile = null;
+        let ftProfile = null;
         try {
             const profileResponse = await firstValueFrom(this.httpService.get('https://api.intra.42.fr/v2/me', config));
-            profile = profileResponse.data;
+            ftProfile = profileResponse.data;
         } catch (exception) {
             throw new HttpException("Unauthorized", 401);
         }
 
-        const ftId = profile["id"];
+        const ftId = ftProfile["id"];
 
-        const user = await this.userRepository.findOne({
+        let user = await this.userRepository.findOne({
             ftId: ftId
-        }, { relations: ["profile"], select: ["ftId"] });
+        });
 
         if (!user) {
-            const username = profile["login"];
-            const ftProfileUrl = profile["url"];
-            const img = profile["image_url"];
+            const username = ftProfile["login"];
+            const ftProfileUrl = ftProfile["url"];
+            const img = ftProfile["image_url"];
             return await this.register(ftId, username, img, ftProfileUrl);
         }
 
+        user = await this.userRepository.findOne({
+            ftId: ftId
+        }, { relations: ["profile"], select: ["ftId"] });
         return user;
     }
 
