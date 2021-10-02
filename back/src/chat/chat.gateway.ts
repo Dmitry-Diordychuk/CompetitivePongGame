@@ -121,7 +121,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         const message = await this.chatService.joinChannel(user, joinChannelDto);
         socket.join(joinChannelDto.name);
-        socket.to(joinChannelDto.name).emit('joined_channel', {message});
+        socket.emit('joined_channel', {message});
     }
 
 
