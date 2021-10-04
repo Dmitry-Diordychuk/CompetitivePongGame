@@ -7,4 +7,4 @@ import {GameGateway} from "@app/game/game.gateway";
     controllers: [],
     providers: [GameService, GameGateway],
 })
-export class ChatModule {}
+export class GameModule {}

@@ -25,7 +25,7 @@ import {IsUserOnlineDto} from "@app/chat/dto/isUserOnline.dto";
 @UseFilters(new WebSocketExceptionFilter())
 @UseGuards(WebSocketAuthGuard)
 @UsePipes(new ValidationPipe({}))
-@WebSocketGateway(3002)
+@WebSocketGateway(3002, { cors: true })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;

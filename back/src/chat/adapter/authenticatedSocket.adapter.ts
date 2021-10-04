@@ -23,7 +23,6 @@ export class AuthenticatedSocketAdapter extends IoAdapter {
     createIOServer(port: number, options?: any): any {
         options.allowRequest = async (request, allowFunction) => {
             const token = AuthenticatedSocketAdapter.getToken(request);
-
             if (!token) {
                 return allowFunction('Unauthorized', false);
             }
