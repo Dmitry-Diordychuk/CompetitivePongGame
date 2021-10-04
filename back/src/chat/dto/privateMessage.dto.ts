@@ -1,9 +1,9 @@
-import {IsNotEmpty, IsNumber, IsString} from "class-validator";
+import {IsNotEmpty, IsString} from "class-validator";
 
 export class PrivateMessageDto {
     @IsNotEmpty()
-    @IsNumber()
-    to: number
+    @IsString()
+    to: string
 
     @IsNotEmpty()
     @IsString()

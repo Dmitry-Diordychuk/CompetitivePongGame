@@ -285,6 +285,13 @@ export class UserService {
         });
     }
 
+    async getUserIdByUsername(username: string): Promise<number> {
+        const user = await this.userRepository.findOne({
+            username: username
+        });
+        return user.id;
+    }
+
     async getChannelsByUserId(currentUserId): Promise<ChannelEntity[]> {
         const user = await this.userRepository.findOne({
             relations: ['connections'],

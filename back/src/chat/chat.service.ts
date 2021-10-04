@@ -390,4 +390,8 @@ export class ChatService {
         channel.visitors = channel.visitors.filter(u => u.id !== targetUserId);
         return await this.channelRepository.save(channel);
     }
+
+    async getUserIdByUsername(username: string): Promise<number> {
+        return await this.userService.getUserIdByUsername(username);
+    }
 }
