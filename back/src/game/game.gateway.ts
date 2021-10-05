@@ -5,7 +5,7 @@ import {
     OnGatewayDisconnect,
     OnGatewayInit, SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer, WsException
+    WebSocketServer
 } from "@nestjs/websockets";
 import {Server} from "socket.io";
 import {GameService} from "@app/game/game.service";
@@ -36,9 +36,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     @SubscribeMessage('addUserInQueue')
     handleMatchmaking(
-        @WSUser() user
+        @WSUser() user,
+        @ConnectedSocket() socket
     ) {
-        this.matchmakingService.AddInQueue(user);
+        this.matchmakingService.AddInQueue(user, socket);
     }
 
     @SubscribeMessage('newGame')

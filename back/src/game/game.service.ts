@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {FRAME_RATE, GRID_SIZE, MAX_TIME_IN_QUEUE, POOL_POLL_INTERVAL} from "@app/game/constants";
+import {FRAME_RATE, GRID_SIZE} from "@app/game/constants";
 import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {BallInterface} from "@app/game/types/ball.interface";
 import {PlayerInterface} from "@app/game/types/player.interface";

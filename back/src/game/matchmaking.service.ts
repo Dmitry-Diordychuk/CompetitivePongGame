@@ -9,9 +9,12 @@ import {WsException} from "@nestjs/websockets";
 export class MatchmakingService {
     queue = [];
 
-    AddInQueue(user: UserEntity) {
+    AddInQueue(user: UserEntity, socket) {
         if (!this.queue.find(u => u.id === user.id)) {
-            user = Object.assign(user, {timeAddedInQueue: Date.now()})
+            user = Object.assign(user, {
+                timeAddedInQueue: Date.now(),
+                socket: socket,
+            });
             this.queue.push(user);
         } else {
             throw new WsException('User already in queue');
@@ -21,12 +24,6 @@ export class MatchmakingService {
     counter = 0
     @Interval(POOL_POLL_INTERVAL)
     matchmaking() {
-        console.log(this.counter++);
-        console.log('[');
-        for (const user of this.queue)
-            console.log('\t', user.username);
-        console.log(']');
-
         if (this.queue.length < 1) {
             return;
         }
@@ -38,7 +35,7 @@ export class MatchmakingService {
                     this.makeSession(userA, userB);
                     return;
                 } else if (Date.now() - userB.timeAddedInQueue > MAX_TIME_IN_QUEUE) {
-                    console.log(`${userB.username} didn't find a match`);
+                    userB.socket.emit("matchmakingFailed", "Didn't find a match");
                     this.queue = this.queue.filter(u => u.id != userB.id);
                     return;
                 }
@@ -48,15 +45,19 @@ export class MatchmakingService {
 
     isMatch(userA, userB): boolean {
         if (userA !== userB) {
-            if (Math.abs(userA.profile.level - userB.profile.level) < 2) {
-                return true;
-            }
-            return false;
+            return Math.abs(userA.profile.level - userB.profile.level) < 2;
         }
         return false;
     }
 
     makeSession(userA, userB) {
-        console.log(`${userA.username} matched with ${userB.username}`)
+        userA.socket.emit("matchmakingSuccess", {
+            roll: "create",
+            rival: userB.id
+        });
+        userB.socket.emit("matchmakingSuccess", {
+            roll: "join",
+            rival: userA.id
+        });
     }
 }
