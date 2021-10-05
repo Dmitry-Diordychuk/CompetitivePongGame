@@ -10,6 +10,7 @@ import {AchievementModule} from "@app/achievement/achievement.module";
 import {TwoFactorAuthenticationModule} from "@app/two_factor_authentication/twoFactorAuthentication.module";
 import {MatchModule} from "@app/match/match.module";
 import {GameModule} from "@app/game/game.module";
+import {ScheduleModule} from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import {GameModule} from "@app/game/game.module";
       AchievementModule,
       TwoFactorAuthenticationModule,
       MatchModule,
-      GameModule
+      GameModule,
+      ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService]

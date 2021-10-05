@@ -5,15 +5,20 @@ import {
     OnGatewayDisconnect,
     OnGatewayInit, SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer
+    WebSocketServer, WsException
 } from "@nestjs/websockets";
 import {Server} from "socket.io";
 import {GameService} from "@app/game/game.service";
 import {GameStateInterface} from "@app/game/types/gameState.interface";
+import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
+import {MatchmakingService} from "@app/game/matchmaking.service";
 
 @WebSocketGateway(3003, { cors: true })
 export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-    constructor(private readonly gameService: GameService) {}
+    constructor(
+        private readonly gameService: GameService,
+        private readonly matchmakingService: MatchmakingService,
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -27,6 +32,13 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
 
     handleDisconnect() {
+    }
+
+    @SubscribeMessage('addUserInQueue')
+    handleMatchmaking(
+        @WSUser() user
+    ) {
+        this.matchmakingService.AddInQueue(user);
     }
 
     @SubscribeMessage('newGame')
