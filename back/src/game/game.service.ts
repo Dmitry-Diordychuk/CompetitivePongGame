@@ -54,7 +54,7 @@ export class GameService {
                     y: 1,
                 }
             },
-            gridSize: 20,
+            gridSize: GRID_SIZE,
         }
     }
 
