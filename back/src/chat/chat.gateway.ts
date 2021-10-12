@@ -92,6 +92,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         ) {
             this.server.to(receiveMessageDto.channel).emit('receive_message', {
                 "message": {
+                    userId: user.id,
                     channel: receiveMessageDto.channel,
                     username: user.username,
                     message: receiveMessageDto.message
@@ -151,10 +152,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() privateMessageDto: PrivateMessageDto
     ) {
-        const userId = this.chatService.getUserIdByUsername(privateMessageDto.to);
+        const userId = await this.chatService.getUserIdByUsername(privateMessageDto.to);
+        console.log(userId.toString());
         this.server.to(userId.toString()).emit('receive_private_message', {
             "message": {
-                user_id: user.id,
+                userId: user.id,
                 username: user.username,
                 message: privateMessageDto.message
             }
