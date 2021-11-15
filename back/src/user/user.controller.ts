@@ -6,8 +6,8 @@ import {
     Param,
     ParseIntPipe,
     Put,
-    Query,
-    UseGuards,
+    Query, UploadedFile,
+    UseGuards, UseInterceptors,
     UsePipes,
     ValidationPipe
 } from '@nestjs/common';
@@ -17,6 +17,9 @@ import {UserResponseInterface} from "@app/user/types/userResponse.interface";
 import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 import {UsersResponseInterface} from "@app/user/types/usersResponse.interface";
+import {Express} from "express";
+import {FileInterceptor} from "@nestjs/platform-express";
+import {diskStorage} from 'multer';
 
 @Controller("api/user")
 export class UserController {
@@ -44,6 +47,24 @@ export class UserController {
     ): Promise<UserResponseInterface> {
         const user = await this.userService.updateCurrentUser(currentUserId, updateUserDto);
         return this.userService.buildUserResponse(user);
+    }
+
+    @UseGuards(AuthGuard)
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './uploadedFiles/avatars'
+        })
+    }))
+    @Put('avatar')
+    async uploadUserAvatar(
+        @User() currentUser,
+        @UploadedFile() file: Express.Multer.File
+    ) {
+        const updateUserDto = {
+            "username": currentUser.username,
+            "image": file.path,
+        }
+        return await this.userService.updateCurrentUser(currentUser.id, updateUserDto);
     }
 
     @UseGuards(AuthGuard)
