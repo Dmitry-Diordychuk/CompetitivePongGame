@@ -128,10 +128,12 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     @SubscribeMessage('update_channel')
     async handleUpdateChannel(
+        @ConnectedSocket() socket: Socket,
         @WSUser() user: UserEntity,
         @MessageBody() updateChannelDto: UpdateChannelDto
     ) {
-        await this.chatService.updateChannel(user, updateChannelDto);
+        const message = await this.chatService.updateChannel(user, updateChannelDto);
+        socket.emit('updated_channel', message);
     }
 
 
@@ -152,9 +154,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() privateMessageDto: PrivateMessageDto
     ) {
-        const userId = await this.chatService.getUserIdByUsername(privateMessageDto.to);
-        console.log(userId.toString());
-        this.server.to(userId.toString()).emit('receive_private_message', {
+        //const userId = await this.chatService.getUserIdByUsername(privateMessageDto.to);
+        this.server.to(privateMessageDto.to).emit('receive_private_message', {
             "message": {
                 userId: user.id,
                 username: user.username,
