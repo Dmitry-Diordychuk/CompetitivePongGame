@@ -14,7 +14,12 @@ export class WebSocketExceptionFilter extends BaseWsExceptionFilter {
             console.log(exception);
             exception = new WsException("Unknown exception type");
         } else {
-            const errors = [exception["message"]];
+            let errors;
+            if (exception["error"]["errors"]) {
+                errors = [exception["error"]["errors"]];
+            } else {
+                errors = [exception["error"]];
+            }
             exception = new WsException({errors});
         }
         super.catch(exception, host);
