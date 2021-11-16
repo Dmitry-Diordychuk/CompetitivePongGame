@@ -2,9 +2,13 @@ const BG_COLOUR = '#231f20';
 const RACKET_COLOUR = '#c2c2c2';
 const BALL_COLOUR = '#e66916';
 
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0SWQiOiIyIiwidXNlcm5hbWUiOiJCX3VzZXIifQ.diAuyuEuB90hgzH4A4gbcwk4GyQ45w7R3QF0UKMiXio
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk
+let token = prompt('Token', '');
 const socket = io('http://localhost:3003', {
     extraHeaders: {
-        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg"
+        Authorization: `Bearer ${token}`
     }
 });
 
@@ -15,16 +19,38 @@ socket.on('gameCode', handleGameCode);
 socket.on('unknownGame', handleUnknownGame);
 socket.on('tooManyPlayers', handleTooManyPlayers);
 
+socket.on('matchmaking-failed', handleMatchmakingFailed);
+socket.on('matchmaking-wait', handleMatchmakingWait);
+socket.on('matchmaking-success', handleMatchmakingSuccess);
+
+socket.on('wait-for-players-timer', handleWaitForPlayersTimer);
+
+socket.on('exception', handleException);
+
+socket.on('create', handleCreate);
+socket.on('join', handleJoin);
 
 const gameScreen = document.getElementById('gameScreen');
 const initialScreen = document.getElementById('initialScreen');
+
 const newGameBtn = document.getElementById('newGameButton');
 const joinGameBtn = document.getElementById('joinGameButton');
+const matchmakingButton = document.getElementById('matchmakingButton');
+const matchmakingCancelButton = document.getElementById('matchmakingCancelButton');
+const matchmakingAcceptButton = document.getElementById('matchmakingAcceptButton');
+
 const gameCodeInput = document.getElementById('gameCodeInput');
-const gameCodeDisplay = document.getElementById('gameCodeDisplay')
+const gameCodeDisplay = document.getElementById('gameCodeDisplay');
+
+const matchmakingTimer = document.getElementById('time');
+const alert_fail = document.getElementById('alert-fail');
+const alert_success = document.getElementById('alert-success');
 
 newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
+matchmakingButton.addEventListener('click', matchmaking);
+matchmakingCancelButton.addEventListener('click', cancel);
+matchmakingAcceptButton.addEventListener('click', acceptGame);
 
 function  newGame() {
     socket.emit('newGame');
@@ -89,7 +115,6 @@ function handleInit(number) {
 }
 
 function handleGameState(gameState) {
-    console.log(gameState);
     if (!gameActive) {
         return;
     }
@@ -133,4 +158,88 @@ function reset() {
     gameCodeDisplay.innerText = "";
     initialScreen.style.display = "block";
     gameScreen.style.display = "none";
+}
+
+function matchmakingView(isMatchmakingActive, timeStr) {
+    matchmakingButton.hidden = isMatchmakingActive;
+    matchmakingCancelButton.hidden = !isMatchmakingActive;
+    if (timeStr) {
+        matchmakingTimer.innerText = timeStr;
+    }
+}
+
+function matchmaking() {
+    alert_fail.hidden = true;
+    socket.emit('addUserInQueue');
+    matchmakingView(true, null);
+}
+
+function handleMatchmakingFailed() {
+    alert_fail.innerText = 'Matchmaking timeout! Try again';
+    alert_fail.hidden = false;
+    matchmakingView(false, "00:00");
+}
+
+function handleMatchmakingWait(time) {
+    time = Math.floor(time) / 1000;
+    let minutes = Math.trunc(time / 60);
+    let seconds = Math.trunc(time % 60);
+
+    let result = '';
+    if (minutes < 10) {
+        result += '0' + minutes.toString();
+    } else {
+        result += minutes.toString();
+    }
+    result += ':';
+    if (seconds < 10) {
+        result += '0' + seconds.toString();
+    } else {
+        result += seconds.toString();
+    }
+    matchmakingView(true, result);
+}
+
+function handleMatchmakingSuccess() {
+    console.log('SUCCESS');
+    alert_success.hidden = false;
+    alert_success.innerText = "Waiting for players: 10";
+    matchmakingView(true, null);
+    matchmakingAcceptButton.hidden = false;
+}
+
+function handleWaitForPlayersTimer(time) {
+    time = (10 - Math.floor(time / 1000));
+    alert_success.innerText = "Waiting for players: " + time;
+    if (time <= 0) {
+        alert_success.hidden = true;
+        alert_fail.hidden = false;
+        alert_fail.innerText = "Matchmaking failed!";
+        matchmakingView(false, '00:00');
+    }
+}
+
+function cancel() {
+    socket.emit('leaveQueue');
+    matchmakingView(false, '00:00');
+}
+
+function acceptGame() {
+    socket.emit('accept-game');
+}
+
+function handleException(exception) {
+    console.log(exception);
+}
+
+function handleCreate() {
+    alert_success.hidden = true;
+    alert_fail.hidden = true;
+    init();
+}
+
+function handleJoin() {
+    alert_success.hidden = true;
+    alert_fail.hidden = true;
+    init();
 }

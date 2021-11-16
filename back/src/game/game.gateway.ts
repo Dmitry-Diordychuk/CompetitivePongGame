@@ -12,7 +12,10 @@ import {GameService} from "@app/game/game.service";
 import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
 import {MatchmakingService} from "@app/game/matchmaking.service";
+import {UseGuards} from "@nestjs/common";
+import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 
+@UseGuards(WebSocketAuthGuard)
 @WebSocketGateway(3003, { cors: true })
 export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     constructor(
@@ -28,7 +31,11 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     afterInit() {
     }
 
-    handleConnection() {
+    handleConnection(
+        @ConnectedSocket() socket
+    ) {
+        const user = socket.handshake.headers.user;
+        this.matchmakingService.updateSocketIfUserInQueue(user, socket);
     }
 
     handleDisconnect() {
@@ -39,11 +46,74 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user,
         @ConnectedSocket() socket
     ) {
-        this.matchmakingService.AddInQueue(user, socket);
+        this.matchmakingService.addInQueue(user, socket);
     }
+
+    @SubscribeMessage('leaveQueue')
+    handleLeaveMatchmaking(
+        @WSUser() user
+    ) {
+        this.matchmakingService.leaveQueue(user);
+    }
+
+    @SubscribeMessage('accept-game')
+    handleAcceptGame(
+        @WSUser() user,
+        @ConnectedSocket() client,
+    ) {
+        const players = this.matchmakingService.acceptGame(user);
+        if (!players) {
+            return;
+        }
+
+        delete this.clientRooms[players.userA.socket.id]
+        delete this.clientRooms[players.userB.socket.id]
+        //UserA
+        let roomName = players.userA.id.toString() + players.userB.id.toString() + this.gameService.makeId(5);
+        this.clientRooms[players.userA.socket.id] = roomName;
+
+        players.userA.socket.emit('create', roomName);
+
+        this.gameService.initGame(roomName);
+
+        players.userA.socket.join(roomName);
+        players.userA.socket.number = 1;
+        players.userA.socket.emit('init', 1);
+
+        //UserB
+        this.clientRooms[players.userB.socket.id] = roomName;
+
+        players.userB.socket.emit('join', roomName)
+
+        players.userB.socket.join(roomName);
+        players.userB.socket.number = 2;
+        players.userB.socket.emit('init', 2);
+
+        this.gameService.startGameInterval(roomName,
+            (gameState: GameStateInterface) => {
+                this.server.sockets
+                    .in(roomName)
+                    .emit('gameState', JSON.stringify(gameState))
+            },
+            (winner: 1 | 2) => {
+                this.server.sockets
+                    .in(roomName)
+                    .emit('gameOver', JSON.stringify({winner}))
+            }
+        );
+    }
+
+    @SubscribeMessage('decline-game')
+    handleDeclineGame(
+        @WSUser() user
+    ) {
+        this.matchmakingService.declineGame(user);
+    }
+
 
     @SubscribeMessage('newGame')
     handleNewGame(
+        @WSUser() user,
         @ConnectedSocket() client
     ) {
         let roomName = this.gameService.makeId(5);
@@ -59,6 +129,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     @SubscribeMessage('joinGame')
     async handleJoinGame(
+        @WSUser() user,
         @ConnectedSocket() client,
         @MessageBody() roomName
     ) {
@@ -107,6 +178,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @MessageBody() keyCode
     ) {
         const roomName = this.clientRooms[client.id];
+        console.log(roomName)
 
         if (!roomName) {
             return;

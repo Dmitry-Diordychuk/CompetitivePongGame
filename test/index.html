@@ -14,8 +14,12 @@
 <body>
     <section class="vh-100">
         <div class="container h-100">
-
+            <div hidden="true" class="alert alert-danger" id="alert-fail" role="alert">
+            </div>
+            <div hidden="true" class="alert alert-success" id="alert-success" role="alert">
+            </div>
             <div id="initialScreen" class="h-100">
+
                 <div class="d-flex flex-column align-items-center justify-content-center h-100">
                     <h1>Pong</h1>
                     <button
@@ -35,6 +39,31 @@
                             id="joinGameButton"
                     >
                         Join Game
+                    </button>
+                    <div>OR</div>
+                    <div id="time">00:00</div>
+                    <button
+                            type="submit"
+                            class="btn btn-success"
+                            id="matchmakingButton"
+                    >
+                        Matchmaking
+                    </button>
+                    <button
+                            type="submit"
+                            class="btn btn-danger"
+                            id="matchmakingAcceptButton"
+                            hidden="true"
+                    >
+                        Accept
+                    </button>
+                    <button
+                            type="submit"
+                            class="btn btn-danger"
+                            id="matchmakingCancelButton"
+                            hidden="true"
+                    >
+                        Cancel
                     </button>
                 </div>
             </div>

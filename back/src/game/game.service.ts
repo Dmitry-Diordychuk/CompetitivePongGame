@@ -10,15 +10,15 @@ export class GameService {
 
     startGameInterval(roomName: string, emitStateFunc, emitGameOverFunc) {
         const intervalId = setInterval(() => {
-        const winner = this.gameLoop(this.state[roomName]);
+            const winner = this.gameLoop(this.state[roomName]);
 
-        if (!winner) {
-            emitStateFunc(this.state[roomName]);
-        } else {
-            this.state[roomName] = null;
-            clearInterval(intervalId);
-            emitGameOverFunc(winner);
-        }
+            if (!winner) {
+                emitStateFunc(this.state[roomName]);
+            } else {
+                this.state[roomName] = null;
+                clearInterval(intervalId);
+                emitGameOverFunc(winner);
+            }
         }, 1000 / FRAME_RATE)
         return;
     }
