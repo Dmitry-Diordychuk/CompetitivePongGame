@@ -319,7 +319,6 @@ export class UserService {
             return verify(token, JWT_SECRET);
         }
         catch (err) {
-            console.log(err);
             return null;
         }
     }
