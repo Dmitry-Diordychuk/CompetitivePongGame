@@ -27,7 +27,12 @@ export class AuthenticatedSocketAdapter extends IoAdapter {
                 return allowFunction('Unauthorized', false);
             }
 
-            const user = await this.chatService.getUserFromToken(token);
+            let user = null;
+            try {
+                user = await this.chatService.getUserFromToken(token);
+            } catch (err) {
+                return allowFunction('Unauthorized', false);
+            }
 
             if (!user) {
                 return allowFunction('Unauthorized', false);
