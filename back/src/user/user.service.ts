@@ -99,7 +99,7 @@ export class UserService {
     }
 
     async updateCurrentUser(currentUserId: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
-        const user = await this.userRepository.findOne(currentUserId, { relations: ["profile"] });
+        const user = await this.getUserById(currentUserId);
 
         if (!user) {
             throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);

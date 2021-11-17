@@ -66,8 +66,6 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             return;
         }
 
-        delete this.clientRooms[players.userA.socket.id]
-        delete this.clientRooms[players.userB.socket.id]
         //UserA
         let roomName = players.userA.id.toString() + players.userB.id.toString() + this.gameService.makeId(5);
         this.clientRooms[players.userA.socket.id] = roomName;
@@ -101,6 +99,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
                     .emit('gameOver', JSON.stringify({winner}))
             }
         );
+        delete this.clientRooms[players.userA.socket.id];
+        delete this.clientRooms[players.userB.socket.id];
     }
 
     @SubscribeMessage('decline-game')
@@ -169,6 +169,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
                     .emit('gameOver', JSON.stringify({winner}))
             }
         );
+
     }
 
 
