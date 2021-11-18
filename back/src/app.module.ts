@@ -11,6 +11,7 @@ import {TwoFactorAuthenticationModule} from "@app/two_factor_authentication/twoF
 import {MatchModule} from "@app/match/match.module";
 import {GameModule} from "@app/game/game.module";
 import {ScheduleModule} from "@nestjs/schedule";
+import {MatchmakingModule} from "@app/matchmaking/matchmaking.module";
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import {ScheduleModule} from "@nestjs/schedule";
       TwoFactorAuthenticationModule,
       MatchModule,
       GameModule,
-      ScheduleModule.forRoot(),
+      MatchmakingModule,
+      ScheduleModule.forRoot(), //TODO: убрать
   ],
   controllers: [AppController],
   providers: [AppService]

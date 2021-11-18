@@ -4,16 +4,16 @@ import {MAX_TIME_IN_QUEUE, POOL_POLL_INTERVAL, WAIT_FOR_PLAYERS_INTERVAL} from "
 import {Interval, SchedulerRegistry} from "@nestjs/schedule";
 import {UserEntity} from "@app/user/user.entity";
 import {WsException} from "@nestjs/websockets";
-import {GameClientInterface} from "@app/game/types/gameClient.interface";
-import {ClientPairInterface} from "@app/game/types/clientPair.interface";
+import {GameClientInterface} from "@app/matchmaking/types/gameClient.interface";
+import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {Socket} from "socket.io";
 
 @Injectable()
 export class MatchmakingService {
     constructor(private schedulerRegistry: SchedulerRegistry) {}
+
     queue: GameClientInterface[] = [];
     waitList: ClientPairInterface[] = [];
-
 
     addInQueue(user: UserEntity, socket) {
         if (!this.queue.find(client => client.user.id === user.id)) {
@@ -33,6 +33,7 @@ export class MatchmakingService {
     leaveQueue(user: UserEntity) {
         this.queue = this.queue.filter(client => client.user.id !== user.id);
     }
+
 
     createWaitForPlayersTimer(clientA: GameClientInterface, clientB: GameClientInterface): {
         IntervalFunctionName: string,
@@ -63,6 +64,7 @@ export class MatchmakingService {
         }
     }
 
+
     successMatchmakingHandle(clientA: GameClientInterface, clientB: GameClientInterface) {
         this.queue = this.queue.filter(client => client.user.id != clientA.user.id && client.user.id != clientB.user.id);
 
@@ -83,6 +85,7 @@ export class MatchmakingService {
         clientA.socket.emit('matchmaking-success');
         clientB.socket.emit('matchmaking-success');
     }
+
 
     @Interval(POOL_POLL_INTERVAL)
     loopMatchmaking() {
@@ -118,6 +121,7 @@ export class MatchmakingService {
         return false;
     }
 
+
     acceptGame(user): ClientPairInterface | null  {
         const pair: ClientPairInterface = this.waitList.find(pair => pair.clientA.user.id === user.id || pair.clientB.user.id === user.id);
         if (pair.clientA.user.id === user.id) {
@@ -134,6 +138,7 @@ export class MatchmakingService {
         return null;
     }
 
+
     removeFromWaitList(user): Socket {
         const pair: ClientPairInterface = this.waitList.find(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);
         this.waitList = this.waitList.filter(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);
@@ -143,6 +148,7 @@ export class MatchmakingService {
             return pair.clientA.socket;
         }
     }
+
 
     updateSocketIfUserInQueue(user, socket) {
         /*

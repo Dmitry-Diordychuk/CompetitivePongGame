@@ -103,7 +103,7 @@ function paintGame(state) {
     const size = canvas.width / gridSize;
 
     ctx.fillStyle = BALL_COLOUR;
-    ctx.fillRect(ball.pos.x * size, ball.pos.y * size, size, size);
+    ctx.fillRect(ball.position.x * size, ball.position.y * size, size, size);
 
     paintPlayer(state.players[0], size, RACKET_COLOUR);
     paintPlayer(state.players[1], size, RACKET_COLOUR);
@@ -113,7 +113,7 @@ function paintPlayer(playerState, size, colour) {
     ctx.fillStyle = colour
 
     for (let i = 0; i < playerState.size; i++) {
-        ctx.fillRect(playerState.pos.x * size, (playerState.pos.y + i) * size, size, size);
+        ctx.fillRect(playerState.position.x * size, (playerState.position.y + i) * size, size, size);
     }
 }
 

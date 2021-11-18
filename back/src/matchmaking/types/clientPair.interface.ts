@@ -1,4 +1,4 @@
-import {GameClientInterface} from "@app/game/types/gameClient.interface";
+import {GameClientInterface} from "@app/matchmaking/types/gameClient.interface";
 
 export class ClientPairInterface {
     clientA: GameClientInterface;

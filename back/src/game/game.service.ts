@@ -30,26 +30,26 @@ export class GameService {
     createGameState(): GameStateInterface {
         return {
             players: [{
-                pos: {
+                position: {
                     x: 1,
                     y: 5,
                 },
-                vel: 0,
+                velocity: 0,
                 size: 5,
             }, {
-                pos: {
+                position: {
                     x: 18,
                     y: 5,
                 },
-                vel: 0,
+                velocity: 0,
                 size: 5,
             }],
             ball: {
-                pos: {
+                position: {
                     x: 2,
                     y: 5,
                 },
-                vel: {
+                velocity: {
                     x: 1,
                     y: 1,
                 }
@@ -64,33 +64,33 @@ export class GameService {
         }
 
         const playerOne = state.players[0];
-        if (playerOne.pos.y + playerOne.vel >= 0 && playerOne.pos.y + playerOne.size + playerOne.vel <= GRID_SIZE) {
-            playerOne.pos.y += playerOne.vel;
-            playerOne.vel = 0;
+        if (playerOne.position.y + playerOne.velocity >= 0 && playerOne.position.y + playerOne.size + playerOne.velocity <= GRID_SIZE) {
+            playerOne.position.y += playerOne.velocity;
+            playerOne.velocity = 0;
         }
 
         const playerTwo = state.players[1];
-        if (playerTwo.pos.y + playerTwo.vel >= 0 && playerTwo.pos.y + playerTwo.size + playerTwo.vel <= GRID_SIZE) {
-            playerTwo.pos.y += playerTwo.vel;
-            playerTwo.vel = 0;
+        if (playerTwo.position.y + playerTwo.velocity >= 0 && playerTwo.position.y + playerTwo.size + playerTwo.velocity <= GRID_SIZE) {
+            playerTwo.position.y += playerTwo.velocity;
+            playerTwo.velocity = 0;
         }
 
         const ball = state.ball;
 
-        if (ball.pos.y + ball.vel.y < 0 || ball.pos.y + ball.vel.y > GRID_SIZE - 1) {
-            ball.vel.y *= -1;
+        if (ball.position.y + ball.velocity.y < 0 || ball.position.y + ball.velocity.y > GRID_SIZE - 1) {
+            ball.velocity.y *= -1;
         }
 
         if (this.isBallCollideWithRacket(ball, playerOne) || this.isBallCollideWithRacket(ball, playerTwo)) {
-            ball.vel.x *= -1;
+            ball.velocity.x *= -1;
         }
 
-        ball.pos.x += ball.vel.x;
-        ball.pos.y += ball.vel.y;
+        ball.position.x += ball.velocity.x;
+        ball.position.y += ball.velocity.y;
 
-        if (ball.pos.x < 0) {
+        if (ball.position.x < 0) {
             return 2;
-        } else if (ball.pos.x > GRID_SIZE) {
+        } else if (ball.position.x > GRID_SIZE) {
             return 1;
         }
         return false;
@@ -98,12 +98,12 @@ export class GameService {
 
     isBallCollideWithRacket(ball: BallInterface, racket: PlayerInterface): boolean {
         let ballNextPosition = {
-            x: ball.pos.x + ball.vel.x,
-            y: ball.pos.y + ball.vel.y,
+            x: ball.position.x + ball.velocity.x,
+            y: ball.position.y + ball.velocity.y,
         }
 
         for (let i = 0; i < racket.size; i++) {
-            if (ballNextPosition.x === racket.pos.x && ballNextPosition.y === racket.pos.y + i) {
+            if (ballNextPosition.x === racket.position.x && ballNextPosition.y === racket.position.y + i) {
                 return true;
             }
         }
@@ -122,7 +122,7 @@ export class GameService {
     }
 
     setPlayerVelocity(roomName: string, playerNumber: 2 | 1, velocity: number) {
-        this.state[roomName].players[playerNumber - 1].vel = velocity;
+        this.state[roomName].players[playerNumber - 1].velocity = velocity;
     }
 
     makeId(length: number): string {
