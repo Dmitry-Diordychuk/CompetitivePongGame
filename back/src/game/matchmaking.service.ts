@@ -4,135 +4,154 @@ import {MAX_TIME_IN_QUEUE, POOL_POLL_INTERVAL, WAIT_FOR_PLAYERS_INTERVAL} from "
 import {Interval, SchedulerRegistry} from "@nestjs/schedule";
 import {UserEntity} from "@app/user/user.entity";
 import {WsException} from "@nestjs/websockets";
+import {GameClientInterface} from "@app/game/types/gameClient.interface";
+import {ClientPairInterface} from "@app/game/types/clientPair.interface";
+import {Socket} from "socket.io";
 
 @Injectable()
 export class MatchmakingService {
     constructor(private schedulerRegistry: SchedulerRegistry) {}
-    queue = [];
-    waitList = [];
+    queue: GameClientInterface[] = [];
+    waitList: ClientPairInterface[] = [];
+
 
     addInQueue(user: UserEntity, socket) {
-        if (!this.queue.find(u => u.id === user.id)) {
-            const data = Object.assign(user, {
-                timeAddedInQueue: Date.now(),
+        if (!this.queue.find(client => client.user.id === user.id)) {
+            const gameClient: GameClientInterface = {
+                user: user,
+                queueEntryTime: Date.now(),
                 socket: socket,
-                isAccept: false,
-            });
-            this.queue.push(data);
+                isGameAccepted: false,
+            }
+            this.queue.push(gameClient);
         } else {
             throw new WsException('User already in queue');
         }
     }
 
+
     leaveQueue(user: UserEntity) {
-        if (this.queue.find(u => u.id === user.id)) {
-            this.queue = this.queue.filter(u => u.id !== user.id);
-        } else {
-            throw new WsException("User isn't in queue");
+        this.queue = this.queue.filter(client => client.user.id !== user.id);
+    }
+
+    createWaitForPlayersTimer(clientA: GameClientInterface, clientB: GameClientInterface): {
+        IntervalFunctionName: string,
+        TimeoutFunctionName: string
+    } {
+        const intervalFunctionName: string = `timer_${clientA.user.id}_${clientB.user.id}`;
+        const timeoutFunctionName: string = `wait_for_${clientA.user.id}_${clientB.user.id}`;
+
+        const startTime = Date.now()
+        const interval = setInterval(() => {
+            const time = Date.now() - startTime;
+            clientA.socket.emit('wait-for-players-timer', time);
+            clientB.socket.emit('wait-for-players-timer', time);
+        }, 1000)
+        this.schedulerRegistry.addInterval(intervalFunctionName, interval);
+
+        const timeout = setTimeout(() => {
+            this.schedulerRegistry.deleteTimeout(intervalFunctionName);
+            this.schedulerRegistry.deleteInterval(timeoutFunctionName);
+            clientA.socket.emit('wait-for-players-timer', 10000);
+            clientB.socket.emit('wait-for-players-timer', 10000);
+        }, WAIT_FOR_PLAYERS_INTERVAL);
+        this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
+
+        return {
+            IntervalFunctionName: intervalFunctionName,
+            TimeoutFunctionName: timeoutFunctionName,
         }
     }
 
+    successMatchmakingHandle(clientA: GameClientInterface, clientB: GameClientInterface) {
+        this.queue = this.queue.filter(client => client.user.id != clientA.user.id && client.user.id != clientB.user.id);
+
+        const functionsNames = this.createWaitForPlayersTimer(clientA, clientB);
+
+        this.waitList.push({
+            clientA: clientA,
+            clientB: clientB,
+            timeoutFunctionName: functionsNames.TimeoutFunctionName,
+            intervalFunctionName: functionsNames.IntervalFunctionName,
+        })
+
+        this.queue = this.queue.filter(
+            client => client.user.id !== clientA.user.id
+                && client.user.id !== clientB.user.id
+        );
+
+        clientA.socket.emit('matchmaking-success');
+        clientB.socket.emit('matchmaking-success');
+    }
 
     @Interval(POOL_POLL_INTERVAL)
-    matchmaking() {
+    loopMatchmaking() {
         if (this.queue.length < 1) {
             return;
         }
 
-        for (const userA of this.queue) {
+        for (const clientA of this.queue) {
             let timeSinceStart = 0;
-            for (const userB of this.queue) {
-                if (this.isMatch(userA, userB)) {
-                    this.queue = this.queue.filter(u => u.id != userA.id && u.id != userB.id);
-
-                    const timeout = setTimeout(() => {
-                        this.schedulerRegistry.deleteTimeout(`wait_for_${userA.id}_${userB.id}`);
-                        this.schedulerRegistry.deleteInterval(`timer_${userA.id}_${userB.id}`);
-                        userA.socket.emit('wait-for-players-timer', 10000);
-                        userB.socket.emit('wait-for-players-timer', 10000);
-                    }, WAIT_FOR_PLAYERS_INTERVAL);
-                    this.schedulerRegistry.addTimeout(`wait_for_${userA.id}_${userB.id}`, timeout);
-
-                    const startTime = Date.now()
-                    const interval = setInterval(() => {
-                        const time = Date.now() - startTime;
-                        userA.socket.emit('wait-for-players-timer', time);
-                        userB.socket.emit('wait-for-players-timer', time);
-                    }, 1000)
-                    this.schedulerRegistry.addInterval(`timer_${userA.id}_${userB.id}`, interval);
-
-                    this.waitList.push({
-                        userA: userA,
-                        userB: userB,
-                        timeout: `wait_for_${userA.id}_${userB.id}`,
-                        interval: `timer_${userA.id}_${userB.id}`,
-                    })
-
-                    this.queue = this.queue.filter(u => u.id !== userA && u.id !== userB.id);
-                    userA.socket.emit('matchmaking-success');
-                    userB.socket.emit('matchmaking-success');
-
+            for (const clientB of this.queue) {
+                if (this.isMatch(clientA, clientB)) {
+                    this.successMatchmakingHandle(clientA, clientB);
                     return;
                 }
-                timeSinceStart = Date.now() - userB.timeAddedInQueue;
+                timeSinceStart = Date.now() - clientB.queueEntryTime;
                 if (timeSinceStart > MAX_TIME_IN_QUEUE) {
-                    userB.socket.emit("matchmaking-failed", "Didn't find a match");
-                    this.queue = this.queue.filter(u => u.id != userB.id);
+                    clientB.socket.emit("matchmaking-failed", "Didn't find a match");
+                    this.queue = this.queue.filter(client => client.user.id != clientB.user.id);
                     return;
                 }
             }
-            userA.socket.emit("matchmaking-wait", timeSinceStart);
+            clientA.socket.emit("matchmaking-time", timeSinceStart);
         }
     }
 
-    isMatch(userA, userB): boolean {
-        if (userA !== userB) {
-            return Math.abs(userA.profile.level - userB.profile.level) < 2;
+    /*
+        How to match two players
+     */
+    isMatch(clientA: GameClientInterface, clientB: GameClientInterface): boolean {
+        if (clientA !== clientB) {
+            return Math.abs(clientA.user.profile.level - clientB.user.profile.level) < 2;
         }
         return false;
     }
 
-
-    updateSocketIfUserInQueue(user, socket) {
-        const data = this.queue.find(d => d.id === user.id);
-        if (!data) {
-            return;
+    acceptGame(user): ClientPairInterface | null  {
+        const pair: ClientPairInterface = this.waitList.find(pair => pair.clientA.user.id === user.id || pair.clientB.user.id === user.id);
+        if (pair.clientA.user.id === user.id) {
+            pair.clientA.isGameAccepted = true;
+        } else if (pair.clientB.user.id === user.id) {
+            pair.clientB.isGameAccepted = true;
         }
-        data.socket = socket;
-    }
-
-    acceptGame(user) {
-        const players = this.waitList.find(i => i.userA.id === user.id || i.userB.id === user.id);
-        if (players.userA.id === user.id) {
-            players.userA.isAccept = true;
-        } else if (players.userB.id === user.id) {
-            players.userB.isAccept = true;
-        }
-        if (players.userA.isAccept && players.userB.isAccept) {
-            this.schedulerRegistry.deleteTimeout(players.timeout);
-            this.schedulerRegistry.deleteInterval(players.interval);
-            this.waitList = this.waitList.filter(i => i !== players);
-            return {
-                userA: players.userA,
-                userB: players.userB,
-            }
+        if (pair.clientA.isGameAccepted && pair.clientB.isGameAccepted) {
+            this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
+            this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);
+            this.waitList = this.waitList.filter(i => i !== pair);
+            return pair;
         }
         return null;
     }
 
-    makeSession(userA, userB) {
-        userA.socket.emit("create", {
-            roll: "create",
-            rival: userB.id
-        });
-        userB.socket.emit("join", {
-            roll: "join",
-            rival: userA.id
-        });
+    removeFromWaitList(user): Socket {
+        const pair: ClientPairInterface = this.waitList.find(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);
+        this.waitList = this.waitList.filter(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);
+        if (pair.clientA.user === user) {
+            return pair.clientB.socket;
+        } else {
+            return pair.clientA.socket;
+        }
     }
 
-    // TODO: match decline
-    declineGame(user) {
-
+    updateSocketIfUserInQueue(user, socket) {
+        /*
+            Обновить сокет если пользователь перезашел.
+         */
+        const data = this.queue.find(client => client.user.id === user.id);
+        if (!data) {
+            return;
+        }
+        data.socket = socket;
     }
 }

@@ -5,7 +5,14 @@ const BALL_COLOUR = '#e66916';
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0SWQiOiIyIiwidXNlcm5hbWUiOiJCX3VzZXIifQ.diAuyuEuB90hgzH4A4gbcwk4GyQ45w7R3QF0UKMiXio
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk
-let token = prompt('Token', '');
+let token;// = prompt('Token', '');
+
+if (confirm('If user A press yes. If user B press no')) {
+    token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg';
+} else {
+    token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk';
+}
+
 const socket = io('http://localhost:3003', {
     extraHeaders: {
         Authorization: `Bearer ${token}`
@@ -20,7 +27,7 @@ socket.on('unknownGame', handleUnknownGame);
 socket.on('tooManyPlayers', handleTooManyPlayers);
 
 socket.on('matchmaking-failed', handleMatchmakingFailed);
-socket.on('matchmaking-wait', handleMatchmakingWait);
+socket.on('matchmaking-time', handleMatchmakingTime);
 socket.on('matchmaking-success', handleMatchmakingSuccess);
 
 socket.on('wait-for-players-timer', handleWaitForPlayersTimer);
@@ -180,7 +187,7 @@ function handleMatchmakingFailed() {
     matchmakingView(false, "00:00");
 }
 
-function handleMatchmakingWait(time) {
+function handleMatchmakingTime(time) {
     time = Math.floor(time) / 1000;
     let minutes = Math.trunc(time / 60);
     let seconds = Math.trunc(time % 60);
