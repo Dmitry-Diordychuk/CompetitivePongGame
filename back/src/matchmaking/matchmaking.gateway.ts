@@ -42,7 +42,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     handleDisconnect() {
     }
 
-    @SubscribeMessage('addUserInQueue')
+    @SubscribeMessage('matchmaking-add-in-queue')
     handleMatchmaking(
         @WSUser() user: UserEntity,
         @ConnectedSocket() socket: Socket
@@ -50,14 +50,23 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         this.matchmakingService.addInQueue(user, socket);
     }
 
-    @SubscribeMessage('leaveQueue')
+    @SubscribeMessage('matchmaking-leave-queue')
     handleLeaveMatchmaking(
         @WSUser() user: UserEntity
     ) {
         this.matchmakingService.leaveQueue(user);
     }
 
-    @SubscribeMessage('accept-game')
+
+    initClient(socket, roomName, playerNumber) {
+        this.clientInfoService.setClientRoom(socket.id, roomName);
+        this.clientInfoService.setClientPlayerNumber(socket.id, playerNumber);
+        socket.join(roomName);
+        socket.emit('game-init', playerNumber);
+    }
+
+
+    @SubscribeMessage('matchmaking-accept-game')
     handleAcceptGame(
         @WSUser() user: UserEntity,
     ) {
@@ -66,43 +75,31 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             return;
         }
 
-        //UserA
         let roomName = pair.clientA.user.id.toString() + pair.clientB.user.id.toString() + this.gameService.makeId(5);
-        this.clientInfoService.setClientRoom(pair.clientA.socket.id, roomName);
-
-        pair.clientA.socket.emit('create', roomName);
-
         this.gameService.initGame(roomName);
 
-        pair.clientA.socket.join(roomName);
-        this.clientInfoService.setClientPlayerNumber(pair.clientA.socket.id, 1);
-        pair.clientA.socket.emit('init', 1);
+        pair.clientA.socket.emit(`matchmaking-create`, roomName);
+        this.initClient(pair.clientA.socket, roomName, 1);
 
-        //UserB
-        this.clientInfoService.setClientRoom(pair.clientB.socket.id, roomName);
-
-        pair.clientB.socket.emit('join', roomName)
-
-        pair.clientB.socket.join(roomName);
-        this.clientInfoService.setClientPlayerNumber(pair.clientB.socket.id, 2);
-        pair.clientB.socket.emit('init', 2);
+        pair.clientB.socket.emit(`matchmaking-join`, roomName);
+        this.initClient(pair.clientB.socket, roomName, 2);
 
         this.gameService.startGameInterval(roomName,
             (gameState: GameStateInterface) => {
                 this.server.sockets
                     .in(roomName)
-                    .emit('gameState', JSON.stringify(gameState))
+                    .emit('game-state', JSON.stringify(gameState))
             },
             (winner: 1 | 2) => {
                 this.server.sockets
                     .in(roomName)
-                    .emit('gameOver', JSON.stringify({winner}))
+                    .emit('game-over', JSON.stringify({winner}))
             }
         );
     }
 
     // TODO: доделать
-    @SubscribeMessage('decline-game')
+    @SubscribeMessage('matchmaking-decline-game')
     handleDeclineGame(
         @WSUser() user: UserEntity,
         @ConnectedSocket() client: Socket
@@ -113,27 +110,23 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     }
 
     // TODO: Убарать после тестирования все что ниже
-    @SubscribeMessage('newGame')
+    @SubscribeMessage('new-game')
     handleNewGame(
         @WSUser() user,
         @ConnectedSocket() client
     ) {
         let roomName = this.gameService.makeId(5);
-        this.clientInfoService.setClientRoom(client.id, roomName);
-        client.emit('gameCode', roomName);
-
+        client.emit('game-code', roomName);
         this.gameService.initGame(roomName);
 
-        client.join(roomName);
-        this.clientInfoService.setClientPlayerNumber(client.id, 1);
-        client.emit('init', 1);
+        this.initClient(client, roomName, 1);
     }
 
-    @SubscribeMessage('joinGame')
+    @SubscribeMessage('join-game')
     async handleJoinGame(
-        @WSUser() user,
-        @ConnectedSocket() client,
-        @MessageBody() roomName
+        @WSUser() user: UserEntity,
+        @ConnectedSocket() client: Socket,
+        @MessageBody() roomName: string
     ) {
         let allUsers;
         if (this.server.sockets.adapter.rooms.has(roomName)) {
@@ -146,31 +139,26 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         }
 
         if (numClients === 0) {
-            client.emit('unknownGame');
+            client.emit('exception', 'Unknown game code');
             return;
         } else if (numClients > 1) {
-            client.emit('tooManyPlayers');
+            client.emit('exception', 'This game is already in progress');
             return;
         }
 
-        this.clientInfoService.setClientRoom(client.id, roomName);
-
-        client.join(roomName);
-        this.clientInfoService.setClientPlayerNumber(client.id, 2);
-        client.emit('init', 2);
+        this.initClient(client, roomName, 2);
 
         this.gameService.startGameInterval(roomName,
             (gameState: GameStateInterface) => {
                 this.server.sockets
                     .in(roomName)
-                    .emit('gameState', JSON.stringify(gameState))
+                    .emit('game-state', JSON.stringify(gameState))
             },
             (winner: 1 | 2) => {
                 this.server.sockets
                     .in(roomName)
-                    .emit('gameOver', JSON.stringify({winner}))
+                    .emit('game-over', JSON.stringify({winner}))
             }
         );
-
     }
 }

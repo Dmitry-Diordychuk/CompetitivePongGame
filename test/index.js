@@ -19,39 +19,34 @@ const socket = io('http://localhost:3003', {
     }
 });
 
-socket.on('init', handleInit);
-socket.on('gameState', handleGameState);
-socket.on('gameOver', handleGameOver);
-socket.on('gameCode', handleGameCode);
-socket.on('unknownGame', handleUnknownGame);
-socket.on('tooManyPlayers', handleTooManyPlayers);
+socket.on('game-init', handleInit);
+socket.on('game-state', handleGameState);
+socket.on('game-over', handleGameOver);
+socket.on('game-code', handleGameCode);
 
-socket.on('matchmaking-failed', handleMatchmakingFailed);
 socket.on('matchmaking-time', handleMatchmakingTime);
 socket.on('matchmaking-success', handleMatchmakingSuccess);
-
-socket.on('wait-for-players-timer', handleWaitForPlayersTimer);
+socket.on('matchmaking-failed', handleMatchmakingFailed);
+socket.on('matchmaking-wait-for-players', handleWaitForPlayersTimer);
+socket.on('matchmaking-create', handleCreate);
+socket.on('matchmaking-join', handleJoin);
 
 socket.on('exception', handleException);
 
-socket.on('create', handleCreate);
-socket.on('join', handleJoin);
 
 const gameScreen = document.getElementById('gameScreen');
 const initialScreen = document.getElementById('initialScreen');
-
 const newGameBtn = document.getElementById('newGameButton');
 const joinGameBtn = document.getElementById('joinGameButton');
-const matchmakingButton = document.getElementById('matchmakingButton');
-const matchmakingCancelButton = document.getElementById('matchmakingCancelButton');
-const matchmakingAcceptButton = document.getElementById('matchmakingAcceptButton');
-
 const gameCodeInput = document.getElementById('gameCodeInput');
 const gameCodeDisplay = document.getElementById('gameCodeDisplay');
 
-const matchmakingTimer = document.getElementById('time');
-const alert_fail = document.getElementById('alert-fail');
-const alert_success = document.getElementById('alert-success');
+const matchmakingButton = document.getElementById('matchmakingButton');
+const matchmakingCancelButton = document.getElementById('matchmakingCancelButton');
+const matchmakingAcceptButton = document.getElementById('matchmakingAcceptButton');
+const matchmakingTimer = document.getElementById('matchmakingTime');
+const alert_fail = document.getElementById('matchmakingAlertFail');
+const alert_success = document.getElementById('matchmakingAlertSuccess');
 
 newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
@@ -60,13 +55,13 @@ matchmakingCancelButton.addEventListener('click', cancel);
 matchmakingAcceptButton.addEventListener('click', acceptGame);
 
 function  newGame() {
-    socket.emit('newGame');
+    socket.emit('new-game');
     init();
 }
 
 function joinGame() {
     const code = gameCodeInput.value;
-    socket.emit('joinGame', code);
+    socket.emit('join-game', code);
     init();
 }
 
@@ -149,14 +144,9 @@ function handleGameCode(gameCode) {
     gameCodeDisplay.innerText = gameCode;
 }
 
-function handleUnknownGame() {
+function handleException(error) {
     reset();
-    alert('Unknown game code')
-}
-
-function handleTooManyPlayers() {
-    reset();
-    alert('This game is already in progress');
+    alert(error);
 }
 
 function reset() {
@@ -177,7 +167,7 @@ function matchmakingView(isMatchmakingActive, timeStr) {
 
 function matchmaking() {
     alert_fail.hidden = true;
-    socket.emit('addUserInQueue');
+    socket.emit('matchmaking-add-in-queue');
     matchmakingView(true, null);
 }
 
@@ -227,16 +217,12 @@ function handleWaitForPlayersTimer(time) {
 }
 
 function cancel() {
-    socket.emit('leaveQueue');
+    socket.emit('matchmaking-leave-queue');
     matchmakingView(false, '00:00');
 }
 
 function acceptGame() {
-    socket.emit('accept-game');
-}
-
-function handleException(exception) {
-    console.log(exception);
+    socket.emit('matchmaking-accept-game');
 }
 
 function handleCreate() {

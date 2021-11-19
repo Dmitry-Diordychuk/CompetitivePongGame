@@ -10,7 +10,6 @@ import {AchievementModule} from "@app/achievement/achievement.module";
 import {TwoFactorAuthenticationModule} from "@app/two_factor_authentication/twoFactorAuthentication.module";
 import {MatchModule} from "@app/match/match.module";
 import {GameModule} from "@app/game/game.module";
-import {ScheduleModule} from "@nestjs/schedule";
 import {MatchmakingModule} from "@app/matchmaking/matchmaking.module";
 
 @Module({
@@ -24,7 +23,6 @@ import {MatchmakingModule} from "@app/matchmaking/matchmaking.module";
       MatchModule,
       GameModule,
       MatchmakingModule,
-      ScheduleModule.forRoot(), //TODO: убрать
   ],
   controllers: [AppController],
   providers: [AppService]

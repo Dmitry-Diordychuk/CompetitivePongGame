@@ -1,6 +1,6 @@
 import {PositionInterface} from "@app/game/types/position.interface";
 
-export class PlayerInterface {
+export class PlayerRacketInterface {
     position: PositionInterface;
     velocity: number;
     size: number;

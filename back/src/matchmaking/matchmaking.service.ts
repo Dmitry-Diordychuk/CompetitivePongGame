@@ -45,16 +45,16 @@ export class MatchmakingService {
         const startTime = Date.now()
         const interval = setInterval(() => {
             const time = Date.now() - startTime;
-            clientA.socket.emit('wait-for-players-timer', time);
-            clientB.socket.emit('wait-for-players-timer', time);
+            clientA.socket.emit('matchmaking-wait-for-players', time);
+            clientB.socket.emit('matchmaking-wait-for-players', time);
         }, 1000)
         this.schedulerRegistry.addInterval(intervalFunctionName, interval);
 
         const timeout = setTimeout(() => {
             this.schedulerRegistry.deleteTimeout(intervalFunctionName);
             this.schedulerRegistry.deleteInterval(timeoutFunctionName);
-            clientA.socket.emit('wait-for-players-timer', 10000);
-            clientB.socket.emit('wait-for-players-timer', 10000);
+            clientA.socket.emit('matchmaking-wait-for-players', 10000);
+            clientB.socket.emit('matchmaking-wait-for-players', 10000);
         }, WAIT_FOR_PLAYERS_INTERVAL);
         this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
 

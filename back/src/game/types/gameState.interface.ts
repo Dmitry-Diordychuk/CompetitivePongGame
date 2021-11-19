@@ -1,8 +1,8 @@
-import {PlayerInterface} from "@app/game/types/player.interface";
+import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {BallInterface} from "@app/game/types/ball.interface";
 
 export class GameStateInterface {
-    players: PlayerInterface[];
+    players: PlayerRacketInterface[];
     ball: BallInterface;
     gridSize: number;
 }

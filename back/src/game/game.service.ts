@@ -2,7 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {FRAME_RATE, GRID_SIZE} from "@app/game/constants";
 import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {BallInterface} from "@app/game/types/ball.interface";
-import {PlayerInterface} from "@app/game/types/player.interface";
+import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 
 @Injectable()
 export class GameService {
@@ -24,10 +24,10 @@ export class GameService {
     }
 
     initGame(roomName: string) {
-        this.state[roomName] = this.createGameState();
+        this.state[roomName] = this.createInitialGameState();
     }
 
-    createGameState(): GameStateInterface {
+    createInitialGameState(): GameStateInterface {
         return {
             players: [{
                 position: {
@@ -96,7 +96,7 @@ export class GameService {
         return false;
     }
 
-    isBallCollideWithRacket(ball: BallInterface, racket: PlayerInterface): boolean {
+    isBallCollideWithRacket(ball: BallInterface, racket: PlayerRacketInterface): boolean {
         let ballNextPosition = {
             x: ball.position.x + ball.velocity.x,
             y: ball.position.y + ball.velocity.y,
