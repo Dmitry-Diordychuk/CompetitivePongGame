@@ -35,6 +35,7 @@ export class UserService {
             const tokenResponse = await firstValueFrom(this.httpService.post('https://api.intra.42.fr/oauth/token', data));
             token = tokenResponse.data["access_token"];
         } catch (exception) {
+            console.log(exception)
             throw new HttpException("Unauthorized", 401);
         }
 
@@ -65,9 +66,16 @@ export class UserService {
             return await this.register(ftId, username, img, ftProfileUrl);
         }
 
-        user = await this.userRepository.findOne({
-            ftId: ftId
-        }, { relations: ["profile"], select: ["ftId"] });
+        user = await this.userRepository.findOne(user.id, {
+            join: {
+                alias: "user",
+                leftJoinAndSelect: {
+                    profile: "user.profile",
+                }
+            },
+            select: ['username', 'ftId', 'isTwoFactorAuthenticationEnable'],
+        })
+
         return user;
     }
 
@@ -84,7 +92,6 @@ export class UserService {
         newProfile.victories = 0;
 
         newUser.profile = newProfile;
-
         return await this.userRepository.save(newUser);
     }
 
