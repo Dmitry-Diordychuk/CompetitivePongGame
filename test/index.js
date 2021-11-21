@@ -19,10 +19,10 @@ const socket = io('http://localhost:3003', {
     }
 });
 
+socket.on('game-code', handleGameCode);
 socket.on('game-init', handleInit);
 socket.on('game-state', handleGameState);
 socket.on('game-over', handleGameOver);
-socket.on('game-code', handleGameCode);
 
 socket.on('matchmaking-time', handleMatchmakingTime);
 socket.on('matchmaking-success', handleMatchmakingSuccess);

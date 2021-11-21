@@ -105,8 +105,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         @ConnectedSocket() client: Socket
     ) {
         const anotherClient = this.matchmakingService.removeFromWaitList(user);
-        anotherClient.emit('matchmaking-restart')
         client.emit('matchmaking-declined');
+        anotherClient.emit('matchmaking-restart')
     }
 
     // TODO: Убарать после тестирования все что ниже
