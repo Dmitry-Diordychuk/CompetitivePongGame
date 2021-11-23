@@ -78,10 +78,10 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         let roomName = pair.clientA.user.id.toString() + pair.clientB.user.id.toString() + this.gameService.makeId(5);
         this.gameService.initGame(roomName);
 
-        pair.clientA.socket.emit(`matchmaking-create`, roomName);
+        pair.clientA.socket.emit(`matchmaking-init`, roomName);
         this.initClient(pair.clientA.socket, roomName, 1);
 
-        pair.clientB.socket.emit(`matchmaking-join`, roomName);
+        pair.clientB.socket.emit(`matchmaking-init`, roomName);
         this.initClient(pair.clientB.socket, roomName, 2);
 
         this.gameService.startGameInterval(roomName,
@@ -107,6 +107,15 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         const anotherClient = this.matchmakingService.removeFromWaitList(user);
         client.emit('matchmaking-declined');
         anotherClient.emit('matchmaking-restart')
+    }
+
+    @SubscribeMessage('spectate-game')
+    async handleSpectateGame(
+        @WSUser() user: UserEntity,
+        @ConnectedSocket() client: Socket,
+        @MessageBody() roomName: string
+    ) {
+        this.initClient(client, roomName, 0);
     }
 
     // TODO: Убарать после тестирования все что ниже

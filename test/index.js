@@ -5,11 +5,13 @@ const BALL_COLOUR = '#e66916';
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0SWQiOiIyIiwidXNlcm5hbWUiOiJCX3VzZXIifQ.diAuyuEuB90hgzH4A4gbcwk4GyQ45w7R3QF0UKMiXio
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk
-let token;// = prompt('Token', '');
+let token = prompt('Token', '');
 
-if (confirm('If user A press yes. If user B press no')) {
+if (token === 'A') {
     token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg';
-} else {
+} else if (token === 'B') {
+    token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0SWQiOiIyIiwidXNlcm5hbWUiOiJCX3VzZXIifQ.diAuyuEuB90hgzH4A4gbcwk4GyQ45w7R3QF0UKMiXio';
+} else if (token === 'C') {
     token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk';
 }
 
@@ -28,8 +30,7 @@ socket.on('matchmaking-time', handleMatchmakingTime);
 socket.on('matchmaking-success', handleMatchmakingSuccess);
 socket.on('matchmaking-failed', handleMatchmakingFailed);
 socket.on('matchmaking-wait-for-players', handleWaitForPlayersTimer);
-socket.on('matchmaking-create', handleCreate);
-socket.on('matchmaking-join', handleJoin);
+socket.on('matchmaking-init', init);
 
 socket.on('exception', handleException);
 
@@ -48,11 +49,15 @@ const matchmakingTimer = document.getElementById('matchmakingTime');
 const alert_fail = document.getElementById('matchmakingAlertFail');
 const alert_success = document.getElementById('matchmakingAlertSuccess');
 
+const spectateButton = document.getElementById('spectateGameButton');
+const spectateCodeInput = document.getElementById('spectateCodeInput');
+
 newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
 matchmakingButton.addEventListener('click', matchmaking);
 matchmakingCancelButton.addEventListener('click', cancel);
 matchmakingAcceptButton.addEventListener('click', acceptGame);
+spectateButton.addEventListener('click', spectateGame);
 
 function  newGame() {
     socket.emit('new-game');
@@ -70,6 +75,9 @@ let playerNumber;
 let gameActive = false;
 
 function init() {
+    alert_success.hidden = true; // добавил
+    alert_fail.hidden = true; //
+
     initialScreen.style.display = "none";
     gameScreen.style.display = "block";
 
@@ -132,10 +140,14 @@ function handleGameOver(data) {
 
     data = JSON.parse(data);
 
-    if (data.winner === playerNumber) {
-        alert('You win!');
+    if (playerNumber === 1 || playerNumber === 2) {
+        if (data.winner === playerNumber) {
+            alert('You win!');
+        } else {
+            alert('You lose.');
+        }
     } else {
-        alert('You lose.');
+        alert('Player ' + data.winner + ' win!');
     }
     gameActive = false;
 }
@@ -156,6 +168,10 @@ function reset() {
     initialScreen.style.display = "block";
     gameScreen.style.display = "none";
 }
+
+
+//////////////////////////////Matchmaking///////////////////////////////////////////////////////////////////////////////
+
 
 function matchmakingView(isMatchmakingActive, timeStr) {
     matchmakingButton.hidden = isMatchmakingActive;
@@ -225,14 +241,25 @@ function acceptGame() {
     socket.emit('matchmaking-accept-game');
 }
 
-function handleCreate() {
-    alert_success.hidden = true;
-    alert_fail.hidden = true;
-    init();
+//////////////////////////////SPECTATE//////////////////////////////////////////////////////////////////////////////////
+
+function spectateGame() {
+    const code = spectateCodeInput.value;
+    socket.emit('spectate-game', code);
+    initSpectate();
 }
 
-function handleJoin() {
-    alert_success.hidden = true;
-    alert_fail.hidden = true;
-    init();
+function initSpectate() {
+    initialScreen.style.display = "none";
+    gameScreen.style.display = "block";
+
+    canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+
+    canvas.width = canvas.height = 600;
+
+    ctx.fillStyle = BG_COLOUR;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    gameActive = true;
 }
