@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Param, Put, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
+import {Body, Controller, Delete, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
 import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {User} from "@app/user/decorators/user.decorator";
 import {MatchService} from "@app/match/match.service";
@@ -14,16 +14,15 @@ export class MatchController {
 
     @UsePipes(new ValidationPipe)
     @UseGuards(AuthGuard)
-    @Put('/:id/comment')
+    @Put('/comment')
     async addComment(
-        @Param('id') matchId: number,
         @User('id') userId: number,
         @Body('message') addCommentDto: AddCommentDto,
     ): Promise<MatchEntity> {
-        return await this.matchService.addComment(matchId, userId, addCommentDto.message);
+        return await this.matchService.addComment(addCommentDto.matchId, userId, addCommentDto.message);
     }
 
-    @UsePipes(new ValidationPipe)
+    @UsePipes(new ParseIntPipe())
     @UseGuards(AuthGuard)
     @Delete('/:id/comment/:comment_id')
     async deleteComment(
