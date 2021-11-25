@@ -7,7 +7,6 @@ import {ChannelEntity} from "@app/chat/channel.entity";
 import {SecondFactorAuthMiddleware} from "@app/user/middleware/secondFactorAuth.middleware";
 import {HttpModule} from "@nestjs/axios";
 import {AuthMiddleware} from "@app/user/middleware/auth.middleware";
-import {SanctionEntity} from "@app/sanction/sanction.entity";
 
 @Module({
     imports: [TypeOrmModule.forFeature([UserEntity, ChannelEntity]), HttpModule],

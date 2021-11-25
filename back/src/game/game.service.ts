@@ -3,21 +3,23 @@ import {FRAME_RATE, GRID_SIZE} from "@app/game/constants";
 import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {BallInterface} from "@app/game/types/ball.interface";
 import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
+import {Server} from "socket.io";
 
 @Injectable()
 export class GameService {
     state = {};
 
-    startGameInterval(roomName: string, emitStateFunc, emitGameOverFunc) {
+    startGameInterval(server: Server, roomName: string, resultFunc) {
         const intervalId = setInterval(() => {
             const winner = this.gameLoop(this.state[roomName]);
 
             if (!winner) {
-                emitStateFunc(this.state[roomName]);
+                server.sockets.in(roomName).emit('game-state', JSON.stringify(this.state[roomName]));
             } else {
                 this.state[roomName] = null;
                 clearInterval(intervalId);
-                emitGameOverFunc(winner);
+                server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
+                resultFunc(winner);
             }
         }, 1000 / FRAME_RATE)
         return;

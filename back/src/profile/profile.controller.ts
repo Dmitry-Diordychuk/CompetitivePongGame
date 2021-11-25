@@ -1,4 +1,4 @@
-import {Controller, Get, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
+import {Controller, Get, Param, ParseIntPipe, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
 import {ProfileService} from "@app/profile/profile.service";
 import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {User} from "@app/user/decorators/user.decorator";
@@ -23,12 +23,5 @@ export class ProfileController {
     async getProfile(@Param('id') profile_id: number): Promise<ProfileResponseInterface> {
         const user = await this.profileService.getUserWithProfileById(profile_id);
         return this.profileService.buildProfileResponse(user);
-    }
-
-    // TODO: Add match.
-    // TODO: Add comment
-    @Put('/matches')
-    async addMatch() {
-
     }
 }

@@ -9,8 +9,6 @@ import {
 } from "@nestjs/websockets";
 import {Server} from "socket.io";
 import {GameService} from "@app/game/game.service";
-import {GameStateInterface} from "@app/game/types/gameState.interface";
-import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
 import {UseGuards} from "@nestjs/common";
 import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";

@@ -14,8 +14,9 @@ import {Server, Socket} from "socket.io";
 import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
 import {UserEntity} from "@app/user/user.entity";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
-import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
+import {ProfileService} from "@app/profile/profile.service";
+
 
 @UseGuards(WebSocketAuthGuard)
 @WebSocketGateway(3003, { cors: true })
@@ -24,6 +25,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         private readonly gameService: GameService,
         private readonly matchmakingService: MatchmakingService,
         private readonly clientInfoService: ClientInfoService,
+        private readonly profileService: ProfileService,
     ) {}
 
     @WebSocketServer()
@@ -84,18 +86,13 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         pair.clientB.socket.emit(`matchmaking-init`, roomName);
         this.initClient(pair.clientB.socket, roomName, 2);
 
-        this.gameService.startGameInterval(roomName,
-            (gameState: GameStateInterface) => {
-                this.server.sockets
-                    .in(roomName)
-                    .emit('game-state', JSON.stringify(gameState))
-            },
-            (winner: 1 | 2) => {
-                this.server.sockets
-                    .in(roomName)
-                    .emit('game-over', JSON.stringify({winner}))
+        this.gameService.startGameInterval(this.server, roomName, async (winner) => {
+            if (winner === 1) {
+                await this.profileService.addMatch('ladder', pair.clientA.user, pair.clientB.user);
+            } else {
+                await this.profileService.addMatch('ladder', pair.clientB.user, pair.clientA.user);
             }
-        );
+        });
     }
 
     // TODO: доделать
@@ -157,17 +154,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
         this.initClient(client, roomName, 2);
 
-        this.gameService.startGameInterval(roomName,
-            (gameState: GameStateInterface) => {
-                this.server.sockets
-                    .in(roomName)
-                    .emit('game-state', JSON.stringify(gameState))
-            },
-            (winner: 1 | 2) => {
-                this.server.sockets
-                    .in(roomName)
-                    .emit('game-over', JSON.stringify({winner}))
-            }
-        );
+        // TODO: duel
+        // TODO: comments
+        this.gameService.startGameInterval(this.server, roomName, async (winner) => {});
     }
 }
