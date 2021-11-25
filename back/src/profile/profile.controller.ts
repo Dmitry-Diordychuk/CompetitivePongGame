@@ -24,10 +24,4 @@ export class ProfileController {
         const user = await this.profileService.getUserWithProfileById(profile_id);
         return this.profileService.buildProfileResponse(user);
     }
-
-    @UsePipes(new ValidationPipe)
-    @UseGuards(AuthGuard)
-    async addAchievement() {
-
-    }
 }

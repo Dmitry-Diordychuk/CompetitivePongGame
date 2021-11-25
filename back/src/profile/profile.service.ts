@@ -5,10 +5,12 @@ import {ProfileResponseInterface} from "@app/profile/type/profileResponse.interf
 import {ProfileEntity} from "@app/profile/profile.entity";
 import {HttpException, HttpStatus} from "@nestjs/common";
 import {MatchService} from "@app/match/match.service";
+import {AchievementService} from "@app/achievement/achievement.service";
 
 export class ProfileService {
     constructor(
         private readonly matchService: MatchService,
+        private readonly achievementService: AchievementService,
         @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(ProfileEntity) private readonly profileRepository: Repository<ProfileEntity>
     ) {}
@@ -54,5 +56,16 @@ export class ProfileService {
             loser.profile.lossMatches = [match];
         }
         await this.profileRepository.save(loser.profile);
+    }
+
+    async addAchievement(profile: ProfileEntity, achievementId: number) {
+        const achievement = await this.achievementService.findAchievementById(achievementId);
+
+        if (profile.achievements) {
+            profile.achievements = [achievement, ...profile.achievements];
+        } else {
+            profile.achievements = [achievement]
+        }
+        return await this.profileRepository.save(profile);
     }
 }

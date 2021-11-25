@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {AchievementEntity} from "@app/achievement/achievement.entity";
 import {Repository} from "typeorm";
@@ -24,6 +24,23 @@ export class AchievementService {
         const achievement = await this.achievementRepository.findOne(achievement_id);
         return {
             achievement
+        }
+    }
+
+    async findAchievementById(achievementId: number): Promise<AchievementEntity> {
+        const achievement = await this.achievementRepository.findOne(achievementId);
+        if (!achievement) {
+            throw new HttpException("There is no such achievement", HttpStatus.BAD_REQUEST);
+        }
+        return achievement;
+    }
+
+    async createAchievement(title: string, description: string): Promise<AchievementResponseInterface> {
+        let achievement = new AchievementEntity();
+        achievement.title = title;
+        achievement.description = description;
+        return {
+            achievement: await this.achievementRepository.save(achievement),
         }
     }
 }

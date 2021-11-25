@@ -7,6 +7,7 @@ import {AchievementEntity} from "@app/achievement/achievement.entity";
 @Module({
     imports: [TypeOrmModule.forFeature([AchievementEntity])],
     controllers: [AchievementController],
-    providers: [AchievementService]
+    providers: [AchievementService],
+    exports: [AchievementService],
 })
 export class AchievementModule {}

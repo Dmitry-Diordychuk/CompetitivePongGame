@@ -155,7 +155,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         this.initClient(client, roomName, 2);
 
         // TODO: duel
-        // TODO: comments
         this.gameService.startGameInterval(this.server, roomName, async (winner) => {});
     }
 }
