@@ -31,6 +31,8 @@ socket.on('matchmaking-success', handleMatchmakingSuccess);
 socket.on('matchmaking-failed', handleMatchmakingFailed);
 socket.on('matchmaking-wait-for-players', handleWaitForPlayersTimer);
 socket.on('matchmaking-init', init);
+socket.on('matchmaking-declined', handleDecline);
+socket.on('matchmaking-restart', handleMatchmakingRestart);
 
 socket.on('exception', handleException);
 
@@ -233,12 +235,24 @@ function handleWaitForPlayersTimer(time) {
 }
 
 function cancel() {
-    socket.emit('matchmaking-leave-queue');
-    matchmakingView(false, '00:00');
+    socket.emit('matchmaking-decline-game');
 }
 
 function acceptGame() {
     socket.emit('matchmaking-accept-game');
+}
+
+function handleDecline() {
+    matchmakingView(false, '00:00');
+    matchmakingAcceptButton.hidden = true;
+    alert_success.hidden = true;
+}
+
+function handleMatchmakingRestart() {
+    matchmakingView(false, '00:00');
+    matchmakingAcceptButton.hidden = true;
+    alert_success.hidden = true;
+    matchmaking();
 }
 
 //////////////////////////////SPECTATE//////////////////////////////////////////////////////////////////////////////////

@@ -170,7 +170,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() sanctionDto: SanctionDto
     ) {
-        const sanction = await this.chatService.applySanctionOnUser(user.id, sanctionDto);
+        const channel = await this.chatService.getChannelByName(sanctionDto.channel);
+        const sanction = await this.chatService.applySanctionOnUser(user.id, sanctionDto, channel);
 
         this.server.to(sanction.target.id.toString()).emit('sanction', {
             "sanction": {

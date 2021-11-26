@@ -94,8 +94,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             }
         });
     }
-
-    // TODO: доделать
+    
     @SubscribeMessage('matchmaking-decline-game')
     handleDeclineGame(
         @WSUser() user: UserEntity,
@@ -114,6 +113,16 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     ) {
         this.initClient(client, roomName, 0);
     }
+
+    // @SubscribeMessage('duel-invite')
+    // handleDuelInvite (
+    //     @WSUser() user,
+    //     @ConnectedSocket() client,
+    //     @MessageBody() rivalId,
+    // ) {
+    //     let roomName = this.gameService.makeId(5);
+    //     client.emit('duel-invited', roomName);
+    // }
 
     // TODO: Убарать после тестирования все что ниже
     @SubscribeMessage('new-game')

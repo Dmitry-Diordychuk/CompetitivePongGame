@@ -69,6 +69,10 @@ export class ChatService {
         await this.userRepository.save(user);
         newChannel = await this.channelRepository.save(newChannel);
         return {
+            "owner" : {
+                "id" : newChannel.owner.id,
+                "username" : newChannel.owner.username
+            },
             "id": newChannel.id,
             "channel": newChannel.name
         };
@@ -279,13 +283,15 @@ export class ChatService {
         return admin;
     }
 
-    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto): Promise<SanctionEntity> {
-        const channel = await this.channelRepository.findOne({
-                name: sanctionDto.channel
-            },
-            { relations: ["visitors", "sanctions"] }
-        );
+    async getChannelByName(channelName: string): Promise<ChannelEntity> {
+        return await this.channelRepository.findOne({
+                name: channelName,
+        }, {
+            relations: ["visitors", "sanctions"]
+        });
+    }
 
+    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto, channel: ChannelEntity): Promise<SanctionEntity> {
         if (!channel) {
             throw new WsException("Channel doesn't exist");
         }

@@ -89,10 +89,6 @@ export class MatchmakingService {
 
     @Interval(POOL_POLL_INTERVAL)
     loopMatchmaking() {
-        if (this.queue.length < 1) {
-            return;
-        }
-
         for (const clientA of this.queue) {
             let timeSinceStart = 0;
             for (const clientB of this.queue) {
@@ -106,8 +102,8 @@ export class MatchmakingService {
                     this.queue = this.queue.filter(client => client.user.id != clientB.user.id);
                     return;
                 }
+                clientA.socket.emit("matchmaking-time", timeSinceStart);
             }
-            clientA.socket.emit("matchmaking-time", timeSinceStart);
         }
     }
 
@@ -140,7 +136,9 @@ export class MatchmakingService {
 
 
     removeFromWaitList(user): Socket {
-        const pair: ClientPairInterface = this.waitList.find(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);
+        const pair = this.waitList.find(pair => pair.clientA.user.id === user.id || pair.clientB.user.id === user.id);
+        this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
+        this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);
         this.waitList = this.waitList.filter(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);
         if (pair.clientA.user === user) {
             return pair.clientB.socket;
