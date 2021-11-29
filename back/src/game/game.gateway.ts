@@ -14,7 +14,7 @@ import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
 
 @UseGuards(WebSocketAuthGuard)
-@WebSocketGateway(3003, { cors: true })
+@WebSocketGateway(3002, { cors: true })
 export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     constructor(
         private readonly gameService: GameService,

@@ -123,6 +123,7 @@ function paintPlayer(playerState, size, colour) {
 }
 
 function handleInit(number) {
+    console.log(number)
     playerNumber = number;
 }
 
@@ -234,15 +235,23 @@ function handleWaitForPlayersTimer(time) {
     }
 }
 
+let isQueue = false;
 function cancel() {
-    socket.emit('matchmaking-decline-game');
+    if (isQueue) {
+        socket.emit('matchmaking-decline-game');
+    } else {
+        socket.emit('matchmaking-leave-queue');
+        matchmakingView(false, '00:00');
+    }
 }
 
 function acceptGame() {
+    isQueue = true;
     socket.emit('matchmaking-accept-game');
 }
 
 function handleDecline() {
+    isQueue = false;
     matchmakingView(false, '00:00');
     matchmakingAcceptButton.hidden = true;
     alert_success.hidden = true;
