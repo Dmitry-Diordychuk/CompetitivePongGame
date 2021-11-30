@@ -1,0 +1,49 @@
+version: '3.0'
+
+services:
+  nest:
+    container_name: nest
+    build:
+      context: /back
+    volumes:
+      - ./back:/app/back
+      - /app/back/node_modules
+    ports:
+      - 3001:3001
+      - 3002:3002
+      - 9229:9229
+    command: npm run start:linux
+    depends_on:
+      - postgres
+    restart: always
+
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: Admin
+      POSTGRES_DB: ft_transcendence
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  react:
+    container_name: react
+    build:
+      context: /front
+    volumes:
+      - ./front:/app/front
+      - /app/front/node_modules
+    ports:
+      - 3000:3000
+    command: npm start
+    depends_on:
+      - nest
+    restart: always
+
+volumes:
+  pgdata:
