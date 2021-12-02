@@ -26,9 +26,9 @@ export class ProfileEntity {
     @JoinTable()
     achievements: AchievementEntity[]
 
-    @OneToMany(() => MatchEntity, (match) => match.winner)
+    @OneToMany(() => MatchEntity, (match) => match.winner, {eager: true})
     winMatches: MatchEntity[];
 
-    @OneToMany(() => MatchEntity, (match) => match.loser)
+    @OneToMany(() => MatchEntity, (match) => match.loser, {eager: true})
     lossMatches: MatchEntity[];
 }
