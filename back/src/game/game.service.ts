@@ -4,9 +4,12 @@ import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {BallInterface} from "@app/game/types/ball.interface";
 import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {Server} from "socket.io";
+import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
 
 @Injectable()
 export class GameService {
+    constructor(private readonly clientInfoService: ClientInfoService) {
+    }
     state = {};
 
     startGameInterval(server: Server, roomName: string, resultFunc) {
@@ -14,7 +17,17 @@ export class GameService {
             const winner = this.gameLoop(this.state[roomName]);
 
             if (!winner) {
-                server.sockets.in(roomName).emit('game-state', JSON.stringify(this.state[roomName]));
+                const clients = server.sockets.adapter.rooms.get(roomName);
+                for (let clientId of clients) {
+                    let player_number = this.clientInfoService.getClientPlayerNumber(clientId);
+                    if (player_number == 1) {
+                        server.sockets.sockets.get(clientId).emit('game-state', JSON.stringify(this.state[roomName]));
+                    } else if (player_number == 2) {
+                        const gameState = {...this.state[roomName]};
+                        gameState.players = [gameState.players[1], gameState.players[0]];
+                        server.sockets.sockets.get(clientId).emit('game-state', JSON.stringify(gameState));
+                    }
+                }
             } else {
                 this.state[roomName] = null;
                 clearInterval(intervalId);
