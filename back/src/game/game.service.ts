@@ -14,7 +14,7 @@ export class GameService {
 
     startGameInterval(server: Server, roomName: string, resultFunc) {
         const intervalId = setInterval(() => {
-            const winner = this.gameLoop(this.state[roomName]);
+            let winner = this.gameLoop(this.state[roomName]);
 
             if (!winner) {
                 const clients = server.sockets.adapter.rooms.get(roomName);
@@ -28,11 +28,22 @@ export class GameService {
                         server.sockets.sockets.get(clientId).emit('game-state', JSON.stringify(gameState));
                     }
                 }
-            } else {
-                this.state[roomName] = null;
-                clearInterval(intervalId);
-                server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
-                resultFunc(winner);
+            } else if (winner && this.state[roomName].roundCounter < 5) {
+                console.log(winner);
+                this.state[roomName].roundCounter++;
+                this.state[roomName].roundResult.push(winner);
+                this.state[roomName] = this.resetGameState(this.state[roomName], this.state[roomName].roundCounter % 2);
+
+                if (this.state[roomName].roundCounter === 5) {
+                    if (this.state[roomName].roundResult.filter(winner => winner === 1).reduce((accumulator) => accumulator + 1) > 2)
+                        winner = 1;
+                    else
+                        winner = 2;
+                    this.state[roomName] = null;
+                    clearInterval(intervalId);
+                    server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
+                    resultFunc(winner);
+                }
             }
         }, 1000 / FRAME_RATE)
         return;
@@ -40,6 +51,47 @@ export class GameService {
 
     initGame(roomName: string) {
         this.state[roomName] = this.createInitialGameState();
+    }
+
+    resetGameState(state: GameStateInterface, ballPosition: number): GameStateInterface {
+        state.players = [{
+            position: {
+                x: 1,
+                y: 5,
+            },
+            velocity: 0,
+            size: 5,
+        }, {
+            position: {
+                x: 18,
+                y: 5,
+            },
+            velocity: 0,
+            size: 5,
+        }]
+        if (ballPosition === 0)
+            state.ball = {
+                position: {
+                    x: 2,
+                    y: 5,
+                },
+                velocity: {
+                    x: 1,
+                    y: 1,
+                }
+            }
+        else
+            state.ball = {
+                position: {
+                    x: GRID_SIZE - 3,
+                    y: 5,
+                },
+                velocity: {
+                    x: 1,
+                    y: 1,
+                }
+            }
+        return (state);
     }
 
     createInitialGameState(): GameStateInterface {
@@ -70,6 +122,8 @@ export class GameService {
                 }
             },
             gridSize: GRID_SIZE,
+            roundCounter: 0,
+            roundResult: [],
         }
     }
 

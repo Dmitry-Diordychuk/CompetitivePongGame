@@ -5,4 +5,6 @@ export class GameStateInterface {
     players: PlayerRacketInterface[];
     ball: BallInterface;
     gridSize: number;
+    roundCounter: number;
+    roundResult: number[];
 }

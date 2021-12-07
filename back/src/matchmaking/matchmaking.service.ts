@@ -7,13 +7,17 @@ import {WsException} from "@nestjs/websockets";
 import {GameClientInterface} from "@app/matchmaking/types/gameClient.interface";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {Socket} from "socket.io";
+import {UserService} from "@app/user/user.service";
 
 @Injectable()
 export class MatchmakingService {
-    constructor(private schedulerRegistry: SchedulerRegistry) {}
+    constructor(
+        private schedulerRegistry: SchedulerRegistry,
+    ) {}
 
     queue: GameClientInterface[] = [];
     waitList: ClientPairInterface[] = [];
+    waitDuel: ClientPairInterface[] = [];
 
     addInQueue(user: UserEntity, socket) {
         if (!this.queue.find(client => client.user.id === user.id)) {
@@ -156,5 +160,47 @@ export class MatchmakingService {
             return;
         }
         data.socket = socket;
+    }
+
+    inviteToDuel(user: UserEntity, socket: Socket, rival: UserEntity, rival_socket: Socket) {
+        const currentClient: GameClientInterface = {
+            user: user,
+            queueEntryTime: Date.now(),
+            socket: socket,
+            isGameAccepted: true,
+        }
+
+        const rivalClient: GameClientInterface = {
+            user: rival,
+            queueEntryTime: Date.now(),
+            socket: rival_socket,
+            isGameAccepted: false,
+        }
+
+        const timeoutFunctionName: string = `wait_for_${user.id}_${rival.id}`;
+
+        const timeout = setTimeout(() => {
+            socket.emit('duel-timeout', rival.id);
+            socket.emit('duel-timeout', user.id);
+            this.waitDuel = this.waitDuel.filter(i => i.clientA.user.id == user.id);
+        }, WAIT_FOR_PLAYERS_INTERVAL);
+        this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
+
+        this.waitDuel.push({
+            clientA: currentClient,
+            clientB: rivalClient,
+            timeoutFunctionName: timeoutFunctionName,
+            intervalFunctionName: null
+        })
+    }
+
+    acceptDuel(user: UserEntity, rivalId: number) {
+        const pair = this.waitDuel.find(duel => duel.clientB.user.id === user.id);
+        if (!pair) {
+            throw new WsException("The is now such invite");
+        }
+        this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
+        this.waitDuel = this.waitDuel.filter(duel => duel.clientB.user.id === user.id);
+        return pair;
     }
 }
