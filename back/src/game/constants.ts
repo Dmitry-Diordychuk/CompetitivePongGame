@@ -9,6 +9,7 @@ export const BONUSES = [
     'speed',
     'wall',
     'freeze',
+    'shake',
 ];
 
 export const BONUS_LIFETIME = 30;

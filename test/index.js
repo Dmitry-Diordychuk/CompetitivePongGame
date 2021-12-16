@@ -83,7 +83,7 @@ acceptCButton.addEventListener('click', duelAccept);
 
 //////////////////////////// DUEL //////////////////////////////////////////////////////////////////////////////////////
 
-const mode = 'modded'; // 'default' | 'modded'
+const mode = 'default'; // 'default' | 'modded'
 
 function invite(event) {
     const button = event.target;
@@ -195,6 +195,11 @@ function paintGame(state) {
 
     paintPlayer(state.players[0], size, RACKET_COLOUR);
     paintPlayer(state.players[1], size, RACKET_COLOUR);
+    state.active.map(bonus => {
+        if (bonus.type === 'wall') {
+            paintPlayer(bonus.wall, size, RACKET_COLOUR);
+        }
+    })
 
     if (state.bonus) {
         ctx.fillStyle = BONUS_COLOUR;

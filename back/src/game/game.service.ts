@@ -94,8 +94,7 @@ export class GameService {
                 }
             }
         state.bonus = null;
-        state.bonuses = [];
-        state.walls = [];
+        state.active = [];
         return (state);
     }
 
@@ -130,8 +129,11 @@ export class GameService {
             roundCounter: 0,
             roundResult: [],
             bonus: null,
-            bonuses: [],
-            walls: [],
+            active: [],
+            prevBallVelocity: {
+                x: 0,
+                y: 0,
+            },
         }
     }
 
@@ -166,12 +168,55 @@ export class GameService {
         ball.position.y += ball.velocity.y;
 
         if (mode === 'modded') {
-            const walls = state.walls;
+            state.active.map(bonus => {
+                if (bonus.type === 'wall' && this.isBallCollideWithRacket(ball, bonus.wall)) {
+                    ball.velocity.x *= -1;
+                } else if (bonus.type === 'freeze') {
+                    ball.velocity.x = 0;
+                    ball.velocity.y = 0;
+                } else if (bonus.type === 'speed') {
+                    if (ball.velocity.x === 1 || ball.velocity.x === -1) {
+                        ball.velocity.x *= 2;
+                        ball.velocity.y *= 2;
+                    }
+                } else if (bonus.type === 'shake') {
+                    ball.velocity.y *= -1;
+                }
+                bonus.lifetime--;
+                if (bonus.lifetime === 0) {
+                    if (bonus.type === 'freeze') {
+                        ball.velocity.x = Math.random() > 0.5 ? 1 : -1;
+                        ball.velocity.y = Math.random() > 0.5 ? 1 : -1;
+                    } else if (bonus.type === 'speed') {
+                        ball.velocity.x /= 2;
+                        ball.velocity.y /= 2;
+                    }
+                }
+            });
+            state.active = state.active.filter(bonus => bonus.lifetime !== 0);
 
             if (state.bonus) {
-                if (ball.position.x >= state.bonus.position.x - 1 && ball.position.x < state.bonus.position.x + 1
-                    && ball.position.y >= state.bonus.position.y - 1 && ball.position.y < state.bonus.position.y + 1
+                if (ball.position.x >= state.bonus.position.x - 1 && ball.position.x <= state.bonus.position.x + 1
+                    && ball.position.y >= state.bonus.position.y - 1 && ball.position.y <= state.bonus.position.y + 1
                 ) {
+                    let position = null;
+                    let lifetime = 10;
+                    if (state.bonus.type === 'wall') {
+                        position = {
+                            x: Math.floor(GRID_SIZE / 2),
+                            y: Math.floor(Math.random() * GRID_SIZE - 7),
+                        }
+                        lifetime = 100;
+                    }
+                    state.active.push({
+                        type: state.bonus.type,
+                        lifetime: lifetime,
+                        wall: {
+                            position: position,
+                            size: 7,
+                            velocity: 0.
+                        }
+                    })
                     state.bonus = null;
                 }
             }
@@ -183,14 +228,21 @@ export class GameService {
             }
 
             if (!state.bonus && Math.floor(Math.random() * 10) === 0) {
-                state.bonus = {
-                    position: {
-                        x: Math.floor(Math.random() * (GRID_SIZE - 5) + 3),
-                        y: Math.floor(Math.random() * GRID_SIZE),
-                    },
-                    type: BONUSES[Math.floor(Math.random() * BONUSES.length)],
-                    lifetime: BONUS_LIFETIME,
+                let bonus_x = Math.floor(Math.random() * (GRID_SIZE - 5) + 3);
+                let bonus_y = Math.floor(Math.random() * GRID_SIZE)
+                if ((bonus_x < ball.position.x - 1  || bonus_x > ball.position.x + 1)
+                    && (bonus_y < ball.position.y - 1 || bonus_y > ball.position.y + 1)
+                ) {
+                    state.bonus = {
+                        position: {
+                            x: bonus_x,
+                            y: bonus_y,
+                        },
+                        type: BONUSES[Math.floor(Math.random() * BONUSES.length)],
+                        lifetime: BONUS_LIFETIME,
+                    }
                 }
+
             }
         }
 
@@ -211,6 +263,11 @@ export class GameService {
         for (let i = 0; i < racket.size; i++) {
             if (ballNextPosition.x === racket.position.x && ballNextPosition.y === racket.position.y + i) {
                 return true;
+            }
+            if (Math.abs(ball.velocity.x) > 1) {
+                if (ballNextPosition.x === racket.position.x + 1 && ballNextPosition.y === racket.position.y + i) {
+                    return true;
+                }
             }
         }
         return false;
