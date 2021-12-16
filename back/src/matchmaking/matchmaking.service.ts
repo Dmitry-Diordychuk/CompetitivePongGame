@@ -9,6 +9,7 @@ import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {Socket} from "socket.io";
 import {UserService} from "@app/user/user.service";
 
+
 @Injectable()
 export class MatchmakingService {
     constructor(
@@ -78,6 +79,7 @@ export class MatchmakingService {
             clientB: clientB,
             timeoutFunctionName: functionsNames.TimeoutFunctionName,
             intervalFunctionName: functionsNames.IntervalFunctionName,
+            gameMode: 'default',
         })
 
         this.queue = this.queue.filter(
@@ -162,7 +164,7 @@ export class MatchmakingService {
         data.socket = socket;
     }
 
-    inviteToDuel(user: UserEntity, socket: Socket, rival: UserEntity, rival_socket: Socket) {
+    inviteToDuel(user: UserEntity, socket, rival: UserEntity, rivalSocket: Socket, gameMode: 'default' | 'modded') {
         const currentClient: GameClientInterface = {
             user: user,
             queueEntryTime: Date.now(),
@@ -173,24 +175,44 @@ export class MatchmakingService {
         const rivalClient: GameClientInterface = {
             user: rival,
             queueEntryTime: Date.now(),
-            socket: rival_socket,
+            socket: rivalSocket,
             isGameAccepted: false,
+        }
+
+        if (user.id === rival.id) {
+            throw new WsException("You can't invite yourself!");
         }
 
         const timeoutFunctionName: string = `wait_for_${user.id}_${rival.id}`;
 
+        const timeouts = this.schedulerRegistry.getTimeouts();
+        timeouts.forEach(key => {
+            if (key === `wait_for_${user.id}_${rival.id}`) {
+                throw new WsException("You have already invited this player!");
+            } else if (key == `wait_for_${rival.id}_${user.id}`) {
+                throw new WsException('You have already been invited!');
+            }
+        })
+
         const timeout = setTimeout(() => {
-            socket.emit('duel-timeout', rival.id);
-            socket.emit('duel-timeout', user.id);
-            this.waitDuel = this.waitDuel.filter(i => i.clientA.user.id == user.id);
-        }, WAIT_FOR_PLAYERS_INTERVAL);
-        this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
+                socket.emit('duel-timeout', rival.id);
+                rivalSocket.emit('duel-timeout', user.id);
+                this.waitDuel = this.waitDuel.filter(i => i.clientA.user.id !== user.id);
+                this.schedulerRegistry.deleteTimeout(timeoutFunctionName);
+            }
+        , WAIT_FOR_PLAYERS_INTERVAL);
+        try {
+            this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
+        } catch (e) {
+            throw new WsException(e.toString());
+        }
 
         this.waitDuel.push({
             clientA: currentClient,
             clientB: rivalClient,
             timeoutFunctionName: timeoutFunctionName,
-            intervalFunctionName: null
+            intervalFunctionName: null,
+            gameMode: gameMode,
         })
     }
 
@@ -200,7 +222,7 @@ export class MatchmakingService {
             throw new WsException("The is now such invite");
         }
         this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
-        this.waitDuel = this.waitDuel.filter(duel => duel.clientB.user.id === user.id);
+        this.waitDuel = this.waitDuel.filter(duel => duel.clientB.user.id !== user.id);
         return pair;
     }
 }

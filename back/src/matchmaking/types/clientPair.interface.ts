@@ -5,4 +5,5 @@ export class ClientPairInterface {
     clientB: GameClientInterface;
     timeoutFunctionName: string;
     intervalFunctionName: string;
+    gameMode: 'default' | 'modded';
 }

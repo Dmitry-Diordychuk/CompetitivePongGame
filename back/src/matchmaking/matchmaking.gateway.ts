@@ -6,7 +6,7 @@ import {
     OnGatewayDisconnect,
     OnGatewayInit, SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer
+    WebSocketServer, WsException
 } from "@nestjs/websockets";
 import {GameService} from "@app/game/game.service";
 import {MatchmakingService} from "@app/matchmaking/matchmaking.service";
@@ -121,17 +121,23 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         @MessageBody() {rivalId, gameMode},
     ) {
         let rival = null;
-        let rival_socket = null;
+        let rivalSocket = null;
         for (let socket of this.server.sockets.sockets) {
             if (socket[1].handshake.headers.user["id"] === rivalId) {
                 rival = socket[1].handshake.headers.user;
-                rival_socket = socket;
+                rivalSocket = socket[1];
             }
         }
-        let roomName = this.gameService.makeId(5);
-        if (rival)
-            this.matchmakingService.inviteToDuel(user, client, rival, rival_socket);
-        client.emit(rivalId, {duel:{room: roomName, rivalId: user.id}});
+
+        if (rival) {
+            this.matchmakingService.inviteToDuel(user, client, rival, rivalSocket, gameMode);
+            this.server.to(rivalSocket.id).emit('duel-invited', {
+                rivalId: user.id,
+                gameMode: gameMode,
+            });
+        } else {
+            throw new WsException('Player offline!');
+        }
     }
 
     @SubscribeMessage('duel-accept')
@@ -160,6 +166,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             } else {
                 await this.profileService.addMatch('duel', pair.clientB.user, pair.clientA.user);
             }
-        });
+        }, pair.gameMode);
     }
 }

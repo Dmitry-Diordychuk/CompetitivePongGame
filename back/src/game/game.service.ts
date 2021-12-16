@@ -1,10 +1,13 @@
 import {Injectable} from "@nestjs/common";
-import {FRAME_RATE, GRID_SIZE} from "@app/game/constants";
+import {BONUS_LIFETIME, BONUSES, FRAME_RATE, GRID_SIZE} from "@app/game/constants";
 import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {BallInterface} from "@app/game/types/ball.interface";
 import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {Server} from "socket.io";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
+import {randomInt} from "crypto";
+import {BonusInterface} from "@app/game/types/bonus.interface";
+import {WsException} from "@nestjs/websockets";
 
 @Injectable()
 export class GameService {
@@ -12,9 +15,9 @@ export class GameService {
     }
     state = {};
 
-    startGameInterval(server: Server, roomName: string, resultFunc) {
+    startGameInterval(server: Server, roomName: string, resultFunc, mode : 'default' | 'modded' = 'default') {
         const intervalId = setInterval(() => {
-            let winner = this.gameLoop(this.state[roomName]);
+            let winner = this.gameLoop(this.state[roomName], mode);
 
             if (!winner) {
                 const clients = server.sockets.adapter.rooms.get(roomName);
@@ -29,7 +32,6 @@ export class GameService {
                     }
                 }
             } else if (winner && this.state[roomName].roundCounter < 5) {
-                console.log(winner);
                 this.state[roomName].roundCounter++;
                 this.state[roomName].roundResult.push(winner);
                 this.state[roomName] = this.resetGameState(this.state[roomName], this.state[roomName].roundCounter % 2);
@@ -72,25 +74,28 @@ export class GameService {
         if (ballPosition === 0)
             state.ball = {
                 position: {
-                    x: 2,
-                    y: 5,
+                    x: 1,
+                    y: 7,
                 },
                 velocity: {
                     x: 1,
-                    y: 1,
+                    y: Math.random() < 0.5 ? -1 : 1,
                 }
             }
         else
             state.ball = {
                 position: {
-                    x: GRID_SIZE - 3,
-                    y: 5,
+                    x: GRID_SIZE - 2,
+                    y: 7,
                 },
                 velocity: {
-                    x: 1,
-                    y: 1,
+                    x: -1,
+                    y: Math.random() < 0.5 ? -1 : 1,
                 }
             }
+        state.bonus = null;
+        state.bonuses = [];
+        state.walls = [];
         return (state);
     }
 
@@ -113,21 +118,24 @@ export class GameService {
             }],
             ball: {
                 position: {
-                    x: 2,
-                    y: 5,
+                    x: 1,
+                    y: 7,
                 },
                 velocity: {
                     x: 1,
-                    y: 1,
+                    y: Math.random() < 0.5 ? -1 : 1,
                 }
             },
             gridSize: GRID_SIZE,
             roundCounter: 0,
             roundResult: [],
+            bonus: null,
+            bonuses: [],
+            walls: [],
         }
     }
 
-    gameLoop(state: GameStateInterface): 2 | 1 | false {
+    gameLoop(state: GameStateInterface, mode: 'default' | 'modded'): 2 | 1 | false {
         if (!state) {
             return;
         }
@@ -156,6 +164,35 @@ export class GameService {
 
         ball.position.x += ball.velocity.x;
         ball.position.y += ball.velocity.y;
+
+        if (mode === 'modded') {
+            const walls = state.walls;
+
+            if (state.bonus) {
+                if (ball.position.x >= state.bonus.position.x - 1 && ball.position.x < state.bonus.position.x + 1
+                    && ball.position.y >= state.bonus.position.y - 1 && ball.position.y < state.bonus.position.y + 1
+                ) {
+                    state.bonus = null;
+                }
+            }
+
+            if (state.bonus) {
+                state.bonus.lifetime--;
+                if (state.bonus.lifetime === 0)
+                    state.bonus = null;
+            }
+
+            if (!state.bonus && Math.floor(Math.random() * 10) === 0) {
+                state.bonus = {
+                    position: {
+                        x: Math.floor(Math.random() * (GRID_SIZE - 5) + 3),
+                        y: Math.floor(Math.random() * GRID_SIZE),
+                    },
+                    type: BONUSES[Math.floor(Math.random() * BONUSES.length)],
+                    lifetime: BONUS_LIFETIME,
+                }
+            }
+        }
 
         if (ball.position.x < 0) {
             return 2;
@@ -191,7 +228,11 @@ export class GameService {
     }
 
     setPlayerVelocity(roomName: string, playerNumber: 2 | 1, velocity: number) {
-        this.state[roomName].players[playerNumber - 1].velocity = velocity;
+        if (this.state[roomName])
+            this.state[roomName].players[playerNumber - 1].velocity = velocity;
+        else {
+            throw new WsException('Game is over!');
+        }
     }
 
     makeId(length: number): string {

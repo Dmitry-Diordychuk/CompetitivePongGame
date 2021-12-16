@@ -2,6 +2,8 @@ const BG_COLOUR = '#231f20';
 const RACKET_COLOUR = '#c2c2c2';
 const BALL_COLOUR = '#e66916';
 
+const BONUS_COLOUR = '#a516e6';
+
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0SWQiOiIxIiwidXNlcm5hbWUiOiJBX3VzZXIifQ.3GrurQz8RZ3CghTnXcJIHulU6KMQXHXj7XL6adY_NJg
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0SWQiOiIyIiwidXNlcm5hbWUiOiJCX3VzZXIifQ.diAuyuEuB90hgzH4A4gbcwk4GyQ45w7R3QF0UKMiXio
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk
@@ -15,7 +17,7 @@ if (token === 'A') {
     token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk';
 }
 
-const socket = io('http://localhost:3003', {
+const socket = io('http://localhost:3002', {
     extraHeaders: {
         Authorization: `Bearer ${token}`
     }
@@ -33,6 +35,10 @@ socket.on('matchmaking-wait-for-players', handleWaitForPlayersTimer);
 socket.on('matchmaking-init', init);
 socket.on('matchmaking-declined', handleDecline);
 socket.on('matchmaking-restart', handleMatchmakingRestart);
+
+socket.on('duel-invited', handleDuelInvite);
+socket.on('duel-timeout', handleDuelTimeout);
+socket.on('duel-init', handleDuelInit);
 
 socket.on('exception', handleException);
 
@@ -54,12 +60,88 @@ const alert_success = document.getElementById('matchmakingAlertSuccess');
 const spectateButton = document.getElementById('spectateGameButton');
 const spectateCodeInput = document.getElementById('spectateCodeInput');
 
+const inviteAButton = document.getElementById('inviteA');
+const inviteBButton = document.getElementById('inviteB');
+const inviteCButton = document.getElementById('inviteC');
+
+const acceptAButton = document.getElementById('acceptA');
+const acceptBButton = document.getElementById('acceptB');
+const acceptCButton = document.getElementById('acceptC');
+
 newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
 matchmakingButton.addEventListener('click', matchmaking);
 matchmakingCancelButton.addEventListener('click', cancel);
 matchmakingAcceptButton.addEventListener('click', acceptGame);
 spectateButton.addEventListener('click', spectateGame);
+inviteAButton.addEventListener('click', invite);
+inviteBButton.addEventListener('click', invite);
+inviteCButton.addEventListener('click', invite);
+acceptAButton.addEventListener('click', duelAccept);
+acceptBButton.addEventListener('click', duelAccept);
+acceptCButton.addEventListener('click', duelAccept);
+
+//////////////////////////// DUEL //////////////////////////////////////////////////////////////////////////////////////
+
+const mode = 'modded'; // 'default' | 'modded'
+
+function invite(event) {
+    const button = event.target;
+    data = null;
+    if (button.value === 'A') {
+        data = {
+            rivalId: 101,
+            gameMode: mode
+        }
+    } else if (button.value === 'B') {
+        data = {
+            rivalId: 102,
+            gameMode: mode
+        }
+    } else if (button.value === 'C') {
+        data = {
+            rivalId: 103,
+            gameMode: mode
+        }
+    }
+    socket.emit('duel-invite', data);
+}
+
+function duelAccept(event) {
+    const button = event.target;
+    rivalId = null;
+    if (button.value === 'A') {
+        rivalId = 101;
+    } else if (button.value === 'B') {
+        rivalId = 102;
+    } else if (button.value === 'C') {
+        rivalId = 103;
+    }
+    socket.emit('duel-accept', rivalId);
+}
+
+function handleDuelInvite(data) {
+    if (data.rivalId === 101) {
+        acceptAButton.hidden = false;
+    } else if (data.rivalId === 102) {
+        acceptBButton.hidden = false;
+    } else if (data.rivalId === 103) {
+        acceptCButton.hidden = false;
+    }
+}
+
+function handleDuelTimeout(data) {
+    console.log('Timeout: ' + data);
+    acceptAButton.hidden = true;
+    acceptBButton.hidden = true;
+    acceptCButton.hidden = true;
+}
+
+function handleDuelInit() {
+    init();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function  newGame() {
     socket.emit('new-game');
@@ -77,6 +159,7 @@ let playerNumber;
 let gameActive = false;
 
 function init() {
+
     alert_success.hidden = true; // добавил
     alert_fail.hidden = true; //
 
@@ -112,6 +195,11 @@ function paintGame(state) {
 
     paintPlayer(state.players[0], size, RACKET_COLOUR);
     paintPlayer(state.players[1], size, RACKET_COLOUR);
+
+    if (state.bonus) {
+        ctx.fillStyle = BONUS_COLOUR;
+        ctx.fillRect(state.bonus.position.x * size, state.bonus.position.y * size, size, size);
+    }
 }
 
 function paintPlayer(playerState, size, colour) {
@@ -160,8 +248,9 @@ function handleGameCode(gameCode) {
 }
 
 function handleException(error) {
+    console.log(error)
     reset();
-    alert(error);
+    alert('Exception!: ', error.message);
 }
 
 function reset() {
