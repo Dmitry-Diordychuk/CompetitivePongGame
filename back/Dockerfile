@@ -4,8 +4,13 @@ WORKDIR /app/back
 
 COPY package*.json ./
 
-RUN npm install
+RUN apk add --no-cache make gcc g++ python && \
+  npm install && \
+  npm rebuild bcrypt --build-from-source && \
+  apk del make gcc g++ python
+
+RUN apk --update add postgresql-client
 
 COPY . .
 
-CMD ["npm", "run", "start:linux"]
+CMD ["sh", "wait-for-postgress.sh", "postgress", "sh", "run.sh"]

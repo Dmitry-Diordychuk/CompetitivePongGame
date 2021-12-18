@@ -4,7 +4,7 @@ services:
   nest:
     container_name: nest
     build:
-      context: /back
+      context: ./back
     volumes:
       - ./back:/app/back
       - /app/back/node_modules
@@ -12,7 +12,9 @@ services:
       - 3001:3001
       - 3002:3002
       - 9229:9229
-    command: npm run start:linux
+    environment:
+      POSTGRES_PASSWORD: secret
+    command: ["sh", "wait-for-postgres.sh", "postgres", "sh", "run.sh"]
     depends_on:
       - postgres
     restart: always
@@ -34,12 +36,12 @@ services:
   react:
     container_name: react
     build:
-      context: /front
+      context: ./front
     volumes:
       - ./front:/app/front
       - /app/front/node_modules
     ports:
-      - 3000:3000
+      - 80:3000
     command: npm start
     depends_on:
       - nest

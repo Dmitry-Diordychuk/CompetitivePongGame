@@ -40,7 +40,7 @@ export class MatchmakingService {
     }
 
 
-    createWaitForPlayersTimer(clientA: GameClientInterface, clientB: GameClientInterface): {
+    createWaitForPlayersTimer(clientA: GameClientInterface, clientB: GameClientInterface, event: string, cleanUp: any): {
         IntervalFunctionName: string,
         TimeoutFunctionName: string
     } {
@@ -50,15 +50,17 @@ export class MatchmakingService {
         const startTime = Date.now()
         const interval = setInterval(() => {
             const time = Date.now() - startTime;
-            clientA.socket.emit('matchmaking-wait-for-players', time);
-            clientB.socket.emit('matchmaking-wait-for-players', time);
+            clientA.socket.emit(event, time);
+            clientB.socket.emit(event, time);
         }, 1000)
         this.schedulerRegistry.addInterval(intervalFunctionName, interval);
 
         const timeout = setTimeout(() => {
             this.schedulerRegistry.deleteInterval(intervalFunctionName);
-            clientA.socket.emit('matchmaking-wait-for-players', 10000);
-            clientB.socket.emit('matchmaking-wait-for-players', 10000);
+            clientA.socket.emit(event, 10000);
+            clientB.socket.emit(event, 10000);
+            cleanUp();
+            this.schedulerRegistry.deleteTimeout(timeoutFunctionName);
         }, WAIT_FOR_PLAYERS_INTERVAL);
         this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
 
@@ -72,7 +74,7 @@ export class MatchmakingService {
     successMatchmakingHandle(clientA: GameClientInterface, clientB: GameClientInterface) {
         this.queue = this.queue.filter(client => client.user.id != clientA.user.id && client.user.id != clientB.user.id);
 
-        const functionsNames = this.createWaitForPlayersTimer(clientA, clientB);
+        const functionsNames = this.createWaitForPlayersTimer(clientA, clientB, 'matchmaking-wait-for-players', ()=>void 0);
 
         this.waitList.push({
             clientA: clientA,
@@ -187,6 +189,7 @@ export class MatchmakingService {
 
         const timeouts = this.schedulerRegistry.getTimeouts();
         timeouts.forEach(key => {
+            console.log(key);
             if (key === `wait_for_${user.id}_${rival.id}`) {
                 throw new WsException("You have already invited this player!");
             } else if (key == `wait_for_${rival.id}_${user.id}`) {
@@ -194,24 +197,15 @@ export class MatchmakingService {
             }
         })
 
-        const timeout = setTimeout(() => {
-                socket.emit('duel-timeout', rival.id);
-                rivalSocket.emit('duel-timeout', user.id);
-                this.waitDuel = this.waitDuel.filter(i => i.clientA.user.id !== user.id);
-                this.schedulerRegistry.deleteTimeout(timeoutFunctionName);
-            }
-        , WAIT_FOR_PLAYERS_INTERVAL);
-        try {
-            this.schedulerRegistry.addTimeout(timeoutFunctionName, timeout);
-        } catch (e) {
-            throw new WsException(e.toString());
-        }
+        const functionsNames = this.createWaitForPlayersTimer(currentClient, rivalClient, 'duel-wait-for-players', () => {
+            this.waitDuel = this.waitDuel.filter(i => i.clientA.user.id !== user.id);
+        });
 
         this.waitDuel.push({
             clientA: currentClient,
             clientB: rivalClient,
-            timeoutFunctionName: timeoutFunctionName,
-            intervalFunctionName: null,
+            timeoutFunctionName: functionsNames.TimeoutFunctionName,
+            intervalFunctionName: functionsNames.IntervalFunctionName,
             gameMode: gameMode,
         })
     }
@@ -222,7 +216,12 @@ export class MatchmakingService {
             throw new WsException("The is now such invite");
         }
         this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
+        this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);
         this.waitDuel = this.waitDuel.filter(duel => duel.clientB.user.id !== user.id);
         return pair;
+    }
+
+    declineDuel(user: UserEntity, rivalId: number) {
+        this.acceptDuel(user, rivalId);
     }
 }

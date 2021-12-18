@@ -37,7 +37,7 @@ socket.on('matchmaking-declined', handleDecline);
 socket.on('matchmaking-restart', handleMatchmakingRestart);
 
 socket.on('duel-invited', handleDuelInvite);
-socket.on('duel-timeout', handleDuelTimeout);
+socket.on('duel-wait-for-players', handleDuelTimer);
 socket.on('duel-init', handleDuelInit);
 
 socket.on('exception', handleException);
@@ -130,11 +130,13 @@ function handleDuelInvite(data) {
     }
 }
 
-function handleDuelTimeout(data) {
-    console.log('Timeout: ' + data);
-    acceptAButton.hidden = true;
-    acceptBButton.hidden = true;
-    acceptCButton.hidden = true;
+function handleDuelTimer(data) {
+    console.log('Timer: ' + data);
+    if (data === 10000) {
+        acceptAButton.hidden = true;
+        acceptBButton.hidden = true;
+        acceptCButton.hidden = true;
+    }
 }
 
 function handleDuelInit() {

@@ -168,4 +168,13 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             }
         }, pair.gameMode);
     }
+
+    @SubscribeMessage('duel-decline')
+    handleDuelDecline (
+        @WSUser() user,
+        @ConnectedSocket() client,
+        @MessageBody() rivalId,
+    ) {
+        this.matchmakingService.declineDuel(user, rivalId);
+    }
 }
