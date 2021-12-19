@@ -4,6 +4,7 @@ import {Injectable} from "@nestjs/common";
 export class ClientInfoService {
     clientRooms = {};
     playerNumbers = {};
+    userRoom = {};
 
     setClientRoom(clientId, roomName) {
         this.clientRooms[clientId] = roomName;
@@ -20,6 +21,10 @@ export class ClientInfoService {
     getClientPlayerNumber(clientId) {
         return this.playerNumbers[clientId];
     }
+
+    // setUserRoom(user, roomName) {
+    //     this.userRoom[user] = roomName;
+    // }
 
     removeClientInfo(clientId) {
         delete this.clientRooms[clientId];

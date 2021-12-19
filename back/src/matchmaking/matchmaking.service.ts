@@ -7,7 +7,6 @@ import {WsException} from "@nestjs/websockets";
 import {GameClientInterface} from "@app/matchmaking/types/gameClient.interface";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {Socket} from "socket.io";
-import {UserService} from "@app/user/user.service";
 
 
 @Injectable()

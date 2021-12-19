@@ -5,8 +5,6 @@ import {BallInterface} from "@app/game/types/ball.interface";
 import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {Server} from "socket.io";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
-import {randomInt} from "crypto";
-import {BonusInterface} from "@app/game/types/bonus.interface";
 import {WsException} from "@nestjs/websockets";
 
 @Injectable()
@@ -23,7 +21,7 @@ export class GameService {
                 const clients = server.sockets.adapter.rooms.get(roomName);
                 for (let clientId of clients) {
                     let player_number = this.clientInfoService.getClientPlayerNumber(clientId);
-                    if (player_number == 1) {
+                    if (player_number == 1 || player_number == 0) {
                         server.sockets.sockets.get(clientId).emit('game-state', JSON.stringify(this.state[roomName]));
                     } else if (player_number == 2) {
                         const gameState = {...this.state[roomName]};

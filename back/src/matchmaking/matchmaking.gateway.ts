@@ -31,6 +31,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     @WebSocketServer()
     server: Server;
 
+    inGameList: {user: UserEntity, roomName: string}[] = []
+
     afterInit() {
     }
 
@@ -86,12 +88,17 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         pair.clientB.socket.emit(`matchmaking-init`, roomName);
         this.initClient(pair.clientB.socket, roomName, 2);
 
+        this.inGameList.push({user: pair.clientA.user, roomName: roomName});
+        this.inGameList.push({user: pair.clientB.user, roomName: roomName});
         this.gameService.startGameInterval(this.server, roomName, async (winner) => {
             if (winner === 1) {
                 await this.profileService.addMatch('ladder', pair.clientA.user, pair.clientB.user);
             } else {
                 await this.profileService.addMatch('ladder', pair.clientB.user, pair.clientA.user);
             }
+            this.inGameList = this.inGameList.filter(i => i.user.id !== pair.clientA.user.id && i.user.id !== pair.clientB.user.id);
+            this.clientInfoService.removeClientInfo(pair.clientA);
+            this.clientInfoService.removeClientInfo(pair.clientB);
         });
     }
     
@@ -103,15 +110,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         const anotherClient = this.matchmakingService.removeFromWaitList(user);
         client.emit('matchmaking-declined');
         anotherClient.emit('matchmaking-restart')
-    }
-
-    @SubscribeMessage('spectate-game')
-    async handleSpectateGame(
-        @WSUser() user: UserEntity,
-        @ConnectedSocket() client: Socket,
-        @MessageBody() roomName: string
-    ) {
-        this.initClient(client, roomName, 0);
     }
 
     @SubscribeMessage('duel-invite')
@@ -160,12 +158,17 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         pair.clientB.socket.emit(`duel-init`, roomName);
         this.initClient(pair.clientB.socket, roomName, 2);
 
+        this.inGameList.push({user: pair.clientA.user, roomName: roomName});
+        this.inGameList.push({user: pair.clientB.user, roomName: roomName});
         this.gameService.startGameInterval(this.server, roomName, async (winner) => {
             if (winner === 1) {
                 await this.profileService.addMatch('duel', pair.clientA.user, pair.clientB.user);
             } else {
                 await this.profileService.addMatch('duel', pair.clientB.user, pair.clientA.user);
             }
+            this.inGameList = this.inGameList.filter(i => i.user.id !== pair.clientA.user.id && i.user.id !== pair.clientB.user.id);
+            this.clientInfoService.removeClientInfo(pair.clientA);
+            this.clientInfoService.removeClientInfo(pair.clientB);
         }, pair.gameMode);
     }
 
@@ -176,5 +179,32 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         @MessageBody() rivalId,
     ) {
         this.matchmakingService.declineDuel(user, rivalId);
+    }
+
+    @SubscribeMessage('is-in-game')
+    handleIsInGame(
+        @ConnectedSocket() client,
+        @MessageBody() userId,
+    ) {
+        const game = this.inGameList.find(i => i.user.id === userId);
+        if (game) {
+            client.emit('in-game', true);
+        } else {
+            client.emit('in-game', false);
+        }
+    }
+
+    @SubscribeMessage('spectate-game')
+    async handleSpectateGame(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() userId,
+    ) {
+        const game = this.inGameList.find(i => i.user.id === userId);
+        console.log(game);
+        if (game) {
+            this.initClient(client, game.roomName, 0);
+        } else {
+            throw new WsException("Player isn't in game!");
+        }
     }
 }
