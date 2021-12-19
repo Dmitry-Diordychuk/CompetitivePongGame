@@ -2,32 +2,39 @@ import {Injectable} from "@nestjs/common";
 
 @Injectable()
 export class ClientInfoService {
-    clientRooms = {};
-    playerNumbers = {};
-    userRoom = {};
+    clientInfo = [];
 
-    setClientRoom(clientId, roomName) {
-        this.clientRooms[clientId] = roomName;
+    setClientInfo(userId, clientId, roomName, playerNumber) {
+        this.clientInfo.push({
+            userId,
+            clientId,
+            roomName,
+            playerNumber,
+        });
     }
 
-    setClientPlayerNumber(clientId, playerNumber) {
-        this.playerNumbers[clientId] = playerNumber;
+    getUserRoom(userId) {
+        const record = this.clientInfo.find(i => i.userId === userId);
+        if (record)
+            return record.roomName;
+        return null;
     }
 
     getClientRoom(clientId) {
-        return this.clientRooms[clientId];
+        const record = this.clientInfo.find(i => i.clientId === clientId);
+        if (record)
+            return record.roomName;
+        return null;
     }
 
     getClientPlayerNumber(clientId) {
-        return this.playerNumbers[clientId];
+        const record = this.clientInfo.find(i => i.clientId === clientId);
+        if (record)
+            return record.playerNumber;
+        return null;
     }
 
-    // setUserRoom(user, roomName) {
-    //     this.userRoom[user] = roomName;
-    // }
-
-    removeClientInfo(clientId) {
-        delete this.clientRooms[clientId];
-        delete this.playerNumbers[clientId];
+    removeClientInfo(roomName) {
+        this.clientInfo = this.clientInfo.filter(i => i.roomName !== roomName);
     }
 }
