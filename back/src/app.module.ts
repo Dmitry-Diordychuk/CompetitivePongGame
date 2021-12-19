@@ -11,6 +11,7 @@ import {TwoFactorAuthenticationModule} from "@app/two_factor_authentication/twoF
 import {MatchModule} from "@app/match/match.module";
 import {GameModule} from "@app/game/game.module";
 import {MatchmakingModule} from "@app/matchmaking/matchmaking.module";
+import {AdminModule} from "@app/admin/admin.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import {MatchmakingModule} from "@app/matchmaking/matchmaking.module";
       MatchModule,
       GameModule,
       MatchmakingModule,
+      AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService]

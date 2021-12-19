@@ -83,7 +83,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         this.initClient(pair.clientA.user, pair.clientA.socket, roomName, 1);
 
         pair.clientB.socket.emit(`matchmaking-init`, roomName);
-        this.initClient(pair.clientA.user, pair.clientB.socket, roomName, 2);
+        this.initClient(pair.clientB.user, pair.clientB.socket, roomName, 2);
 
         this.gameService.startGameInterval(this.server, roomName, async (winner) => {
             if (winner === 1) {

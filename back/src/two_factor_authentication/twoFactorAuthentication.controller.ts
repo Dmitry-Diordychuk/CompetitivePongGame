@@ -45,6 +45,25 @@ export class TwoFactorAuthenticationController {
 
     @HttpCode(200)
     @UseGuards(AuthGuard)
+    @Post('turn-off')
+    async turnOffTwoFactorAuthentication(
+        @User() user: UserEntity,
+        @Body() twoFactorAuthenticationsCodeDto: TwoFactorAuthenticationsCodeDto
+    ) {
+        const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
+            twoFactorAuthenticationsCodeDto.code,
+            user.twoFactorAuthenticationsSecret
+        );
+
+        if (!isCodeValid) {
+            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        await this.userService.turnOffTwoFactorAuthentication(user.id);
+    }
+
+    @HttpCode(200)
+    @UseGuards(AuthGuard)
     @Post('authenticate')
     async authenticate(
         @User() user: UserEntity,
