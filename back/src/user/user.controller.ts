@@ -131,4 +131,17 @@ export class UserController {
         const friends = await this.userService.removeUserFromCurrentUserBlackList(currentUserId, targetUserId);
         return this.userService.buildUsersResponse(friends);
     }
+
+    @UseGuards(RoleGuard(Role.User))
+    @UsePipes(new ParseIntPipe())
+    @Get(':pageNumber')
+    async getUsers(
+        @Param('pageNumber') pageNumber: number,
+    ) {
+        const [result, total] = await this.userService.getAllUsers(10, pageNumber);
+        return {
+            result,
+            total,
+        }
+    }
 }

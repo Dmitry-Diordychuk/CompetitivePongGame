@@ -359,4 +359,14 @@ export class UserService {
             isTwoFactorAuthenticationEnable: false
         })
     }
+
+    async getAllUsers(take: number, skip: number): Promise<any> {
+        return await this.userRepository.findAndCount({
+            order: {
+                username: "ASC",
+            },
+            skip: skip,
+            take: take,
+        });
+    }
 }
