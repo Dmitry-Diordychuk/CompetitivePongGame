@@ -12,6 +12,7 @@ import {ChannelEntity} from "@app/chat/channel.entity";
 import {ProfileEntity} from "@app/profile/profile.entity";
 import {CommentEntity} from "@app/match/comment.entity";
 import {SanctionEntity} from "@app/sanction/sanction.entity";
+import Role from "@app/user/types/role.enum";
 
 @Entity("users")
 export class UserEntity {
@@ -23,6 +24,13 @@ export class UserEntity {
 
     @Column({unique: true})
     username: string
+
+    @Column({
+        type: 'enum',
+        enum: Role,
+        default: Role.User
+    })
+    public role: Role
 
     @Column({ default: false, select: false })
     isTwoFactorAuthenticationEnable: boolean;

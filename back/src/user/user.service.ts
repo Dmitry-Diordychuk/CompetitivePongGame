@@ -288,7 +288,7 @@ export class UserService {
             id,
             {
                 relations: ["profile"],
-                select: ["id", "username", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
+                select: ["id", "username", "role", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
         });
     }
 

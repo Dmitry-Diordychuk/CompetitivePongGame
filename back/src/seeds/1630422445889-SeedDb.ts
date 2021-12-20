@@ -17,22 +17,22 @@ export class SeedDb1630422445889 implements MigrationInterface {
 
         // Users
         /*
-        Token формируется из
-        id
-        ft_id
-        username
+            Token формируется из
+            id
+            ft_id
+            username
 
-        Алгоритм HS256
-        Тип JWT
+            Алгоритм HS256
+            Тип JWT
          */
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0X2lkIjoiMSIsInVzZXJuYW1lIjoiQV91c2VyIn0.uIUje5AHnK4fi1b21vvzN1XO_eP20slTPPchWFj3g0E
-        await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (101, 1, 'A_user', 101);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (101, 1, 'A_user', 'Admin', 101);`);
 
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0X2lkIjoiMiIsInVzZXJuYW1lIjoiQl91c2VyIn0.yZvTcANIHFMlWwyTluOwCGbR3jHe-hQfGc-OsCK_UvM
-        await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (102, 2, 'B_user', 102);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (102, 2, 'B_user', 'User', 102);`);
 
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0X2lkIjoiMyIsInVzZXJuYW1lIjoiQ191c2VyIn0.ijI9lgVwE0aVKHtrVexVsD3IM43TVJUoeZwzOFx6C0M
-        await queryRunner.query(`INSERT INTO users (id, "ftId", username, "profileId") VALUES (103, 3, 'C_user', 103);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (103, 3, 'C_user', 'User', 103);`);
 
 
         // Achievements
