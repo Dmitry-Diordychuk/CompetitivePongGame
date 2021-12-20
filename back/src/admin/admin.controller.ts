@@ -42,7 +42,8 @@ export class AdminController {
     async destroyChannel(
         @Param('id') channelId: number
     ) {
-        await this.adminService.destroyChannel(channelId);
+        const channel = await this.adminService.destroyChannel(channelId);
+        return channel;
     }
 
     @UseGuards(RoleGuard(Role.Admin))
@@ -51,7 +52,8 @@ export class AdminController {
     async makeChannelOwner(
         @Body('user') updateChannelAdminDto: UpdateChannelAdminDto
     ) {
-        await this.adminService.makeChannelOwner(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        const channel = await this.adminService.makeChannelOwner(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        return channel;
     }
 
     @UseGuards(RoleGuard(Role.Admin))
@@ -60,7 +62,8 @@ export class AdminController {
     async removeChannelOwner(
         @Param('id') channelId: number
     ) {
-        await this.adminService.removeChannelOwner(channelId);
+        const channel = await this.adminService.removeChannelOwner(channelId);
+        return channel;
     }
 
     @UseGuards(RoleGuard(Role.Admin))
@@ -69,7 +72,8 @@ export class AdminController {
     async makeChannelAdmin(
         @Body('user') updateChannelAdminDto: UpdateChannelAdminDto
     ) {
-        await this.adminService.makeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        const channel = await this.adminService.makeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        return channel;
     }
 
     @UseGuards(RoleGuard(Role.Admin))
@@ -78,6 +82,7 @@ export class AdminController {
     async removeChannelAdmin(
         @Body('user') updateChannelAdminDto: UpdateChannelAdminDto
     ) {
-        await this.adminService.removeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        const channel = await this.adminService.removeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        return channel;
     }
 }
