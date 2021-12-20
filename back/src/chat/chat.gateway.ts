@@ -11,7 +11,6 @@ import {ChatService} from "@app/chat/chat.service";
 import {Logger, UseFilters, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
 import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {ReceiveMessageDto} from "@app/chat/dto/receiveMessage.dto";
-import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
@@ -21,9 +20,11 @@ import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
 import {WebSocketExceptionFilter} from "@app/chat/filters/webSocketException.filter";
 import {SanctionDto} from "@app/chat/dto/sanction.dto";
 import {IsUserOnlineDto} from "@app/chat/dto/isUserOnline.dto";
+import WebSocketRoleGuard from "@app/shared/guards/webSocketRole.guard";
+import Role from "@app/user/types/role.enum";
 
 @UseFilters(new WebSocketExceptionFilter())
-@UseGuards(WebSocketAuthGuard)
+@UseGuards(WebSocketRoleGuard(Role.User))
 @UsePipes(new ValidationPipe({}))
 @WebSocketGateway(3002, { cors: true })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

@@ -1,9 +1,9 @@
 import {CanActivate, ExecutionContext, mixin, Type} from "@nestjs/common";
-import {AuthGuard} from "@app/shared/guards/auth.guard";
 import Role from "@app/user/types/role.enum";
+import {WebSocketAuthGuard} from "@app/shared/guards/webSocketAuth.guard";
 
-const RoleGuard = (role: Role): Type<CanActivate> => {
-    class RoleGuardMixin extends AuthGuard {
+const WebSocketRoleGuard = (role: Role): Type<CanActivate> => {
+    class WebSocketRoleGuardMixin extends WebSocketAuthGuard {
         canActivate(context: ExecutionContext): boolean {
             super.canActivate(context);
 
@@ -18,6 +18,6 @@ const RoleGuard = (role: Role): Type<CanActivate> => {
         }
     }
 
-    return mixin(RoleGuardMixin);
+    return mixin(WebSocketRoleGuardMixin);
 }
-export default RoleGuard;
+export default WebSocketRoleGuard;

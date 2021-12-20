@@ -1,12 +1,14 @@
 import {UseGuards} from "@nestjs/common";
-import {WebSocketAuthGuard} from "@app/chat/guard/webSocketAuth.guard";
 import {
-    ConnectedSocket, MessageBody,
+    ConnectedSocket,
+    MessageBody,
     OnGatewayConnection,
     OnGatewayDisconnect,
-    OnGatewayInit, SubscribeMessage,
+    OnGatewayInit,
+    SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer, WsException
+    WebSocketServer,
+    WsException
 } from "@nestjs/websockets";
 import {GameService} from "@app/game/game.service";
 import {MatchmakingService} from "@app/matchmaking/matchmaking.service";
@@ -16,9 +18,11 @@ import {UserEntity} from "@app/user/user.entity";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
 import {ProfileService} from "@app/profile/profile.service";
+import WebSocketRoleGuard from "@app/shared/guards/webSocketRole.guard";
+import Role from "@app/user/types/role.enum";
 
 
-@UseGuards(WebSocketAuthGuard)
+@UseGuards(WebSocketRoleGuard(Role.User))
 @WebSocketGateway(3002, { cors: true })
 export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     constructor(

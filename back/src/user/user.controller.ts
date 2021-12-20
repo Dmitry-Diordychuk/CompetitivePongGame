@@ -14,12 +14,13 @@ import {
 import {UserService} from "@app/user/user.service";
 import {User} from "@app/user/decorators/user.decorator";
 import {UserResponseInterface} from "@app/user/types/userResponse.interface";
-import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 import {UsersResponseInterface} from "@app/user/types/usersResponse.interface";
 import {Express} from "express";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {diskStorage} from 'multer';
+import RoleGuard from "@app/shared/guards/role.guard";
+import Role from "@app/user/types/role.enum";
 
 @Controller("api/user")
 export class UserController {
@@ -31,14 +32,14 @@ export class UserController {
         return this.userService.buildUserResponse(user);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @Get('')
     async getCurrentUser(@User('id') currentUserId): Promise<UserResponseInterface> {
         const user = await this.userService.getCurrentUser(currentUserId);
         return this.userService.buildUserResponse(user);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @UsePipes(new ValidationPipe)
     @Put('')
     async updateCurrentUser(
@@ -49,12 +50,14 @@ export class UserController {
         return this.userService.buildUserResponse(user);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: './uploadedFiles/avatars'
         })
     }))
+
+    @UseGuards(RoleGuard(Role.User))
     @Put('avatar')
     async uploadUserAvatar(
         @User() currentUser,
@@ -67,7 +70,7 @@ export class UserController {
         return await this.userService.updateCurrentUser(currentUser.id, updateUserDto);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @Get('/friends')
     async getCurrentUserFriends(
         @User('id') currentUserId: number
@@ -76,7 +79,7 @@ export class UserController {
         return this.userService.buildUsersResponse(friends);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @UsePipes(new ParseIntPipe())
     @Put('/friends/:friendId')
     async addUserToCurrentUserFriendList(
@@ -87,7 +90,7 @@ export class UserController {
         return this.userService.buildUsersResponse(friends);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @UsePipes(new ParseIntPipe())
     @Delete('/friends/:friendId')
     async removeUserFromCurrentUserFriendList(
@@ -97,8 +100,8 @@ export class UserController {
         const friends = await this.userService.removeUserFromCurrentUserFriendList(currentUserId, friendId);
         return this.userService.buildUsersResponse(friends);
     }
-    
-    @UseGuards(AuthGuard)
+
+    @UseGuards(RoleGuard(Role.User))
     @Get('/blacklist')
     async getCurrentUserBlacklist(
         @User('id') currentUserId: number
@@ -107,7 +110,7 @@ export class UserController {
         return this.userService.buildUsersResponse(blacklist);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @UsePipes(new ParseIntPipe())
     @Put('/blacklist/:userId')
     async addUserToCurrentUserBlackList(
@@ -118,7 +121,7 @@ export class UserController {
         return this.userService.buildUsersResponse(friends);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(RoleGuard(Role.User))
     @UsePipes(new ParseIntPipe())
     @Delete('/blacklist/:userId')
     async removeUserFromCurrentUserBlackList(

@@ -1,9 +1,12 @@
-import {Controller, Get, Param, ParseIntPipe, UsePipes} from "@nestjs/common";
+import {Controller, Get, Param, ParseIntPipe, UseGuards, UsePipes} from "@nestjs/common";
 import {AchievementService} from "@app/achievement/achievement.service";
 import {AchievementsResponseInterface} from "@app/achievement/type/achievementsResponse.interface";
 import {AchievementResponseInterface} from "@app/achievement/type/achievementResponse.interface";
+import Role from "@app/user/types/role.enum";
+import RoleGuard from "@app/shared/guards/role.guard";
 
 @Controller("api/achievement")
+@UseGuards(RoleGuard(Role.User))
 export class AchievementController {
     constructor(private readonly achievementService: AchievementService) {}
 

@@ -1,20 +1,21 @@
 import {Body, Controller, HttpCode, HttpException, HttpStatus, Post, Res, UseGuards} from "@nestjs/common";
-import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {UserEntity} from "@app/user/user.entity";
 import {User} from "@app/user/decorators/user.decorator";
 import {TwoFactorAuthenticationService} from "@app/two_factor_authentication/twoFactorAuthentication.service";
 import {Response} from "express";
 import {UserService} from "@app/user/user.service";
 import {TwoFactorAuthenticationsCodeDto} from "@app/two_factor_authentication/dto/twoFactorAuthenticationsCode.dto";
+import RoleGuard from "@app/shared/guards/role.guard";
+import Role from "@app/user/types/role.enum";
 
 @Controller('api/2fa')
+@UseGuards(RoleGuard(Role.User))
 export class TwoFactorAuthenticationController {
     constructor(
         private readonly twoFactorAuthenticationService: TwoFactorAuthenticationService,
         private readonly userService: UserService
     ) {}
 
-    @UseGuards(AuthGuard)
     @Post('generate')
     async register(
         @Res() response: Response,
@@ -25,7 +26,6 @@ export class TwoFactorAuthenticationController {
     }
 
     @HttpCode(200)
-    @UseGuards(AuthGuard)
     @Post('turn-on')
     async turnOnTwoFactorAuthentication(
         @User() user: UserEntity,
@@ -44,7 +44,6 @@ export class TwoFactorAuthenticationController {
     }
 
     @HttpCode(200)
-    @UseGuards(AuthGuard)
     @Post('turn-off')
     async turnOffTwoFactorAuthentication(
         @User() user: UserEntity,
@@ -63,7 +62,6 @@ export class TwoFactorAuthenticationController {
     }
 
     @HttpCode(200)
-    @UseGuards(AuthGuard)
     @Post('authenticate')
     async authenticate(
         @User() user: UserEntity,

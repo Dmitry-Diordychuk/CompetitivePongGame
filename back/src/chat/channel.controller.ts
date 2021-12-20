@@ -1,22 +1,14 @@
-import {
-    Body,
-    Controller,
-    Get,
-    Param,
-    ParseIntPipe,
-    Put,
-    UseGuards,
-    UsePipes,
-    ValidationPipe
-} from '@nestjs/common';
+import {Body, Controller, Get, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
 import {ChatService} from "@app/chat/chat.service";
-import {AuthGuard} from "@app/shared/guards/auth.guard";
 import {User} from "@app/user/decorators/user.decorator";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
 import {MakeAdminDto} from "@app/chat/dto/makeAdmin.dto";
 import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
+import Role from "@app/user/types/role.enum";
+import RoleGuard from "@app/shared/guards/role.guard";
 
 @Controller("api/channel")
+@UseGuards(RoleGuard(Role.User))
 export class ChannelController {
     constructor(
         private readonly chatService: ChatService,
@@ -27,7 +19,6 @@ export class ChannelController {
         return await this.chatService.getAllPublicChannels();
     }
 
-    @UseGuards(AuthGuard)
     @Get('all/current')
     async getUserChannels(
         @User('id') currentUserId: number,
@@ -43,7 +34,6 @@ export class ChannelController {
         return await this.chatService.getChannel(channel_id);
     }
 
-    @UseGuards(AuthGuard)
     @UsePipes(new ValidationPipe())
     @Put('admin')
     async makeUserChannelAdmin(
