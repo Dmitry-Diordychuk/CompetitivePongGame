@@ -134,7 +134,7 @@ export class UserController {
 
     @UseGuards(RoleGuard(Role.User))
     @UsePipes(new ParseIntPipe())
-    @Get(':pageNumber')
+    @Get('all/:pageNumber')
     async getUsers(
         @Param('pageNumber') pageNumber: number,
     ) {
@@ -142,6 +142,6 @@ export class UserController {
         return {
             result,
             total,
-        }
+        };
     }
 }

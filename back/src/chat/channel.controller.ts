@@ -43,4 +43,16 @@ export class ChannelController {
         const channel = await this.chatService.makeAdmin(currentUserId, makeAdminDto.userId, makeAdminDto.channelId);
         return {channel};
     }
+
+    @UsePipes(new ParseIntPipe())
+    @Get('all/:pageNumber')
+    async getAllChannels(
+        @Param('pageNumber') pageNumber: number,
+    ) {
+        const [result, total] = await this.chatService.getAllChannels(10, pageNumber);
+        return {
+            result,
+            total,
+        };
+    }
 }

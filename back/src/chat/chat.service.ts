@@ -414,4 +414,14 @@ export class ChatService {
 
         return (channel);
     }
+
+    async getAllChannels(take: number, skip: number): Promise<any> {
+        return await this.channelRepository.findAndCount({
+            order: {
+                name: "ASC"
+            },
+            skip: skip,
+            take: take,
+        });
+    }
 }
