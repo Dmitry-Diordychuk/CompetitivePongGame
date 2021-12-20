@@ -12,5 +12,6 @@ import {SanctionEntity} from "@app/sanction/sanction.entity";
     imports: [TypeOrmModule.forFeature([ChannelEntity, UserEntity, SanctionEntity]), UserModule],
     controllers: [ChannelController],
     providers: [ChatService, ChatGateway],
+    exports: [ChatService],
 })
 export class ChatModule {}

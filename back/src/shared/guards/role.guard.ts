@@ -10,7 +10,9 @@ const RoleGuard = (role: Role): Type<CanActivate> => {
             const request = context.switchToHttp().getRequest();
             const user = request.user;
 
-            if ((user?.role === Role.Owner || user?.role === Role.Admin) && role === Role.User)
+            if (user?.role === Role.Owner)
+                return true;
+            else if (user?.role === Role.Admin && role !== Role.Owner)
                 return true;
             else if (user?.role === Role.Banned)
                 return false;

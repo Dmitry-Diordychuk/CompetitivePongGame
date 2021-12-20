@@ -63,7 +63,7 @@ export class GameService {
             size: 5,
         }, {
             position: {
-                x: 18,
+                x: GRID_SIZE - 2,
                 y: 5,
             },
             velocity: 0,
@@ -107,7 +107,7 @@ export class GameService {
                 size: 5,
             }, {
                 position: {
-                    x: 18,
+                    x: GRID_SIZE - 2,
                     y: 5,
                 },
                 velocity: 0,

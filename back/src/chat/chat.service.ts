@@ -7,15 +7,15 @@ import {ChannelEntity} from "@app/chat/channel.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {getConnection, Repository} from "typeorm";
 import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
-import {compare} from "bcrypt";
+import {compare, hash} from "bcrypt";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
 import {CreateChannelDto} from "@app/chat/dto/createChannel.dto";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
 import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interface";
 import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
-import {hash} from "bcrypt"
 import {SanctionDto} from "@app/chat/dto/sanction.dto";
 import {SanctionEntity} from "@app/sanction/sanction.entity";
+import Role from "@app/user/types/role.enum";
 
 
 @Injectable()
@@ -85,8 +85,10 @@ export class ChatService {
             throw new WsException("Channel doesn't exist");
         }
 
-        if (!await this.isChannelPassword(channel, joinChannelDto.password)) {
-            throw new WsException("Wrong password");
+        if (user.role !== Role.Admin && user.role !== Role.Owner) {
+            if (!await this.isChannelPassword(channel, joinChannelDto.password)) {
+                throw new WsException("Wrong password");
+            }
         }
 
         const sanction = channel.sanctions.find(s => s.target.id === user.id);
@@ -98,8 +100,10 @@ export class ChatService {
             }
         }
 
-        channel.visitors.push(user);
-        channel = await this.channelRepository.save(channel);
+        if (user.role !== Role.Admin && user.role !== Role.Owner) {
+            channel.visitors.push(user);
+            channel = await this.channelRepository.save(channel);
+        }
 
         return {
             "id": channel.id,
@@ -399,5 +403,15 @@ export class ChatService {
 
     async getUserIdByUsername(username: string): Promise<number> {
         return await this.userService.getUserIdByUsername(username);
+    }
+
+    async findChannelById(channelId: number): Promise<ChannelEntity> {
+        const channel = await this.channelRepository.findOne(channelId);
+
+        if (!channel) {
+            throw new HttpException("There is no such channel!", 404);
+        }
+
+        return (channel);
     }
 }
