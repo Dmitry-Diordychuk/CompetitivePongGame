@@ -26,7 +26,7 @@ export class SeedDb1630422445889 implements MigrationInterface {
             Тип JWT
          */
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0X2lkIjoiMSIsInVzZXJuYW1lIjoiQV91c2VyIn0.uIUje5AHnK4fi1b21vvzN1XO_eP20slTPPchWFj3g0E
-        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (101, 1, 'A_user', 'Admin', 101);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (101, 1, 'A_user', 'Owner', 101);`);
 
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0X2lkIjoiMiIsInVzZXJuYW1lIjoiQl91c2VyIn0.yZvTcANIHFMlWwyTluOwCGbR3jHe-hQfGc-OsCK_UvM
         await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (102, 2, 'B_user', 'User', 102);`);
@@ -36,20 +36,38 @@ export class SeedDb1630422445889 implements MigrationInterface {
 
 
         // Achievements
-        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (101, 'achievement_1', 'make something_1');`);
-        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (102, 'achievement_2', 'make something_2');`);
-        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (103, 'A_achievement', 'make something_3');`);
-        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (104, 'B_achievement', 'make something_4');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (1, '1ая игра', 'Первый шаг');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (2, '3я игра', 'Спасибо что с нами');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (3, '7ая игра', 'Добро пожаловать в задроты');`);
+
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (4, '1ая победа', '1ая победа');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (5, '3ая победа', '3ая победа');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (6, '5ая победа', '5ая победа');`);
+
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (7, '3я победа подряд', 'А ты что-то можешь');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (8, '4я победа подряд', 'Неплохая серия');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (9, '5я победа подряд', 'Дорога на чемпионат');`);
+
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (10, 'Смена аватарки', 'У вас ус отклеился');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (11, 'Смена ника', 'Загранпаспорт');`);
+
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (12, '1ое поражение', 'Всякое бывает');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (13, '2ое поражение', 'Не первый раз замужем');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (14, '5ое поражение', 'Вперёд, лузеры');`);
+
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (15, '2ое поражение подряд', 'Ну, бывает');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (16, '3ое поражение подряд', 'Так держать');`);
+        await queryRunner.query(` INSERT INTO achievements(id, title, description) VALUES (17, '4ое поражение подряд', 'А ты неплох');`);
 
 
-        // Add achievements to profiles
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 101);`);
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 102);`);
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 103);`);
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 104);`);
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (102, 104);`);
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (103, 103);`);
-        await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (103, 104);`);
+        // // Add achievements to profiles
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 101);`);
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 102);`);
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 103);`);
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (101, 104);`);
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (102, 104);`);
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (103, 103);`);
+        // await queryRunner.query(`INSERT INTO profiles_achievements_achievements ("profilesId", "achievementsId") VALUES (103, 104);`);
 
 
         // Channels

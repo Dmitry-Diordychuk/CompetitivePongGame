@@ -14,11 +14,11 @@ export class GameService {
     state = {};
 
     startGameInterval(server: Server, roomName: string, resultFunc, mode : 'default' | 'modded' = 'default') {
+        const clients = server.sockets.adapter.rooms.get(roomName);
         const intervalId = setInterval(() => {
             let winner = this.gameLoop(this.state[roomName], mode);
 
             if (!winner) {
-                const clients = server.sockets.adapter.rooms.get(roomName);
                 for (let clientId of clients) {
                     let player_number = this.clientInfoService.getClientPlayerNumber(clientId);
                     if (player_number == 1 || player_number == 0) {

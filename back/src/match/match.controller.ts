@@ -1,4 +1,15 @@
-import {Body, Controller, Delete, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Put,
+    UseGuards,
+    UsePipes,
+    ValidationPipe
+} from "@nestjs/common";
 import {User} from "@app/user/decorators/user.decorator";
 import {MatchService} from "@app/match/match.service";
 import {AddCommentDto} from "@app/match/dto/addComment.dto";
@@ -12,6 +23,15 @@ export class MatchController {
     constructor(
         private readonly matchService: MatchService,
     ) {
+    }
+
+    @UsePipes(new ParseIntPipe())
+    @Get('/user/:id')
+    async getUserMatches(
+        @Param('id') userId: number
+    ) {
+        const matches = await this.matchService.findUserMatches(userId);
+        return matches;
     }
 
     @UsePipes(new ValidationPipe)

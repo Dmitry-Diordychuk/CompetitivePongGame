@@ -1,4 +1,4 @@
-import {MiddlewareConsumer, Module, RequestMethod} from "@nestjs/common";
+import {forwardRef, MiddlewareConsumer, Module, RequestMethod} from "@nestjs/common";
 import {UserController} from "@app/user/user.controller";
 import {UserService} from "@app/user/user.service";
 import {TypeOrmModule} from "@nestjs/typeorm";
@@ -7,6 +7,7 @@ import {ChannelEntity} from "@app/chat/channel.entity";
 import {SecondFactorAuthMiddleware} from "@app/user/middleware/secondFactorAuth.middleware";
 import {HttpModule} from "@nestjs/axios";
 import {AuthMiddleware} from "@app/user/middleware/auth.middleware";
+import {ProfileModule} from "@app/profile/profile.module";
 
 @Module({
     imports: [TypeOrmModule.forFeature([UserEntity, ChannelEntity]), HttpModule],

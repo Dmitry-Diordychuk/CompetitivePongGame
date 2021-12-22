@@ -95,6 +95,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             } else {
                 await this.profileService.addMatch('ladder', pair.clientB.user, pair.clientA.user);
             }
+            await this.profileService.unlockAchievements(pair.clientA.user.profile);
+            await this.profileService.unlockAchievements(pair.clientB.user.profile);
             this.clientInfoService.removeClientInfo(roomName);
         });
     }
@@ -161,6 +163,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             } else {
                 await this.profileService.addMatch('duel', pair.clientB.user, pair.clientA.user);
             }
+            await this.profileService.unlockAchievements(pair.clientA.user.profile);
+            await this.profileService.unlockAchievements(pair.clientB.user.profile);
             this.clientInfoService.removeClientInfo(roomName);
         }, pair.gameMode);
     }

@@ -18,7 +18,7 @@ export class UserService {
     constructor(
         @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(ChannelEntity) private readonly channelRepository: Repository<ChannelEntity>,
-        private readonly httpService: HttpService
+        private readonly httpService: HttpService,
     ) {}
 
     async ftAuth(code: string): Promise<UserEntity> {
@@ -122,6 +122,7 @@ export class UserService {
                 throw new HttpException("This username already in use", HttpStatus.CONFLICT);
             }
 
+
             user.username = updateUserDto.username;
         }
 
@@ -129,6 +130,7 @@ export class UserService {
             if (user.profile.image == updateUserDto.image) {
                 throw new HttpException("This image same as previous", HttpStatus.BAD_REQUEST);
             }
+
 
             user.profile.image = updateUserDto.image;
         }

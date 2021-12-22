@@ -5,6 +5,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {CommentEntity} from "@app/match/comment.entity";
 import {UserService} from "@app/user/user.service";
+import {find} from "rxjs";
 
 @Injectable()
 export class MatchService {
@@ -20,6 +21,25 @@ export class MatchService {
             throw new HttpException("There is no such match", HttpStatus.BAD_REQUEST);
         }
         return match;
+    }
+
+    async findUserMatches(userId: number) {
+        let matches = await this.matchRepository.find({
+            relations: ["winner", "loser"],
+            where: [
+                {
+                    winner: {
+                        id: userId,
+                    },
+                },
+                {
+                    loser: {
+                        id: userId,
+                    },
+                }
+            ]
+        });
+        return matches;
     }
 
     async createMatch(type: 'duel' | 'ladder', winner: ProfileEntity, loser: ProfileEntity): Promise<MatchEntity> {
