@@ -6,6 +6,7 @@ import {Repository} from "typeorm";
 import {CommentEntity} from "@app/match/comment.entity";
 import {UserService} from "@app/user/user.service";
 import {find} from "rxjs";
+import {UserEntity} from "@app/user/user.entity";
 
 @Injectable()
 export class MatchService {
@@ -24,21 +25,12 @@ export class MatchService {
     }
 
     async findUserMatches(userId: number) {
-        let matches = await this.matchRepository.find({
-            relations: ["winner", "loser"],
-            where: [
-                {
-                    winner: {
-                        id: userId,
-                    },
-                },
-                {
-                    loser: {
-                        id: userId,
-                    },
-                }
-            ]
-        });
+        let matches = await this.matchRepository
+            .createQueryBuilder('match')
+            .leftJoinAndSelect(UserEntity, "winner", "match.winnerId = winner.id")
+            .leftJoinAndSelect(UserEntity, "loser", "match.loserId = loser.id")
+            .where("match.winnerId = :userId OR match.loserId = :userId", { userId: userId })
+            .getRawMany();
         return matches;
     }
 
