@@ -16,6 +16,9 @@ export class ProfileEntity {
     @Column({default: 1, nullable: false})
     level: number
 
+    @Column({type: "float", default: 1.0, nullable: false})
+    exp: number
+
     @Column({nullable: false})
     ftProfile: string
 
@@ -26,9 +29,9 @@ export class ProfileEntity {
     @JoinTable()
     achievements: AchievementEntity[]
 
-    @OneToMany(() => MatchEntity, (match) => match.winner, {eager: true})
+    @OneToMany(() => MatchEntity, (match) => match.winner)
     winMatches: MatchEntity[];
 
-    @OneToMany(() => MatchEntity, (match) => match.loser, {eager: true})
+    @OneToMany(() => MatchEntity, (match) => match.loser)
     lossMatches: MatchEntity[];
 }

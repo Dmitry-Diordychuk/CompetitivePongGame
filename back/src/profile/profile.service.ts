@@ -50,7 +50,7 @@ export class ProfileService {
         let counter = 0;
         let isWinStreak = matches[0].winner.id === profileId;
 
-        while ((matches[counter].winner.id === profileId) === isWinStreak)
+        while (counter < matches.length && (matches[counter].winner.id === profileId) === isWinStreak)
             counter++;
 
         if (isWinStreak === true)
@@ -94,6 +94,7 @@ export class ProfileService {
         let matches = [...wonMatches, ...lostMatches];
         const streak = this.calculateStreak(matches, profile.id);
 
+
         if (matches.length === 1) {
             await this.addAchievement(profile, 1);
         } else if (matches.length === 3) {
@@ -133,6 +134,22 @@ export class ProfileService {
         } else if (streak === -4) {
             await this.addAchievement(profile, 17);
         }
+
+        await this.profileRepository.save(profile);
+    }
+
+    async calculateLevel(profile: ProfileEntity, rivalProfile: ProfileEntity) {
+        let playerLevel = profile.level;
+        const rivalLevel = rivalProfile.level;
+
+        const levelDiff = rivalLevel - playerLevel;
+        const exp = 1 + levelDiff / 10;
+
+        profile.exp += exp;
+
+        profile.level = Math.floor(Math.log2(profile.exp + 1));
+
+        await this.profileRepository.save(profile);
     }
 
     async addAchievement(profile: ProfileEntity, achievementId: number) {

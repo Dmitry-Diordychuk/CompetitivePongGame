@@ -92,11 +92,13 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         this.gameService.startGameInterval(this.server, roomName, async (winner) => {
             if (winner === 1) {
                 await this.profileService.addMatch('ladder', pair.clientA.user, pair.clientB.user);
+                await this.profileService.calculateLevel(pair.clientA.user.profile, pair.clientB.user.profile);
             } else {
                 await this.profileService.addMatch('ladder', pair.clientB.user, pair.clientA.user);
             }
             await this.profileService.unlockAchievements(pair.clientA.user.profile);
             await this.profileService.unlockAchievements(pair.clientB.user.profile);
+            await this.profileService.calculateLevel(pair.clientA.user.profile, pair.clientB.user.profile);
             this.clientInfoService.removeClientInfo(roomName);
         });
     }
@@ -163,8 +165,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             } else {
                 await this.profileService.addMatch('duel', pair.clientB.user, pair.clientA.user);
             }
-            await this.profileService.unlockAchievements(pair.clientA.user.profile);
-            await this.profileService.unlockAchievements(pair.clientB.user.profile);
             this.clientInfoService.removeClientInfo(roomName);
         }, pair.gameMode);
     }

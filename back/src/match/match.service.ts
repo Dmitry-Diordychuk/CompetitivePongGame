@@ -30,6 +30,7 @@ export class MatchService {
             .leftJoinAndSelect(UserEntity, "winner", "match.winnerId = winner.id")
             .leftJoinAndSelect(UserEntity, "loser", "match.loserId = loser.id")
             .where("match.winnerId = :userId OR match.loserId = :userId", { userId: userId })
+            .orderBy("match.create_at", 'DESC')
             .getRawMany();
         return matches;
     }

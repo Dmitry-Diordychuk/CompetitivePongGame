@@ -8,7 +8,6 @@ import {GameClientInterface} from "@app/matchmaking/types/gameClient.interface";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {Socket} from "socket.io";
 
-
 @Injectable()
 export class MatchmakingService {
     constructor(
@@ -118,7 +117,7 @@ export class MatchmakingService {
      */
     isMatch(clientA: GameClientInterface, clientB: GameClientInterface): boolean {
         if (clientA !== clientB) {
-            return Math.abs(clientA.user.profile.level - clientB.user.profile.level) < 2;
+            return Math.abs(clientA.user.profile.level - clientB.user.profile.level) < 11;
         }
         return false;
     }
@@ -188,7 +187,6 @@ export class MatchmakingService {
 
         const timeouts = this.schedulerRegistry.getTimeouts();
         timeouts.forEach(key => {
-            console.log(key);
             if (key === `wait_for_${user.id}_${rival.id}`) {
                 throw new WsException("You have already invited this player!");
             } else if (key == `wait_for_${rival.id}_${user.id}`) {

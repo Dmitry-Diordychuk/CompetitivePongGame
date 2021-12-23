@@ -6,10 +6,14 @@ import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {Server} from "socket.io";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
 import {WsException} from "@nestjs/websockets";
+import {SchedulerRegistry, Interval} from "@nestjs/schedule";
 
 @Injectable()
 export class GameService {
-    constructor(private readonly clientInfoService: ClientInfoService) {
+    constructor(
+        private readonly clientInfoService: ClientInfoService,
+        private schedulerRegistry: SchedulerRegistry,
+    ) {
     }
     state = {};
 
@@ -40,13 +44,13 @@ export class GameService {
                     else
                         winner = 2;
                     this.state[roomName] = null;
-                    clearInterval(intervalId);
+                    this.schedulerRegistry.deleteInterval(roomName);
                     server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
                     resultFunc(winner);
                 }
             }
         }, 1000 / FRAME_RATE)
-        return;
+        this.schedulerRegistry.addInterval(roomName, intervalId);
     }
 
     initGame(roomName: string) {

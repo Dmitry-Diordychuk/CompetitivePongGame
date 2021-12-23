@@ -289,7 +289,7 @@ export class UserService {
         return await this.userRepository.findOne(
             id,
             {
-                relations: ["profile"],
+                relations: ["profile", "profile.winMatches", "profile.lossMatches"],
                 select: ["id", "username", "role", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
         });
     }
