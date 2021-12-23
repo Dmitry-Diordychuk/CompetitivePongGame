@@ -72,18 +72,19 @@ export class ProfileService {
                 winner.profile.victories += 1;
             }
         }
-        await this.profileRepository.save(winner.profile);
 
         if (loser.profile.lossMatches) {
             loser.profile.lossMatches = [match, ...loser.profile.lossMatches];
             if (type === 'ladder')
-                winner.profile.losses += 1;
+                loser.profile.losses += 1;
         } else {
             loser.profile.lossMatches = [match];
             if (type === 'ladder') {
-                winner.profile.losses += 1;
+                loser.profile.losses += 1;
             }
         }
+
+        await this.profileRepository.save(winner.profile);
         await this.profileRepository.save(loser.profile);
     }
 
