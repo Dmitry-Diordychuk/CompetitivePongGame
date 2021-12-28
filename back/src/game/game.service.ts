@@ -6,7 +6,8 @@ import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {Server} from "socket.io";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
 import {WsException} from "@nestjs/websockets";
-import {SchedulerRegistry, Interval} from "@nestjs/schedule";
+import {Interval, SchedulerRegistry} from "@nestjs/schedule";
+import {UserEntity} from "@app/user/user.entity";
 
 @Injectable()
 export class GameService {
@@ -16,6 +17,14 @@ export class GameService {
     ) {
     }
     state = {};
+
+    @Interval(1000)
+    log() {
+        console.log('Games');
+        const intervals = this.schedulerRegistry.getIntervals();
+        intervals.forEach(key => console.log(`Interval: ${key}`));
+
+    }
 
     startGameInterval(server: Server, roomName: string, resultFunc, mode : 'default' | 'modded' = 'default') {
         const clients = server.sockets.adapter.rooms.get(roomName);

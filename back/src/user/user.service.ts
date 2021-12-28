@@ -35,7 +35,6 @@ export class UserService {
             const tokenResponse = await firstValueFrom(this.httpService.post('https://api.intra.42.fr/oauth/token', data));
             token = tokenResponse.data["access_token"];
         } catch (exception) {
-            console.log(exception)
             throw new HttpException("Unauthorized", 401);
         }
 
@@ -73,7 +72,7 @@ export class UserService {
                     profile: "user.profile",
                 }
             },
-            select: ['username', 'ftId', 'isTwoFactorAuthenticationEnable'],
+            select: ['id', 'username', 'role', 'ftId', 'isTwoFactorAuthenticationEnable'],
         })
 
         return user;
@@ -146,9 +145,7 @@ export class UserService {
     }
 
     async addUserToCurrentUserFriendList(currentUserId: number, friendId: number): Promise<UserEntity[]> {
-        console.log(typeof currentUserId, typeof friendId);
         if (currentUserId === friendId) {
-            console.log("Here");
             throw new HttpException("You can't add to the friend list yourself", HttpStatus.BAD_REQUEST);
         }
 
@@ -257,7 +254,7 @@ export class UserService {
 
         return user.blacklist;
     }
-    // TODO: Intra error 42
+
     buildUserResponse(user: UserEntity, isSecondFactorAuthenticated: boolean = false): UserResponseInterface {
         if (!user) {
             return;
@@ -268,6 +265,7 @@ export class UserService {
         delete user.profile;
         delete user.ftId;
         delete user.twoFactorAuthenticationsSecret;
+
         return {
             user: {
                 ...user,
@@ -319,7 +317,7 @@ export class UserService {
         return sign(
             payload,
             JWT_SECRET,
-            { expiresIn: JWT_EXPIRATION_TIME }
+            //{ expiresIn: JWT_EXPIRATION_TIME },
         );
     }
 
@@ -358,7 +356,8 @@ export class UserService {
 
     async turnOffTwoFactorAuthentication(userId: number) {
         return this.userRepository.update(userId, {
-            isTwoFactorAuthenticationEnable: false
+            isTwoFactorAuthenticationEnable: false,
+            twoFactorAuthenticationsSecret: null,
         })
     }
 

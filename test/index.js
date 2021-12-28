@@ -17,11 +17,11 @@ if (token === 'A') {
     token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMyIsImZ0SWQiOiIzIiwidXNlcm5hbWUiOiJDX3VzZXIifQ.zKQs-ZTDK3JCrou_ojapbL7NtJqXhEzOVbKCR0nJ-uk';
 }
 
-const socket = io('http://localhost:3002', {
-    extraHeaders: {
-        Authorization: `Bearer ${token}`
-    }
-});
+// const socket = io('http://localhost:3002', {
+//     extraHeaders: {
+//         Authorization: `Bearer ${token}`
+//     }
+// });
 
 socket.on('game-code', handleGameCode);
 socket.on('game-init', handleInit);

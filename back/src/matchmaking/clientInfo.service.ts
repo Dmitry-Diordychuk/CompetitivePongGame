@@ -4,13 +4,20 @@ import {Injectable} from "@nestjs/common";
 export class ClientInfoService {
     clientInfo = [];
 
-    setClientInfo(userId, clientId, roomName, playerNumber) {
+    setClientInfo(userId, socketId, roomName, playerNumber) {
         this.clientInfo.push({
             userId,
-            clientId,
+            socketId,
             roomName,
             playerNumber,
         });
+    }
+
+    getUserSocket(userId) {
+        const record = this.clientInfo.find(i => i.userId === userId);
+        if (record)
+            return record.socketId;
+        return null;
     }
 
     getUserRoom(userId) {

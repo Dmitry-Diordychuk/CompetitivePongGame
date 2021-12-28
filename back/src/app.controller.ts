@@ -16,7 +16,6 @@ export class AppController {
 
   @Get('/heapdump')
   getDump() {
-    console.log('dump')
     const snapshotStream = v8.getHeapSnapshot();
     const filename = `${Date.now()}.heapsnapshot`;
     const filestream = fs.createWriteStream(filename);

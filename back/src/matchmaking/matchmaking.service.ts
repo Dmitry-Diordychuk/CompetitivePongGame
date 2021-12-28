@@ -7,6 +7,7 @@ import {WsException} from "@nestjs/websockets";
 import {GameClientInterface} from "@app/matchmaking/types/gameClient.interface";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
 import {Socket} from "socket.io";
+import {queue} from "rxjs";
 
 @Injectable()
 export class MatchmakingService {
@@ -72,7 +73,9 @@ export class MatchmakingService {
     successMatchmakingHandle(clientA: GameClientInterface, clientB: GameClientInterface) {
         this.queue = this.queue.filter(client => client.user.id != clientA.user.id && client.user.id != clientB.user.id);
 
-        const functionsNames = this.createWaitForPlayersTimer(clientA, clientB, 'matchmaking-wait-for-players', ()=>void 0);
+        const functionsNames = this.createWaitForPlayersTimer(clientA, clientB, 'matchmaking-wait-for-players', ()=>{
+            this.waitList = this.waitList.filter(i => i.clientA.user.id !== clientA.user.id);
+        });
 
         this.waitList.push({
             clientA: clientA,
@@ -94,6 +97,11 @@ export class MatchmakingService {
 
     @Interval(POOL_POLL_INTERVAL)
     loopMatchmaking() {
+        console.log(new Date());
+        console.log('Queue: ', this.queue.map((client) => client.user.username));
+        console.log('Wait list: ', this.waitList.map((pair) => pair.clientA.user + ' ' + pair.clientB.user));
+        console.log('Wait duel: ', this.waitDuel);
+
         for (const clientA of this.queue) {
             let timeSinceStart = 0;
             for (const clientB of this.queue) {
@@ -142,6 +150,9 @@ export class MatchmakingService {
 
     removeFromWaitList(user): Socket {
         const pair = this.waitList.find(pair => pair.clientA.user.id === user.id || pair.clientB.user.id === user.id);
+        if (!pair) {
+            throw new WsException("Your aren't paired!");
+        }
         this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
         this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);
         this.waitList = this.waitList.filter(pair => pair.clientA.user.id !== user.id && pair.clientB.user.id !== user.id);

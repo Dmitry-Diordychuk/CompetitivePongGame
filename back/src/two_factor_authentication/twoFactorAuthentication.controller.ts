@@ -21,6 +21,8 @@ export class TwoFactorAuthenticationController {
         @Res() response: Response,
         @User() user: UserEntity
     ) {
+        if (user.isTwoFactorAuthenticationEnable)
+            throw new HttpException("Already generated!", HttpStatus.BAD_REQUEST);
         const { otpAuthUrl } = await this.twoFactorAuthenticationService.generateTwoFactorAuthenticationSecret(user);
         return this.twoFactorAuthenticationService.pipeQrCodeStream(response, otpAuthUrl);
     }
@@ -67,6 +69,8 @@ export class TwoFactorAuthenticationController {
         @User() user: UserEntity,
         @Body() twoFactorAuthenticationCodeDto: TwoFactorAuthenticationsCodeDto
     ) {
+        console.log(user, twoFactorAuthenticationCodeDto.code, user.twoFactorAuthenticationsSecret);
+
         const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
             twoFactorAuthenticationCodeDto.code,
             user.twoFactorAuthenticationsSecret

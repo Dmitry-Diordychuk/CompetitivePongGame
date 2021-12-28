@@ -41,11 +41,19 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     handleConnection(
         @ConnectedSocket() socket: Socket
     ) {
-        const user = socket.handshake.headers.user;
-        this.matchmakingService.updateSocketIfUserInQueue(user, socket);
+        //const user = socket.handshake.headers.user;
+        //this.matchmakingService.updateSocketIfUserInQueue(user, socket);
     }
 
-    handleDisconnect() {
+    handleDisconnect(
+        @ConnectedSocket() socket: Socket
+    ) {
+        // @ts-ignore
+        const user: UserEntity = socket.handshake.headers.user;
+        this.matchmakingService.leaveQueue(user);
+        const anotherClient = this.matchmakingService.removeFromWaitList(user);
+        socket.emit('matchmaking-declined');
+        anotherClient.emit('matchmaking-restart');
     }
 
     @SubscribeMessage('matchmaking-add-in-queue')

@@ -25,7 +25,10 @@ export class UserModule {
             })
         consumer
             .apply(SecondFactorAuthMiddleware)
-            .exclude('api/2fa/authenticate')
+            .exclude(
+                'api/2fa/authenticate',
+                'api/user',
+            )
             .forRoutes({
                 path: '*',
                 method: RequestMethod.ALL
