@@ -1,9 +1,10 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
-import '../styles/ontop.css'
 import {useChat} from "../contexts/chat.context";
 import Matchmacking from "./Matchmacking";
+
+import '../styles/TopPanel.css'
 
 
 export default function TopPanel() {

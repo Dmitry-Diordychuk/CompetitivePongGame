@@ -41,8 +41,9 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     handleConnection(
         @ConnectedSocket() socket: Socket
     ) {
-        //const user = socket.handshake.headers.user;
-        //this.matchmakingService.updateSocketIfUserInQueue(user, socket);
+        const user = socket.handshake.headers.user;
+        // @ts-ignore
+        this.clientInfoService.renewClientSocket(user.id, socket.id);
     }
 
     handleDisconnect(
@@ -52,8 +53,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         const user: UserEntity = socket.handshake.headers.user;
         this.matchmakingService.leaveQueue(user);
         const anotherClient = this.matchmakingService.removeFromWaitList(user);
-        socket.emit('matchmaking-declined');
-        anotherClient.emit('matchmaking-restart');
+        //socket.emit('matchmaking-declined');
+        anotherClient?.emit('matchmaking-restart');
     }
 
     @SubscribeMessage('matchmaking-add-in-queue')
@@ -106,7 +107,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             }
             await this.profileService.unlockAchievements(pair.clientA.user.profile);
             await this.profileService.unlockAchievements(pair.clientB.user.profile);
-            await this.profileService.calculateLevel(pair.clientA.user.profile, pair.clientB.user.profile);
+            //await this.profileService.calculateLevel(pair.clientA.user.profile, pair.clientB.user.profile);
             this.clientInfoService.removeClientInfo(roomName);
         });
     }

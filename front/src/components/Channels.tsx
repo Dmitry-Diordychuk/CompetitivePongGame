@@ -1,9 +1,8 @@
 import React, {useRef, useState} from "react";
-import '../styles/channels_panel.css'
-import '../styles/bottom.css';
-import '../styles/new_channel.css';
 import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
+
+import '../styles/Channels.css'
 
 
 export default function Channels() {
@@ -82,43 +81,14 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
     const pass_ref = useRef<any>("");
     const name_fer = useRef<any>("");
 
-    function switch_priv()
-    {
-        if (is_priv === false)
-            setIs_priv(true)
-        else
-            setIs_priv(false)
-    }
-
-    function switch_join_or_creat()
-    {
-        if (create_or_join === false)
-            setCoJ(true)
-        else
-            setCoJ(false)
-    }
-
     function PassInput()
     {
-        let button_label : string = 'Join channel';
-        if (create_or_join === false)
-            button_label = 'Create channel';
-        if (is_priv === false)
-        {
-            return (
-                <div>
-                    <button onClick={switch_priv}>Private channel</button>
-                    <button onClick={switch_join_or_creat}>{button_label}</button>
-                </div>)
-        }
+        if (!is_priv)
+            return (<div> </div>)
         return (
             <div>
                 <input type='text' ref={pass_ref} placeholder='Chanel password' onKeyPress={e => (e.code === "Enter" || e.code === "NumpadEnter") ?
-                    pre_add_new_chan(name_fer.current) : 0}></input>
-                <div>
-                    <button onClick={switch_priv}>Common channel</button>
-                    <button onClick={switch_join_or_creat}>{button_label}</button>
-                </div>
+                    add_new_chan() : 0}></input>
             </div>
         )
     }
@@ -157,19 +127,24 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
         setLastAdded(name);
     }
 
-    function add_new_chan(value : string)
+    function add_new_chan()
     {
         var temp_pass;
-
-        if (pass_ref.current === '' || pass_ref === null)
+        var value : string = name_fer.current.value
+        name_fer.current.value = ''
+        if (pass_ref === null || pass_ref.current === '' )
             temp_pass = null;
         else
+        {
             temp_pass = pass_ref.current.value;
+            pass_ref.current = '';
+        }
 
         const new_chan = {
             name: value,
             password: temp_pass
         }
+        console.log(new_chan)
         if (!chat.channels.find((ch: any) => ch.name === value))
         {
             if (create_or_join === true)
@@ -179,21 +154,35 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
         }
     }
 
-    //Omni.addNewChannel = add_new_chan; //Transite for function
-
-    function pre_add_new_chan(somthng : any)
+    function NewChannelWindow()
     {
-        const value = somthng.value
-        add_new_chan(value)
-        somthng.value = ''
+        let label = 'Join a';
+        if (create_or_join === true)
+            label = 'Create new';
+        return (
+            <div>
+                <div className="joinChannelBttn" onClick={() => setCoJ(!create_or_join)}>join</div>
+                <div className="createChannelBttn" onClick={() => setCoJ(!create_or_join)}>create</div>
+                <div className={create_or_join ? 'createChannelDiv' : 'joinChannelDiv'}>
+                <h3>{label} channel</h3>
+                <input placeholder='Chanel name' ref={name_fer}
+                                   onKeyPress={e =>
+                                       (e.code === "Enter" || e.code === "NumpadEnter") ?
+                                       add_new_chan() : 0}></input>
+                <PassInput/>
+                    <div><input type="checkbox" checked={is_priv} 
+                onChange={() => setIs_priv(!is_priv)} /> With password</div>
+                    <button onClick={() => add_new_chan()}>Do it</button>
+                </div>
+                
+            </div>
+        )
     }
 
-    let label = 'Join a';
-    if (create_or_join === true)
-        label = 'Create new';
     if (have_err != null)
     {
-        return (<div className={visible ? 'NC_active' : 'myModal'}>
+        return (
+        <div className={visible ? 'NC_active' : 'myModal'}>
             <div className='NC_Content'><div>{have_err.errors[0]}</div>
                 <div>
                     <button  onClick={() => setError(null)} >ok</button>
@@ -203,20 +192,11 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
     }
     else{
         return (
-            <>
                 <div className={visible ? 'NC_active' : 'myModal'}>
-                    <div className='NC_Content'><h3>{label} chanel</h3>
                         <button className='ModalBttn' onClick={() => setVisible(false)}></button>
-                        <div>
-                            <input placeholder='Chanel name' ref={name_fer}
-                                   onKeyPress={e =>
-                                       (e.code === "Enter" || e.code === "NumpadEnter") ?
-                                           pre_add_new_chan(e.target) : 0}></input>
-                            <PassInput/>
-                        </div>
-                    </div>
+                            <NewChannelWindow />
                 </div>
-            </>
+          
         )
     }
 }

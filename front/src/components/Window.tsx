@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../styles/modal_win.css';
+import '../styles/Window.css';
 import axios, { AxiosRequestConfig }  from 'axios';
 import {useModal} from "../contexts/modal.context";
 import {useContact} from "../contexts/contact.context";

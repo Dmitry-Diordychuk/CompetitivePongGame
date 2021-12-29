@@ -5,10 +5,10 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useModal} from "../contexts/modal.context";
 import uuidv4 from "../utils/uuid";
-
-import "../styles/chat_field.css";
-import '../styles/roster.css'
 import ModalWindow from "./Window";
+
+import "../styles/ChannelChat.css";
+import '../styles/ChannelRoster.css'
 
 
 export default function Channel() {

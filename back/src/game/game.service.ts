@@ -18,29 +18,72 @@ export class GameService {
     }
     state = {};
 
-    @Interval(1000)
-    log() {
-        console.log('Games');
-        const intervals = this.schedulerRegistry.getIntervals();
-        intervals.forEach(key => console.log(`Interval: ${key}`));
+    // @Interval(1000)
+    // log() {
+    //     console.log('Games');
+    //     const intervals = this.schedulerRegistry.getIntervals();
+    //     intervals.forEach(key => console.log(`Interval: ${key}`));
+    //
+    // }
 
+    initGame(roomName: string) {
+        this.state[roomName] = this.createInitialGameState();
     }
 
-    startGameInterval(server: Server, roomName: string, resultFunc, mode : 'default' | 'modded' = 'default') {
-        const clients = server.sockets.adapter.rooms.get(roomName);
-        const intervalId = setInterval(() => {
-            let winner = this.gameLoop(this.state[roomName], mode);
+    startGameInterval(server: Server, roomName: string, callback, mode : 'default' | 'modded' = 'default') {
+        let clients = server.sockets.adapter.rooms.get(roomName);
 
-            if (!winner) {
-                for (let clientId of clients) {
-                    let player_number = this.clientInfoService.getClientPlayerNumber(clientId);
-                    if (player_number == 1 || player_number == 0) {
-                        server.sockets.sockets.get(clientId).emit('game-state', JSON.stringify(this.state[roomName]));
-                    } else if (player_number == 2) {
-                        const gameState = {...this.state[roomName]};
-                        gameState.players = [gameState.players[1], gameState.players[0]];
-                        server.sockets.sockets.get(clientId).emit('game-state', JSON.stringify(gameState));
-                    }
+        let playerOne = null;
+        let playerTwo = null;
+        for (let socketId of clients) {
+            let player = this.clientInfoService.getClientInfo(socketId);
+            if (player.playerNumber === 1) {
+                playerOne = player;
+            } else if (player.playerNumber === 2) {
+                playerTwo = player;
+            }
+        }
+
+        const intervalId = setInterval(() => {
+            let winner: false | 1 | 2 = false;
+
+            clients = server.sockets.adapter.rooms.get(roomName);
+
+            if (this.state[roomName].pause) {
+                if (Date.now() - this.state[roomName].pauseStartTime > 30000) {
+                    this.state[roomName].pause = false;
+                    if (!clients.has(playerOne.socketId) && this.state[roomName].pausePlayerOneCounter > 0)
+                        winner = 2;
+                    else if (!clients.has(playerTwo.socketId) && this.state[roomName].pausePlayerTwoCounter > 0)
+                        winner = 1;
+                }
+                if (winner)
+                    this.gameOver(server, roomName, winner, callback);
+
+                return;
+            }
+
+            if (!clients.has(playerOne.socketId)) {
+                if (this.state[roomName].pause === false) {
+                    this.state[roomName].pause = true;
+                    this.state[roomName].pauseStartTime = new Date();
+                    this.state[roomName].pausePlayerOneCounter += 1;
+                }
+                return;
+            } else if (!clients.has(playerTwo.socketId)) {
+                if (this.state[roomName].pause === false) {
+                    this.state[roomName].pause = true;
+                    this.state[roomName].pauseStartTime = new Date();
+                    this.state[roomName].pausePlayerTwoCounter += 1;
+                }
+                return;
+            }
+
+            winner = this.gameLoop(this.state[roomName], mode);
+            if (!winner && clients) {
+                for (let socketId of clients) {
+                    let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
+                    server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(gameState));
                 }
             } else if (winner && this.state[roomName].roundCounter < 5) {
                 this.state[roomName].roundCounter++;
@@ -52,18 +95,28 @@ export class GameService {
                         winner = 1;
                     else
                         winner = 2;
-                    this.state[roomName] = null;
-                    this.schedulerRegistry.deleteInterval(roomName);
-                    server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
-                    resultFunc(winner);
+                    this.gameOver(server, roomName, winner, callback);
                 }
             }
         }, 1000 / FRAME_RATE)
         this.schedulerRegistry.addInterval(roomName, intervalId);
     }
 
-    initGame(roomName: string) {
-        this.state[roomName] = this.createInitialGameState();
+    gameOver(server, roomName, winner, callback) {
+        this.state[roomName] = null;
+        this.schedulerRegistry.deleteInterval(roomName);
+        server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
+        this.clientInfoService.removeClientInfo(roomName);
+        callback(winner);
+    }
+
+    inverseState(playerTwoSocketId, socketId, gameState) {
+        if (playerTwoSocketId === socketId) {
+            gameState.players = [gameState.players[1], gameState.players[0]];
+            return (gameState);
+        } else {
+            return (gameState);
+        }
     }
 
     resetGameState(state: GameStateInterface, ballPosition: number): GameStateInterface {
@@ -145,6 +198,10 @@ export class GameService {
                 x: 0,
                 y: 0,
             },
+            pause: false,
+            pauseStartTime: Date.now(),
+            pausePlayerOneCounter: 0,
+            pausePlayerTwoCounter: 0,
         }
     }
 

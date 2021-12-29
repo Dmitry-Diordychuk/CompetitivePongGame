@@ -1,47 +1,14 @@
-import React, {useEffect, useState, useRef} from "react";
-import omni_class, { OmniInt } from "../temp/classes/omni";
+import React, {useState, useRef} from "react";
 import axios from "axios";
-import  { io } from "socket.io-client";
-import '../styles/preferences.css';
 import { useCookies } from "react-cookie";
 import {useGame} from "../contexts/game.context";
 import {useAuth} from "../auth/auth.context";
-import {useEffectOnce, useFetch} from "usehooks-ts";
+import {useEffectOnce} from "usehooks-ts";
 import {useNavigate} from "react-router-dom";
 import {Alert} from "react-bootstrap";
 
-function Loading_loc(object : any, option : string,
-                     state : Function, Omni : omni_class,
-                     setImageQR : Function): any
-{
-    useEffect(() =>
-    {
-        if (option === 'not_logged' || option === 'skip')
-            return;
-        axios(object.axiosRequest(option))
-            .then((answer : any) => {
-                object.axiosLoading(answer, option);
-                if (option === 'set_name')
-                {
-                    Omni.ChannelsList.token = Omni.Account.getToken()
-                    Omni.FriendsList.token = Omni.Account.getToken()
-                    Omni.ChannelsList.socket.disconnect()
-                    // Omni.ChannelsList.setSocket(io("http://localhost:3002",
-                    // {
-                    // 	extraHeaders:
-                    // 		{
-                    // 			Authorization : Omni.Account.getToken()
-                    // 		}
-                    // }));
-                }
-                if (option === 'two-factor')
-                    setImageQR(answer.data)
-            })
-            .catch(e => console.log('Preferences: ' + e))
+import '../styles/Settings.css';
 
-        state('skip');
-    })
-}
 
 export default function Settings()
 {

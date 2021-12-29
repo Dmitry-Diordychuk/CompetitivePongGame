@@ -10,7 +10,13 @@ export class GameStateInterface {
     gridSize: number;
     roundCounter: number;
     roundResult: number[];
+
     bonus: BonusInterface;
     active: ActiveInterface[];
     prevBallVelocity: PositionInterface;
+
+    pause: boolean;
+    pauseStartTime: number;
+    pausePlayerOneCounter: number;
+    pausePlayerTwoCounter: number;
 }

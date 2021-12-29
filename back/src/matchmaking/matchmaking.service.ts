@@ -97,10 +97,10 @@ export class MatchmakingService {
 
     @Interval(POOL_POLL_INTERVAL)
     loopMatchmaking() {
-        console.log(new Date());
-        console.log('Queue: ', this.queue.map((client) => client.user.username));
-        console.log('Wait list: ', this.waitList.map((pair) => pair.clientA.user + ' ' + pair.clientB.user));
-        console.log('Wait duel: ', this.waitDuel);
+        // console.log(new Date());
+        // console.log('Queue: ', this.queue.map((client) => client.user.username));
+        // console.log('Wait list: ', this.waitList.map((pair) => pair.clientA.user + ' ' + pair.clientB.user));
+        // console.log('Wait duel: ', this.waitDuel);
 
         for (const clientA of this.queue) {
             let timeSinceStart = 0;
@@ -151,7 +151,7 @@ export class MatchmakingService {
     removeFromWaitList(user): Socket {
         const pair = this.waitList.find(pair => pair.clientA.user.id === user.id || pair.clientB.user.id === user.id);
         if (!pair) {
-            throw new WsException("Your aren't paired!");
+            return ;
         }
         this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
         this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);

@@ -3,7 +3,7 @@ import axios from "axios";
 import {useContact} from "../contexts/contact.context";
 import {useModal} from "../contexts/modal.context";
 
-import '../styles/contacts.css'
+import '../styles/Contacts.css'
 
 export default function Contacts() {
 
