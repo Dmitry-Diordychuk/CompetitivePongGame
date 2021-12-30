@@ -7,7 +7,6 @@ import {Server} from "socket.io";
 import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
 import {WsException} from "@nestjs/websockets";
 import {Interval, SchedulerRegistry} from "@nestjs/schedule";
-import {UserEntity} from "@app/user/user.entity";
 
 @Injectable()
 export class GameService {
@@ -18,12 +17,10 @@ export class GameService {
     }
     state = {};
 
-    // @Interval(1000)
+    // @Interval(10000)
     // log() {
     //     console.log('Games');
-    //     const intervals = this.schedulerRegistry.getIntervals();
-    //     intervals.forEach(key => console.log(`Interval: ${key}`));
-    //
+    //     console.log(this.state);
     // }
 
     initGame(roomName: string) {
@@ -45,41 +42,59 @@ export class GameService {
         }
 
         const intervalId = setInterval(() => {
-            let winner: false | 1 | 2 = false;
-
             clients = server.sockets.adapter.rooms.get(roomName);
 
-            if (this.state[roomName].pause) {
+            if (this.state[roomName].playerSurrendered === 1)
+                this.gameOver(server, roomName, 2, callback);
+            else if (this.state[roomName].playerSurrendered === 1)
+                this.gameOver(server, roomName, 1, callback);
+
+            if (!this.state[roomName].pause) {
+                if (!clients.has(playerOne.socketId)) {
+                    if (this.state[roomName].pause === false) {
+                        this.state[roomName].pause = true;
+                        this.state[roomName].pauseStartTime = new Date();
+                        if (this.state[roomName].pausePlayerOneCounter > 0) // MAX_PAUSES
+                        {
+                            this.gameOver(server, roomName, 2, callback);
+                            return;
+                        }
+                        this.state[roomName].pausePlayerOneCounter += 1;
+                    }
+                    return;
+                } else if (!clients.has(playerTwo.socketId)) {
+                    if (this.state[roomName].pause === false) {
+                        this.state[roomName].pause = true;
+                        this.state[roomName].pauseStartTime = new Date();
+                        if (this.state[roomName].pausePlayerTwoCounter > 0) // MAX_PAUSES
+                        {
+                            this.gameOver(server, roomName, 1, callback);
+                            return;
+                        }
+                        this.state[roomName].pausePlayerTwoCounter += 1;
+                    }
+                    return;
+                }
+            } else if (this.state[roomName].pause) {
                 if (Date.now() - this.state[roomName].pauseStartTime > 30000) {
                     this.state[roomName].pause = false;
-                    if (!clients.has(playerOne.socketId) && this.state[roomName].pausePlayerOneCounter > 0)
-                        winner = 2;
-                    else if (!clients.has(playerTwo.socketId) && this.state[roomName].pausePlayerTwoCounter > 0)
-                        winner = 1;
+                    if (this.state[roomName].pausePlayerOneCounter > 0) // IF_DISCONNECTED
+                        this.gameOver(server, roomName, 2, callback);
+                    else if (this.state[roomName].pausePlayerTwoCounter > 0) // IF_DISCONNECTED
+                        this.gameOver(server, roomName, 1, callback);
+                } else if (clients.has(playerOne.socketId) && clients.has(playerTwo.socketId)) {
+                    this.state[roomName].pause = false;
                 }
-                if (winner)
-                    this.gameOver(server, roomName, winner, callback);
-
-                return;
-            }
-
-            if (!clients.has(playerOne.socketId)) {
-                if (this.state[roomName].pause === false) {
-                    this.state[roomName].pause = true;
-                    this.state[roomName].pauseStartTime = new Date();
-                    this.state[roomName].pausePlayerOneCounter += 1;
-                }
-                return;
-            } else if (!clients.has(playerTwo.socketId)) {
-                if (this.state[roomName].pause === false) {
-                    this.state[roomName].pause = true;
-                    this.state[roomName].pauseStartTime = new Date();
-                    this.state[roomName].pausePlayerTwoCounter += 1;
+                if (clients) {
+                    for (let socketId of clients) {
+                        let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
+                        server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(gameState));
+                    }
                 }
                 return;
             }
 
-            winner = this.gameLoop(this.state[roomName], mode);
+            let winner = this.gameLoop(this.state[roomName], mode);
             if (!winner && clients) {
                 for (let socketId of clients) {
                     let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
@@ -107,15 +122,17 @@ export class GameService {
         this.schedulerRegistry.deleteInterval(roomName);
         server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
         this.clientInfoService.removeClientInfo(roomName);
+        delete this.state[roomName];
         callback(winner);
     }
 
     inverseState(playerTwoSocketId, socketId, gameState) {
+        const state = Object.assign({}, gameState);
         if (playerTwoSocketId === socketId) {
-            gameState.players = [gameState.players[1], gameState.players[0]];
-            return (gameState);
+            state.players = [state.players[1], state.players[0]];
+            return (state);
         } else {
-            return (gameState);
+            return (state);
         }
     }
 
@@ -126,14 +143,14 @@ export class GameService {
                 y: 5,
             },
             velocity: 0,
-            size: 5,
+            size: 9,
         }, {
             position: {
                 x: GRID_SIZE - 2,
                 y: 5,
             },
             velocity: 0,
-            size: 5,
+            size: 9,
         }]
         if (ballPosition === 0)
             state.ball = {
@@ -159,6 +176,7 @@ export class GameService {
             }
         state.bonus = null;
         state.active = [];
+
         return (state);
     }
 
@@ -170,14 +188,14 @@ export class GameService {
                     y: 5,
                 },
                 velocity: 0,
-                size: 5,
+                size: 9,
             }, {
                 position: {
                     x: GRID_SIZE - 2,
                     y: 5,
                 },
                 velocity: 0,
-                size: 5,
+                size: 9,
             }],
             ball: {
                 position: {
@@ -190,18 +208,18 @@ export class GameService {
                 }
             },
             gridSize: GRID_SIZE,
+
             roundCounter: 0,
             roundResult: [],
+
             bonus: null,
             active: [],
-            prevBallVelocity: {
-                x: 0,
-                y: 0,
-            },
+
             pause: false,
             pauseStartTime: Date.now(),
             pausePlayerOneCounter: 0,
             pausePlayerTwoCounter: 0,
+            playerSurrendered: false,
         }
     }
 
@@ -355,6 +373,14 @@ export class GameService {
     setPlayerVelocity(roomName: string, playerNumber: 2 | 1, velocity: number) {
         if (this.state[roomName])
             this.state[roomName].players[playerNumber - 1].velocity = velocity;
+        else {
+            throw new WsException('Game is over!');
+        }
+    }
+
+    giveUp(roomName: string, playerNumber: 1 | 2) {
+        if (this.state[roomName])
+            this.state[roomName].playerSurrendered = playerNumber;
         else {
             throw new WsException('Game is over!');
         }

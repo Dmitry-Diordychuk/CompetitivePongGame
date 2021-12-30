@@ -284,12 +284,18 @@ export class UserService {
     }
 
     async getUserById(id: number): Promise<UserEntity> {
-        return await this.userRepository.findOne(
+        const user = await this.userRepository.findOne(
             id,
             {
-                relations: ["profile", "profile.winMatches", "profile.lossMatches"],
+                relations: [
+                    "profile",
+                    "profile.winMatches",
+                    "profile.lossMatches",
+                ],
                 select: ["id", "username", "role", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
         });
+        console.log(user.profile.winMatches);
+        return user;
     }
 
     async getUserIdByUsername(username: string): Promise<number> {

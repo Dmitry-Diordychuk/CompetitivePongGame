@@ -44,6 +44,10 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         const user = socket.handshake.headers.user;
         // @ts-ignore
         this.clientInfoService.renewClientSocket(user.id, socket.id);
+        // @ts-ignore
+        const room = this.clientInfoService.getUserRoom(user.id);
+        if (room)
+            socket.join(room);
     }
 
     handleDisconnect(
@@ -107,7 +111,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             }
             await this.profileService.unlockAchievements(pair.clientA.user.profile);
             await this.profileService.unlockAchievements(pair.clientB.user.profile);
-            //await this.profileService.calculateLevel(pair.clientA.user.profile, pair.clientB.user.profile);
+
             this.clientInfoService.removeClientInfo(roomName);
         });
     }

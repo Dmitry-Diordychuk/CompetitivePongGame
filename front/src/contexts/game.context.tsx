@@ -1,5 +1,8 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
+import {useEffectOnce} from "usehooks-ts";
+import {useChat} from "./chat.context";
+import {useSocketIO} from "./socket.io.context";
 
 interface GameContextType {
     upButton: number;
@@ -12,71 +15,106 @@ interface GameContextType {
     setDuel: Function;
     gameMessage: any;
     setGameMessage: Function;
+
     playerNumber: number;
-    setPlayerNumber: Function;
     isPlaying: boolean;
-    setIsPlaying: Function;
     ball: any;
-    setBall: Function;
     player: any;
-    setPlayer: Function;
     enemy: any;
-    setEnemy: Function;
     wall: any;
-    setWall: Function;
     freeze: any;
-    setFreeze: Function;
     shake: any;
-    setShake: Function;
     speed: any;
-    setSpeed: Function;
 }
 
 const GameContext = React.createContext<GameContextType>(null!);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+    const socket = useSocketIO();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    if (isPlaying && location.pathname != "/game") {
+        navigate('/game', {replace: true});
+    }
+
     const [upButton, setUpButton] = useState(38);
     const [downButton, setDownButton] = useState(40);
     const [direction, setDirection] = useState('left');
     const [duel, setDuel] = useState(null);
-    const [gameMessage, setGameMessage] = useState(null);
+    const [gameMessage, setGameMessage] = useState<any>(null);
     const [playerNumber, setPlayerNumber] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
 
-    const [ball, setBall] = useState({
-        x : 1,
-        y : 1
-    });
-    const [player, setPlayer] = useState({
-            x : 1,
-            y : 1
-    });
-    const [enemy, setEnemy] = useState({
-        x : 1,
-        y : 1
-    });
-    const [wall, setWall] = useState({
-        x : 1,
-        y : 1
-    });
-    const [freeze, setFreeze] = useState({
-        x : 1,
-        y : 1
-    });
-    const [shake, setShake] = useState({
-        x : 1,
-        y : 1
-    });
-    const [speed, setSpeed] = useState({
-        x : 1,
-        y : 1
+    const [ball, setBall] = useState(null);
+    const [player, setPlayer] = useState(null);
+    const [enemy, setEnemy] = useState(null);
+    const [wall, setWall] = useState(null);
+    const [freeze, setFreeze] = useState(null);
+    const [shake, setShake] = useState(null);
+    const [speed, setSpeed] = useState(null);
+
+    // useEffect(() => {
+    //     setIsPlaying(false);
+    //     setUpButton(38);
+    //     setDownButton(40);
+    //     setDirection('left');
+    //     setDuel(null);
+    //     setGameMessage(null);
+    //     setPlayerNumber(0);
+    //
+    //     setBall(null);
+    //     setPlayer(null);
+    //     setEnemy(null);
+    //     setWall(null);
+    //     setFreeze(null);
+    //     setShake(null);
+    //     setSpeed(null);
+    // }, [socket]);
+
+    useEffectOnce(() => {
+        socket.on('game-init', ((init : number) => {
+            setIsPlaying(true);
+            setPlayerNumber(init - 1);
+            if (playerNumber === -1)
+                setPlayerNumber(0);
+        }))
+        return (() => {
+            socket.off('game-init', ()=>{});
+        })
     });
 
-    const location = useLocation();
-    const navigate = useNavigate();
-    if (isPlaying && location.pathname != "/game") {
-        navigate('/game', {replace: true});
-    }
+    useEffectOnce(() => {
+        socket.on('game-state', ((message : string) => {
+            let gameState = JSON.parse(message);
+
+            setSpeed(gameState.speed);
+            setShake(gameState.shake);
+            setFreeze(gameState.freeze);
+            setBall(gameState.ball);
+            setWall(gameState.wall);
+            setPlayer(gameState.players[0]);
+            setEnemy(gameState.players[1]);
+
+            setIsPlaying(true);
+            setGameMessage(message);
+        }))
+        return (() => {
+            socket.off('game-state', ()=>{});
+        })
+    });
+
+    useEffectOnce(() => {
+        socket.on('game-over', ((over : any) => {
+            console.log('GAME-OVER!');
+            setIsPlaying(false);
+            navigate('/profile', {replace: true});
+        }))
+        return (() => {
+            socket.off('game-over', ()=>{});
+        })
+    });
 
     let value : GameContextType = {
         upButton,
@@ -89,24 +127,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setDuel,
         gameMessage,
         setGameMessage,
+
         playerNumber,
-        setPlayerNumber,
         isPlaying,
-        setIsPlaying,
         ball,
-        setBall,
         player,
-        setPlayer,
         enemy,
-        setEnemy,
         wall,
-        setWall,
         freeze,
-        setFreeze,
         shake,
-        setShake,
         speed,
-        setSpeed,
     };
 
     return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

@@ -5,7 +5,7 @@ import {
     OnGatewayDisconnect,
     OnGatewayInit, SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer
+    WebSocketServer, WsException
 } from "@nestjs/websockets";
 import {Server} from "socket.io";
 import {GameService} from "@app/game/game.service";
@@ -33,25 +33,34 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     handleDisconnect() {
     }
 
+    @SubscribeMessage('giveUp')
+    handleGiveUp(
+        @ConnectedSocket() client
+    ) {
+        const clientInfo = this.clientInfoService.getClientInfo(client.id);
+        if (!clientInfo) {
+            return;
+        }
+        this.gameService.giveUp(clientInfo.roomName, clientInfo.playerNumber);
+    }
+
     @SubscribeMessage('keyDown')
     handleKeyDown(
         @ConnectedSocket() client,
         @MessageBody() keyCode
     ) {
-        const roomName = this.clientInfoService.getClientRoom(client.id);
-        if (!roomName) {
+        const clientInfo = this.clientInfoService.getClientInfo(client.id);
+        if (!clientInfo) {
             return;
         }
 
         try {
             keyCode = parseInt(keyCode);
         } catch (exception) {
-            console.error(exception);
-            return;
+            throw new WsException('Wrong input!');
         }
 
         const vel = this.gameService.getUpdatedVelocity(keyCode);
-        const playerNumber = this.clientInfoService.getClientPlayerNumber(client.id);
-        this.gameService.setPlayerVelocity(roomName, playerNumber, vel);
+        this.gameService.setPlayerVelocity(clientInfo.roomName, clientInfo.playerNumber, vel);
     }
 }

@@ -19,13 +19,21 @@
     width: 5vw;
 }
 
-.chanButtn {
-    height: 10px;
-    width: 10px;
-    vertical-align: top;
-    background-color: hotpink;
-    position: flex;
-    float: right;
+.chat_list
+{
+}
+
+.chat_item
+{
+}
+
+.chat_name
+{
+}
+
+.delete_chat
+{
+    margin-left: 10px;
 }
 
 .visible_chan
@@ -110,6 +118,12 @@
     overflow-y: hidden;
     overflow-x: scroll;
     vertical-align: 'bottom';
+}
+
+.chat-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .div-chat {

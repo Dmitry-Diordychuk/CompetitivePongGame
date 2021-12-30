@@ -9,6 +9,7 @@ import ModalWindow from "./Window";
 
 import "../styles/ChannelChat.css";
 import '../styles/ChannelRoster.css'
+import {useSocketIO} from "../contexts/socket.io.context";
 
 
 export default function Channel() {
@@ -27,29 +28,30 @@ export default function Channel() {
 function MessageInput()
 {
     const chat: any = useChat();
+    const socket = useSocketIO();
     const auth: any = useAuth();
     const navigate = useNavigate();
 
     useEffect(() =>
-            chat.socket.on("sanction", (arg : any) =>
-            {
-                let until = new Date(arg.sanction.expiry);
-                let msg : string = "At "+ arg.sanction.channel + " channel you are at " + arg.sanction.type + " until " + until;
-                let temp =
-                    {
-                        channel : arg.sanction.channel,
-                        userId : 1023942,
-                        username : 'trans_tech_msg',
-                        id : uuidv4(),
-                        message : msg
-                    };
-                chat.addMessage(temp);
-                if (chat.newMessageFlag)
-                    chat.toggleNewMessageFlag();
-                if (arg.sanction.type === 'ban')
-                    chat.deleteChannel(arg.sanction.channel)
-            }),
-        [chat]);
+        socket.on("sanction", (arg : any) =>
+        {
+            let until = new Date(arg.sanction.expiry);
+            let msg : string = "At "+ arg.sanction.channel + " channel you are at " + arg.sanction.type + " until " + until;
+            let temp =
+                {
+                    channel : arg.sanction.channel,
+                    userId : 1023942,
+                    username : 'trans_tech_msg',
+                    id : uuidv4(),
+                    message : msg
+                };
+            chat.addMessage(temp);
+            if (chat.newMessageFlag)
+                chat.toggleNewMessageFlag();
+            if (arg.sanction.type === 'ban')
+                chat.deleteChannel(arg.sanction.channel)
+        }),
+    [chat]);
 
     function add_new_msg(value : any)
     {
@@ -59,7 +61,7 @@ function MessageInput()
                 channel: chat.currentChannelName,
                 message: value.value
             }
-            chat.socket.emit("send_message", newone);
+            socket.emit("send_message", newone);
         }
         else
         {
@@ -74,8 +76,8 @@ function MessageInput()
                     message: value.value,
                     username: auth.user.username,
                 }
-            chat.socket.emit("send_private_message", newone);
-            chat.socket.on("exception", (arg : any) => {})
+            socket.emit("send_private_message", newone);
+            socket.on("exception", (arg : any) => {})
             chat.addMessage(msg);
         }
         value.value = '';
@@ -151,6 +153,7 @@ function ChatPart()
 function Roster()
 {
     const chat: any = useChat();
+    const socket = useSocketIO();
     const auth = useAuth();
     const modal = useModal();
 
@@ -183,12 +186,12 @@ function Roster()
             userId : name.name.id
         }
         let in_game = false;
-        chat.socket.emit('is-online', newone)
-        chat.socket.emit("is-in-game", newone);
+        socket.emit('is-online', newone)
+        socket.emit("is-in-game", newone);
         useEffect(() => {
-            chat.socket.on('status', (message : any) => {
+            socket.on('status', (message : any) => {
                 chat.onliner.set(message.info['userId'], message.info.status)})
-            chat.socket.on("in-game", ((e : any) => {in_game = e}));
+            socket.on("in-game", ((e : any) => {in_game = e}));
         })
 
 

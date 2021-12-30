@@ -13,10 +13,11 @@ export class GameStateInterface {
 
     bonus: BonusInterface;
     active: ActiveInterface[];
-    prevBallVelocity: PositionInterface;
 
     pause: boolean;
     pauseStartTime: number;
     pausePlayerOneCounter: number;
     pausePlayerTwoCounter: number;
+
+    playerSurrendered: false | 1 | 2;
 }

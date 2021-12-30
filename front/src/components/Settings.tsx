@@ -12,13 +12,9 @@ import '../styles/Settings.css';
 
 export default function Settings()
 {
+    const [cookies, setCookie, removeCookie] = useCookies(["up", 'down', 'direction']);
     const game = useGame();
     const auth = useAuth();
-
-    const [requestType, setRequestType] = useState<string>('skip');
-    const [twoFactor, setTwoFactor] = useState<boolean>(false);
-    const [imageQR, setImageQR] = useState<any>();
-    const qr_code = useRef<any>("");
 
     var keyboardMap = [
         "", // [0]
@@ -279,33 +275,13 @@ export default function Settings()
         "" // [255]
     ];
 
-    const [cookies, setCookie, removeCookie] = useCookies(["up", 'down', 'direction']);
-
-    const [twoFactorStop, setTwoFactorStop] = useState<boolean>(false);
-
-    //Loading_loc(Omni.Account, requestType, setRequestType, Omni, setImageQR);
-
     function setNewName(value : any)
     {
         auth.changeUsername(value.value);
-        setRequestType('set_name');
         value.value = '';
     }
 
-    // function startTwoFactor()
-    // {
-    //     setRequestType('two-factor');
-    //     setTwoFactor(true);
-    // }
-
-    // function stopTwoFactor(qr_code : any)
-    // {
-    //     Omni.Account.setQRstop(qr_code.value);
-    //     qr_code.value = '';
-    //     setRequestType('stop_dfi');
-    // }
-
-    function TwoFactorNope()
+    function TwoFactor()
     {
         const navigate = useNavigate();
 
@@ -401,53 +377,6 @@ export default function Settings()
             );
     }
 
-// //	console.log(Omni.Account.profile)
-//
-//     function SendCode(qr_code : any)
-//     {
-//         Omni.Account.setQRcode(qr_code.value);
-//         qr_code.value = '';
-//         setRequestType('qr_code');
-//     }
-//
-//     function TwoFactorStop()
-//     {
-//         if (twoFactorStop)
-//             return (
-//                 <div>
-//                     <input type='text' ref={qr_code} placeholder="google's code" onKeyPress={e => (e.code === "Enter" || e.code === "NumpadEnter") ?
-//                         stopTwoFactor(qr_code.current) : 0}></input>
-//                 </div>
-//
-//             )
-//         else if (Omni.Account.twoFactor_on)
-//             return(
-//                 <div>
-//                     <button onClick={() => setTwoFactorStop(true)}> Turn off two factor Auth </button>
-//                 </div>
-//             )
-//         return (<div></div>)
-//     }
-
-    function TwoFactorYes()
-    {
-        if (twoFactor)
-            return (
-                <div>
-                    <div>
-                        Please scan this anti-CoV QR-code
-                    </div>
-                    {imageQR && <img alt={'QR code'} src={URL.createObjectURL(imageQR)} />}
-                    <div>
-                        {/*<input type='text' ref={qr_code} placeholder="google's code" onKeyPress={e => (e.code === "Enter" || e.code === "NumpadEnter") ?*/}
-                        {/*    SendCode(qr_code.current) : 0}></input>*/}
-                    </div>
-                </div>
-
-            )
-        return (<div></div>)
-    }
-
     function changeUpKey(e : any)
     {
         game.setUpButton(e.keyCode);
@@ -508,10 +437,8 @@ export default function Settings()
             <button onClick={resetControls}> Reset Controls </button>
 
             <div>
-                <TwoFactorNope />
+                <TwoFactor />
             </div>
-            <TwoFactorYes />
-            {/*<TwoFactorStop />*/}
         </div>
     )
 }

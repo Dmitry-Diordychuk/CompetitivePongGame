@@ -6,12 +6,14 @@ import {useContact} from "../contexts/contact.context";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
+import {useSocketIO} from "../contexts/socket.io.context";
 
 function ModalWindow()
 {
     const auth = useAuth();
     const contact = useContact();
     const modalWindow = useModal();
+    const socket = useSocketIO();
     const chat = useChat();
     const navigate = useNavigate();
 
@@ -96,7 +98,7 @@ function ModalWindow()
         let date : Date = new Date();
         date.setMinutes(date.getMinutes() + (+banTime.current.value));
 
-        chat.socket?.emit('apply-sanction', {
+        socket.emit('apply-sanction', {
             'channel' : chat.currentChannelName,
             'userId' : modalWindow.subject.id,
             'type' : type,
@@ -161,8 +163,8 @@ function ModalWindow()
     {
         const [spectrate, setSpectr] = useState('Spectrate')
 
-        chat.socket?.emit("is-in-game", modalWindow.subject.id);
-        chat.socket?.once("in-game", ((e : any) => setSpectr(e)));
+        socket.emit("is-in-game", modalWindow.subject.id);
+        socket.once("in-game", ((e : any) => setSpectr(e)));
 
 
         if (!spectrate)
@@ -171,7 +173,7 @@ function ModalWindow()
         return (
             <div className='modal_div' onClick={() => {
                 //Omni.Game.playerNumber = 0
-                chat.socket?.emit("spectate-game", modalWindow.subject.id)
+                socket.emit("spectate-game", modalWindow.subject.id)
                 //Omni.setActScreen('game');
 
             }}>Spectrate</div>
@@ -185,7 +187,7 @@ function ModalWindow()
                 rivalId : +modalWindow.subject.id,
                 gameMode : type //modded default
             }
-        chat.socket?.emit('duel-invite', temp)
+        socket.emit('duel-invite', temp)
     }
 
     function openProfile() {

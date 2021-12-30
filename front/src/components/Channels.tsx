@@ -3,9 +3,11 @@ import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
 
 import '../styles/Channels.css'
+import {useSocketIO} from "../contexts/socket.io.context";
 
 
 export default function Channels() {
+    const navigate = useNavigate();
     const chat = useChat();
 
     if (!chat.channels.length) {
@@ -13,13 +15,23 @@ export default function Channels() {
     }
 
     return (
-        <div className='td_chat_list'>
+        <>
             <AddChannelButton />
-            <div>
-                {chat.channels.map((ch : any) : any =>
-                    <ChanelButton channel={ch} key={ch.id}/>)}
-            </div>
-        </div>
+            <ul className="chat_list">
+                {chat.channels.map((ch : any, i: number) : any =>
+                    <li className="chat_item" key={i}>
+                        <span className="chat_name" onClick={() => navigate("/channel/" + ch.id)}>
+                            {ch.name}
+                        </span>
+                        {ch.name !== 'general' && <span
+                            onClick={() => chat.deleteChannel(ch.name)}
+                            className="delete_chat"
+                        >
+                            <button>x</button>
+                        </span>}
+                    </li>)}
+            </ul>
+        </>
     )
 }
 
@@ -42,28 +54,6 @@ interface ChannelButtonInterface
     channel : any;
 }
 
-function ChanelButton({channel} : ChannelButtonInterface) : any
-{
-    const chat = useChat();
-    const navigate = useNavigate();
-
-    function button_exit(name : string)
-    {
-        if (name === 'general' || name === 'direct')
-            return
-        return (<button onClick={() => chat.deleteChannel(name)} className="chanButtn">
-        </button>)
-    }
-
-    return (
-        <div className='td_div_chat_item'>
-            <div className='td_div_chat_item_left' onClick={() => navigate("/channel/" + channel.id)}>
-                {channel.name}
-            </div>
-            {button_exit(channel.name)}
-        </div>)
-}
-
 interface NewChannelWindowInterface
 {
     setVisible : any;
@@ -73,6 +63,7 @@ interface NewChannelWindowInterface
 function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
 {
     const chat = useChat();
+    const socket = useSocketIO();
 
     const [last_added_channel, setLastAdded] = useState<string>('');
     const [create_or_join, setCoJ] = useState(false);
@@ -92,8 +83,6 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
             </div>
         )
     }
-
-    let socket : any = chat.socket;
 
     function create_channel(new_chan : any, name : string)
     {
@@ -115,6 +104,7 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
     {
         if (last_added_channel === name)
             return ;
+
         socket.emit("join_channel", new_chan)
         socket.once("exception", (data : any) => {setError(data)})
         socket.once("joined_channel", (data : any) =>
@@ -144,7 +134,7 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
             name: value,
             password: temp_pass
         }
-        console.log(new_chan)
+
         if (!chat.channels.find((ch: any) => ch.name === value))
         {
             if (create_or_join === true)

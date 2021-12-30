@@ -5,10 +5,10 @@ import {Interval} from "@nestjs/schedule";
 export class ClientInfoService {
     clientInfo = [];
 
-    @Interval(1000)
-    log() {
-        console.log(this.clientInfo);
-    }
+    // @Interval(1000)
+    // log() {
+    //     console.log(this.clientInfo);
+    // }
 
     setClientInfo(userId, socketId, roomName, playerNumber) {
         this.clientInfo.push({

@@ -5,66 +5,48 @@ import {useChat} from "../contexts/chat.context";
 import Matchmacking from "./Matchmacking";
 
 import '../styles/TopPanel.css'
+import {useSocketIO} from "../contexts/socket.io.context";
 
 
 export default function TopPanel() {
     const chat = useChat();
+    const auth = useAuth();
+    const socket = useSocketIO();
+    const navigate = useNavigate();
 
     useEffect(()=>{}, [chat.currentChannelName])
 
     return (
         <div>
             <div className="topnav">
-                <div className="topnav">
-                    <Link to="/">Pong</Link>
-                </div>
-                <div className="topnav">
-                    <AuthStatus />
-                </div>
-                <div className="topnav">
-                    <Link to="/profile">Profile</Link>
-                </div>
-                <div className="topnav">
-                    <Link to="/channels">Channels</Link>
-                </div>
-                <div className="topnav">
-                    {chat.currentChannelName}
-                </div>
-                <div className="topnav">
-                    <Link to="/contacts">Contacts</Link>
-                </div>
-                <div className="topnav">
-                    <Link to="/settings">Settigs</Link>
-                </div>
+                {
+                    auth.user && (auth.user.role === 'Admin' || auth.user.role === 'Owner')
+                        ?
+                        <Link style={{ textDecoration: 'none' }} to="/admin">Admin</Link>
+                        :
+                        <></>
+                }
+                <Link to="/">Pong</Link>
+                <Link to="/profile">Profile</Link>
+                <Link to="/channels">Channels</Link>
+                <Link to="/contacts">Contacts</Link>
+                <Link to="/settings">Settigs</Link>
                 <Matchmacking />
+
+                {auth.user ?
+                    <a className={'right'} onClick={() => {
+                        auth.signout(() => {
+                            socket.disconnect();
+                            navigate("/");
+                        });
+                    }}>Sign out</a>
+                        : <></>
+                }
+                {auth.user ? <a className={'right'}>Welcome {auth.user.username}!</a> : 0}
+                <a className={'right'}>{"Current channel: " + chat.currentChannelName}</a>
             </div>
             <Outlet />
         </div>
     )
 }
 
-function AuthStatus() {
-    let auth = useAuth();
-    let navigate = useNavigate();
-    let chat = useChat();
-
-    if (!auth.user) {
-        return <p>You are not logged in.</p>;
-    }
-
-    return (
-        <p>
-            Welcome {auth.user.username}!{" "}
-            <button
-                onClick={() => {
-                    auth.signout(() => {
-                        chat.disconnect();
-                        navigate("/");
-                    });
-                }}
-            >
-                Sign out
-            </button>
-        </p>
-    );
-}

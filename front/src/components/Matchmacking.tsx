@@ -3,10 +3,11 @@ import {useGame} from "../contexts/game.context";
 import {useLocation, useNavigate} from "react-router-dom";
 import React, {useRef, useState} from "react";
 import {useEffectOnce} from "usehooks-ts";
+import {useSocketIO} from "../contexts/socket.io.context";
 
 
 export default function Matchmacking() {
-    const chat = useChat();
+    const socket = useSocketIO();
     const game = useGame();
     const location = useLocation();
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function Matchmacking() {
             return;
         matchMakingStatusRef.current = 'Leave queue';
         setMatchMakingStatus('Leave queue');
-        chat.socket?.emit('matchmaking-add-in-queue');
+        socket.emit('matchmaking-add-in-queue');
     }
 
     function handleMatchmakingTime(time : any) {
@@ -51,34 +52,34 @@ export default function Matchmacking() {
         if (matchMakingStatusRef.current === 'Leave queue')
         {
             return (
-                <div onClick={() => {
+                <a onClick={() => {
                     matchMakingStatusRef.current = 'false';
                     setMatchMakingStatus('false');
                     timerRef.current = -1;
-                    chat.socket?.emit('matchmaking-leave-queue');
+                    socket.emit('matchmaking-leave-queue');
                 }}>
                     <b>{stringOfTime} </b> {matchMakingStatus}
-                </div>
+                </a>
             )
         }
         if (matchMakingStatusRef.current === 'accept')
             return (
-                <div>
+                <a>
                     <b onClick={() => {
                         matchMakingStatusRef.current = 'accepted';
                         setMatchMakingStatus('accepted');
                         if (game.duel)
                         {
-                            chat.socket?.emit('duel-accept', game.duel.rivalId)
+                            socket.emit('duel-accept', game.duel.rivalId)
                             game.setDuel(null);
                         }
-                        chat.socket?.emit('matchmaking-accept-game')}}>
+                        socket.emit('matchmaking-accept-game')}}>
                         {matchMakingStatus} </b>  {stringOfTime}
                     <b onClick={() => {
                         matchMakingStatusRef.current = 'false';
                         setMatchMakingStatus('false');
-                        chat.socket?.emit('matchmaking-decline-game')}}> Decline </b>
-                </div>
+                        socket.emit('matchmaking-decline-game')}}> Decline </b>
+                </a>
             )
         if (matchMakingStatusRef.current === 'accepted')
         {
@@ -86,17 +87,17 @@ export default function Matchmacking() {
                 return (<div></div>)
             else
                 return (
-                    <div>
+                    <a>
                         <b> Accepted </b> {stringOfTime}
-                    </div>
+                    </a>
                 )
         }
         if (matchMakingStatusRef.current === 'declined')
         {
             return (
-                <div>
+                <a>
                     Match was {matchMakingStatus} <b onClick={() => cancelSearching()}>OK</b>
-                </div>
+                </a>
             )
         }
         return (
@@ -110,7 +111,7 @@ export default function Matchmacking() {
     }
 
     useEffectOnce(()=>{
-        chat.socket?.on('matchmaking-init', (message: any) => {
+        socket.on('matchmaking-init', (message: any) => {
             if (matchMakingStatusRef.current === 'accepted') {
                 matchMakingStatusRef.current = 'false';
                 setMatchMakingStatus('false');
@@ -118,22 +119,22 @@ export default function Matchmacking() {
             }
         })
         return (() => {
-            chat.socket?.off('matchmaking-init');
+            socket.off('matchmaking-init');
         });
     });
 
     useEffectOnce(() => {
-        chat.socket?.on('matchmaking-success', (message : any) => {
+        socket.on('matchmaking-success', (message : any) => {
             matchMakingStatusRef.current = 'accept';
             setMatchMakingStatus('accept');
         });
         return (() => {
-            chat.socket?.off('matchmaking-success')
+            socket.off('matchmaking-success')
         });
     })
 
     useEffectOnce(() => {
-        chat.socket?.on('matchmaking-wait-for-players', (message: any) => {
+        socket.on('matchmaking-wait-for-players', (message: any) => {
             if (message > 9000) {
                 matchMakingStatusRef.current = 'declined';
                 setMatchMakingStatus('declined');
@@ -144,12 +145,12 @@ export default function Matchmacking() {
             timerRef.current = message / 1000;
         })
         return (() => {
-            chat.socket?.off('matchmaking-wait-for-players');
+            socket.off('matchmaking-wait-for-players');
         });
     })
 
     useEffectOnce(() => {
-        chat.socket?.on('duel-wait-for-players', (message: any) => {
+        socket.on('duel-wait-for-players', (message: any) => {
             if (message > 9000) {
                 matchMakingStatusRef.current = 'declined';
                 setMatchMakingStatus('declined');
@@ -160,47 +161,47 @@ export default function Matchmacking() {
             timerRef.current = message / 1000;
         })
         return (() => {
-            chat.socket?.off('duel-wait-for-players');
+            socket.off('duel-wait-for-players');
         });
     })
 
     useEffectOnce(() => {
         if (matchMakingStatusRef.current === 'accept') {
-            chat.socket?.on('matchmaking-restart', (meassge: any) => {
+            socket.on('matchmaking-restart', (meassge: any) => {
                 startGameSearch();
             })
         }
         return (() => {
-            chat.socket?.off('matchmaking-restart');
+            socket.off('matchmaking-restart');
         });
     });
 
     useEffectOnce(() => {
-        chat.socket?.on('duel-invited', (message: any) => {
+        socket.on('duel-invited', (message: any) => {
             matchMakingStatusRef.current = 'accept';
             setMatchMakingStatus('accept');
             game.setDuel(message);
         })
         return (() => {
-            chat.socket?.off('duel-invited');
+            socket.off('duel-invited');
         });
     });
 
     useEffectOnce(() => {
-        chat.socket?.on('matchmaking-time', (message: any) => {
+        socket.on('matchmaking-time', (message: any) => {
             if (timerRef.current === message / 1000)
                 return;
             handleMatchmakingTime(message)
             timerRef.current = message / 1000;
         })
         return (() => {
-            chat.socket?.off('matchmaking-time');
+            socket.off('matchmaking-time');
         });
     });
 
     return (
         <>
-            <div className="topnav" onClick={() => startGameSearch() }>The GAME</div>
+            <a className="topnav" onClick={() => startGameSearch() }>The GAME</a>
             <GameBttn />
         </>
     )
