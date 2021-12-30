@@ -123,7 +123,9 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     ) {
         const anotherClient = this.matchmakingService.removeFromWaitList(user);
         client.emit('matchmaking-declined');
-        anotherClient.emit('matchmaking-restart')
+        if (anotherClient) {
+            anotherClient.emit('matchmaking-restart')
+        }
     }
 
     @SubscribeMessage('duel-invite')

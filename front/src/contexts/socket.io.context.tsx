@@ -1,5 +1,5 @@
 import {io, Socket} from "socket.io-client/build/esm-debug";
-import React, {useRef} from "react";
+import React, {useEffect, useRef} from "react";
 
 interface SocketIOContextType {
     socket: Socket | null;

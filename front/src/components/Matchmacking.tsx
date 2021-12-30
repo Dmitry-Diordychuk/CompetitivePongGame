@@ -166,11 +166,10 @@ export default function Matchmacking() {
     })
 
     useEffectOnce(() => {
-        if (matchMakingStatusRef.current === 'accept') {
-            socket.on('matchmaking-restart', (meassge: any) => {
+        socket.on('matchmaking-restart', (message: any) => {
+            if (matchMakingStatusRef.current === 'accept')
                 startGameSearch();
-            })
-        }
+        })
         return (() => {
             socket.off('matchmaking-restart');
         });

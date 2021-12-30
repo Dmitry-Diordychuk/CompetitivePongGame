@@ -284,17 +284,38 @@ export class UserService {
     }
 
     async getUserById(id: number): Promise<UserEntity> {
-        const user = await this.userRepository.findOne(
-            id,
-            {
-                relations: [
-                    "profile",
-                    "profile.winMatches",
-                    "profile.lossMatches",
+        // const user = await this.userRepository.findOne(
+        //     id,
+        //     {
+        //         relations: [
+        //             "profile",
+        //             "profile.winMatches",
+        //             "profile.lossMatches",
+        //         ],
+        //         select: ["id", "username", "role", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
+        // });
+        const user = await this.userRepository
+            .createQueryBuilder("user")
+            .select([
+                "user.id",
+                "user.username",
+                "user.role",
+                "user.ftId",
+                "user.isTwoFactorAuthenticationEnable",
+                "user.twoFactorAuthenticationsSecret"
                 ],
-                select: ["id", "username", "role", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
-        });
-        console.log(user.profile.winMatches);
+            )
+            .leftJoinAndSelect("user.profile", "profile")
+            .leftJoinAndSelect("profile.winMatches", "winMatches")
+            .leftJoinAndSelect("profile.lossMatches", "lossMatches")
+            .leftJoinAndSelect("profile.achievements", "achievements")
+            .leftJoinAndSelect("winMatches.winner", "win_winner")
+            .leftJoinAndSelect("winMatches.loser", "win_loser")
+            .leftJoinAndSelect("lossMatches.winner", "loss_winner")
+            .leftJoinAndSelect("lossMatches.loser", "loss_loser")
+            .where(`user.id = ${id}`, {id: id})
+            .andWhere("user.id = profile.id")
+            .getOne();
         return user;
     }
 
