@@ -3,7 +3,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {UserEntity} from "@app/user/user.entity";
 import {Repository, UpdateResult} from "typeorm";
 import {UserService} from "@app/user/user.service";
-import {HttpException} from "@nestjs/common";
+import {HttpException, HttpStatus} from "@nestjs/common";
 import {ChannelEntity} from "@app/chat/channel.entity";
 import {ChatService} from "@app/chat/chat.service";
 
@@ -19,26 +19,42 @@ export class AdminService {
         const user = await this.userService.getUserById(userId);
 
         if (!user) {
-            throw new HttpException('There is no such user!', 404);
-        } else if (user.role === Role.Admin || user.role === Role.Owner) {
-            throw new HttpException("User already admin!", 404);
+            throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
+        } else if (user.role === Role.PO || user.role === Role.Owner) {
+            throw new HttpException("User already admin!", HttpStatus.BAD_REQUEST);
         }
 
         return await this.userRepository.update(userId, {
-            role: Role.Admin,
+            role: Role.PO,
         })
     }
 
-    async banUser(userId: number): Promise<UpdateResult> {
+    async makeUser(userId: number) {
         const user = await this.userService.getUserById(userId);
 
         if (!user) {
-            throw new HttpException('There is no such user!', 404);
-        } else if (user.role === Role.Admin || user.role === Role.Owner) {
-            throw new HttpException("You can't ban administrator!", 404);
+            throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
+        } else if (user.role === Role.Owner) {
+            throw new HttpException("You can't remove owner!", HttpStatus.BAD_REQUEST);
+        } else if (user.role === Role.User) {
+            throw new HttpException("Already user!", HttpStatus.BAD_REQUEST);
         }
 
         return await this.userRepository.update(userId, {
+            role: Role.User,
+        })
+    }
+
+    async banUser(targetId: number): Promise<UpdateResult> {
+        const user = await this.userService.getUserById(targetId);
+
+        if (!user) {
+            throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
+        } else if (user.role === Role.Owner || user.role === Role.PO) {
+            throw new HttpException("You can't ban administrator!", HttpStatus.BAD_REQUEST);
+        }
+
+        return await this.userRepository.update(targetId, {
             role: Role.Banned,
         })
     }
@@ -48,15 +64,18 @@ export class AdminService {
         await this.channelRepository.delete(channelId);
     }
 
-    async makeChannelOwner(channelId: number, userId: number): Promise<ChannelEntity> {
+    async makeChannelOwner(channelId: number, userName: string): Promise<ChannelEntity> {
         const channel = await this.chatService.findChannelById(channelId);
 
-        const user = await this.userService.getUserById(userId);
+        if (userName === '') {
+            await this.removeChannelOwner(channel);
+            return channel;
+        }
+
+        const user = await this.userService.getUserByName(userName);
 
         if (!user) {
-            throw new HttpException('There is no such user!', 404);
-        } else if (user.role === Role.Admin || user.role === Role.Owner) {
-            throw new HttpException("User already admin!", 404);
+            throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
         }
 
         channel.owner = user;
@@ -65,23 +84,23 @@ export class AdminService {
         return (channel);
     }
 
-    async removeChannelOwner(channelId: number): Promise<ChannelEntity> {
-        const channel = await this.chatService.findChannelById(channelId);
-
+    async removeChannelOwner(channel: ChannelEntity): Promise<ChannelEntity> {
         channel.owner = null;
         await this.channelRepository.save(channel);
         return (channel);
     }
 
-    async makeChannelAdmin(channelId: number, userId: number): Promise<ChannelEntity> {
+    async makeChannelAdmin(channelId: number, userName: string): Promise<ChannelEntity> {
         const channel = await this.chatService.findChannelById(channelId);
 
-        const user = await this.userService.getUserById(userId);
+        const user = await this.userService.getUserByName(userName);
 
         if (!user) {
-            throw new HttpException('There is no such user!', 404);
-        } else if (user.role === Role.Admin || user.role === Role.Owner) {
-            throw new HttpException("User already admin!", 404);
+            throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
+        }
+
+        if (channel.admins.includes(user) || channel.owner.id === user.id) {
+            throw new HttpException('This user already admin!', HttpStatus.BAD_REQUEST);
         }
 
         channel.admins.push(user);
@@ -90,16 +109,16 @@ export class AdminService {
         return (channel);
     }
 
-    async removeChannelAdmin(channelId: number, userId: number): Promise<ChannelEntity> {
+    async removeChannelAdmin(channelId: number, userName: string): Promise<ChannelEntity> {
         const channel = await this.chatService.findChannelById(channelId);
 
-        const user = channel.admins.find(u => u.id === user.id);
+        const user = await this.userService.getUserByName(userName);
 
         if (!user) {
-            throw new HttpException('There is no such user!', 404);
+            throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
         }
 
-        channel.admins = channel.admins.filter(u => u.id === user.id);
+        channel.admins = channel.admins.filter(u => u.id !== user.id);
 
         await this.channelRepository.save(channel);
         return (channel);

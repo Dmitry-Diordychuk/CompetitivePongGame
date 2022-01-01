@@ -20,7 +20,7 @@ export default function TopPanel() {
         <div>
             <div className="topnav">
                 {
-                    auth.user && (auth.user.role === 'Admin' || auth.user.role === 'Owner')
+                    auth.user && (auth.user.role === 'Admin' || auth.user.role === 'PO')
                         ?
                         <Link style={{ textDecoration: 'none' }} to="/admin">Admin</Link>
                         :

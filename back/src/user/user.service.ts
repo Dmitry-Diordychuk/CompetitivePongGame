@@ -284,16 +284,6 @@ export class UserService {
     }
 
     async getUserById(id: number): Promise<UserEntity> {
-        // const user = await this.userRepository.findOne(
-        //     id,
-        //     {
-        //         relations: [
-        //             "profile",
-        //             "profile.winMatches",
-        //             "profile.lossMatches",
-        //         ],
-        //         select: ["id", "username", "role", "ftId", "isTwoFactorAuthenticationEnable", "twoFactorAuthenticationsSecret"]
-        // });
         const user = await this.userRepository
             .createQueryBuilder("user")
             .select([
@@ -316,6 +306,13 @@ export class UserService {
             .where(`user.id = ${id}`, {id: id})
             .andWhere("user.id = profile.id")
             .getOne();
+        return user;
+    }
+
+    async getUserByName(name: string): Promise<UserEntity> {
+        const user = await this.userRepository.findOne({
+            username: name,
+        })
         return user;
     }
 

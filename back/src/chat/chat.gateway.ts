@@ -121,7 +121,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() joinChannelDto: JoinChannelDto
     ) {
-        const message = await this.chatService.joinChannel(user, joinChannelDto);
+        const message = await this.chatService.joinChannel(user, joinChannelDto, false);
         socket.join(joinChannelDto.name);
         socket.emit('joined_channel', {message});
     }
@@ -208,5 +208,17 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
                 }
             });
         }
+    }
+
+    @UseGuards(WebSocketRoleGuard(Role.PO))
+    @SubscribeMessage('admin_join_channel')
+    async handleJoinChannelAsAdmin(
+        @ConnectedSocket() socket: Socket,
+        @WSUser() user: UserEntity,
+        @MessageBody() joinChannelDto: JoinChannelDto
+    ) {
+        const message = await this.chatService.joinChannel(user, joinChannelDto, true);
+        socket.join(joinChannelDto.name);
+        socket.emit('joined_channel', {message});
     }
 }

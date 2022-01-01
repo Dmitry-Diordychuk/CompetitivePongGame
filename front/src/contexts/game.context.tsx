@@ -1,7 +1,6 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useEffectOnce} from "usehooks-ts";
-import {useChat} from "./chat.context";
 import {useSocketIO} from "./socket.io.context";
 
 interface GameContextType {
@@ -15,6 +14,9 @@ interface GameContextType {
     setDuel: Function;
     gameMessage: any;
     setGameMessage: Function;
+
+    roundCounter: number;
+    roundResult: number[];
 
     playerNumber: number;
     isPlaying: boolean;
@@ -47,6 +49,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const [gameMessage, setGameMessage] = useState<any>(null);
     const [playerNumber, setPlayerNumber] = useState(0);
 
+    const [roundCounter, setRoundCounter] = useState(0);
+    const [roundResult, setRoundResult] = useState([]);
+
     const [ball, setBall] = useState(null);
     const [player, setPlayer] = useState(null);
     const [enemy, setEnemy] = useState(null);
@@ -54,24 +59,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const [freeze, setFreeze] = useState(null);
     const [shake, setShake] = useState(null);
     const [speed, setSpeed] = useState(null);
-
-    // useEffect(() => {
-    //     setIsPlaying(false);
-    //     setUpButton(38);
-    //     setDownButton(40);
-    //     setDirection('left');
-    //     setDuel(null);
-    //     setGameMessage(null);
-    //     setPlayerNumber(0);
-    //
-    //     setBall(null);
-    //     setPlayer(null);
-    //     setEnemy(null);
-    //     setWall(null);
-    //     setFreeze(null);
-    //     setShake(null);
-    //     setSpeed(null);
-    // }, [socket]);
 
     useEffectOnce(() => {
         socket.on('game-init', ((init : number) => {
@@ -97,6 +84,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             setPlayer(gameState.players[0]);
             setEnemy(gameState.players[1]);
 
+            setRoundResult(gameState.roundResult);
+            setRoundCounter(gameState.roundCounter);
+
             setIsPlaying(true);
             setGameMessage(message);
         }))
@@ -107,7 +97,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     useEffectOnce(() => {
         socket.on('game-over', ((over : any) => {
-            console.log('GAME-OVER!');
             setIsPlaying(false);
             navigate('/profile', {replace: true});
         }))
@@ -127,6 +116,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setDuel,
         gameMessage,
         setGameMessage,
+
+        roundCounter,
+        roundResult,
 
         playerNumber,
         isPlaying,

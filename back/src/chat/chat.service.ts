@@ -78,29 +78,27 @@ export class ChatService {
         };
     }
 
-    async joinChannel(user: UserEntity, joinChannelDto: JoinChannelDto): Promise<any> {
+    async joinChannel(user: UserEntity, joinChannelDto: JoinChannelDto, isAdmin: boolean): Promise<any> {
         let channel = await this.findChannelByName(joinChannelDto.name);
 
         if (!channel) {
             throw new WsException("Channel doesn't exist");
         }
 
-        if (user.role !== Role.Admin && user.role !== Role.Owner) {
+        if (!isAdmin) {
             if (!await this.isChannelPassword(channel, joinChannelDto.password)) {
                 throw new WsException("Wrong password");
             }
-        }
 
-        const sanction = channel.sanctions.find(s => s.target.id === user.id);
-        if (sanction && sanction.type === 'ban') {
-            if ((sanction.expiry_at.getTime() - Date.now()) < 0) {
-                channel.sanctions = channel.sanctions.filter(s => s.id !== sanction.id);
-            } else {
-                throw new WsException("You have been banned till " + sanction.expiry_at);
+            const sanction = channel.sanctions.find(s => s.target.id === user.id);
+            if (sanction && sanction.type === 'ban') {
+                if ((sanction.expiry_at.getTime() - Date.now()) < 0) {
+                    channel.sanctions = channel.sanctions.filter(s => s.id !== sanction.id);
+                } else {
+                    throw new WsException("You have been banned till " + sanction.expiry_at);
+                }
             }
-        }
 
-        if (user.role !== Role.Admin && user.role !== Role.Owner) {
             channel.visitors.push(user);
             channel = await this.channelRepository.save(channel);
         }
@@ -224,6 +222,16 @@ export class ChatService {
         }
 
         return {channel};
+    }
+
+    async deleteChannel(channel_id: number) {
+        const channel = await this.channelRepository.findOne(channel_id);
+
+        if (!channel) {
+            throw new HttpException("Channel doesn't exit", HttpStatus.NOT_FOUND);
+        }
+
+        await this.channelRepository.remove(channel);
     }
 
     async getUserOpenChannels(user_id: number): Promise<ChannelsResponseInterface> {
@@ -416,12 +424,21 @@ export class ChatService {
     }
 
     async getAllChannels(take: number, skip: number): Promise<any> {
-        return await this.channelRepository.findAndCount({
+        const channels = await this.channelRepository.findAndCount({
+            select: ["id", "name", "owner", "password"],
+            relations: ["owner", "admins", "visitors", "sanctions"],
             order: {
                 name: "ASC"
             },
             skip: skip,
             take: take,
         });
+        channels[0].map((channel: any) => {
+            if (channel.password)
+                channel.password = true;
+            else
+                channel.password = false;
+        })
+        return channels;
     }
 }

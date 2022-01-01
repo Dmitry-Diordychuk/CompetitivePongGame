@@ -1,4 +1,15 @@
-import {Body, Controller, Get, Param, ParseIntPipe, Put, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
+import {
+    Body,
+    Controller, Delete,
+    Get,
+    HttpException, HttpStatus,
+    Param,
+    ParseIntPipe,
+    Put,
+    UseGuards,
+    UsePipes,
+    ValidationPipe
+} from '@nestjs/common';
 import {ChatService} from "@app/chat/chat.service";
 import {User} from "@app/user/decorators/user.decorator";
 import {ChannelsResponseInterface} from "@app/chat/types/channelsResponse.interface";
@@ -34,6 +45,14 @@ export class ChannelController {
         return await this.chatService.getChannel(channel_id);
     }
 
+    @UsePipes(new ParseIntPipe())
+    @Delete(':id')
+    async deleteChannel(
+        @Param('id') channel_id: number
+    ) {
+        await this.chatService.deleteChannel(channel_id);
+    }
+
     @UsePipes(new ValidationPipe())
     @Put('admin')
     async makeUserChannelAdmin(
@@ -49,7 +68,11 @@ export class ChannelController {
     async getAllChannels(
         @Param('pageNumber') pageNumber: number,
     ) {
-        const [result, total] = await this.chatService.getAllChannels(10, pageNumber);
+        const take = 5;
+        if (pageNumber < 1)
+            return new HttpException("Wrong page number", HttpStatus.BAD_REQUEST);
+        const skip = (pageNumber - 1) * take;
+        const [result, total] = await this.chatService.getAllChannels(take, skip);
         return {
             result,
             total,

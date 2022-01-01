@@ -26,7 +26,7 @@ export class SeedDb1630422445889 implements MigrationInterface {
             Тип JWT
          */
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMSIsImZ0X2lkIjoiMSIsInVzZXJuYW1lIjoiQV91c2VyIn0.uIUje5AHnK4fi1b21vvzN1XO_eP20slTPPchWFj3g0E
-        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (101, 1, 'A_user', 'Owner', 101);`);
+        await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (101, 1, 'A_user', 'PO', 101);`);
 
         // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwMiIsImZ0X2lkIjoiMiIsInVzZXJuYW1lIjoiQl91c2VyIn0.yZvTcANIHFMlWwyTluOwCGbR3jHe-hQfGc-OsCK_UvM
         await queryRunner.query(`INSERT INTO users (id, "ftId", username, role, "profileId") VALUES (102, 2, 'B_user', 'User', 102);`);

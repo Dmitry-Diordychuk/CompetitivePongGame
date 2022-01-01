@@ -1,6 +1,6 @@
 enum Role {
     User = 'User',
-    Admin = 'Admin',
+    PO = 'PO',
     Owner = 'Owner',
     Banned = 'Banned',
 }

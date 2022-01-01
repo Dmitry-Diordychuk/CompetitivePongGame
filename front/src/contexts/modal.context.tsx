@@ -21,8 +21,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
     const summonModalWindow = (event: any, msg: any) => {
         console.log(event.pageX, event.pageY);
-        setX(event.pageX);
-        setY(event.pageY);
+        setX(event.pageX - window.scrollX);
+        setY(event.pageY - window.scrollY);
         setSubject(msg);
         setIsActive(true);
     }

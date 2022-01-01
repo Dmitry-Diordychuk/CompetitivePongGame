@@ -44,13 +44,23 @@ export class GameService {
         const intervalId = setInterval(() => {
             clients = server.sockets.adapter.rooms.get(roomName);
 
+            if (!clients && Date.now() - this.state[roomName].pauseStartTime > 900000) {
+                if (
+                    this.state[roomName].roundResult.filter(x => x === 1).length >
+                    this.state[roomName].roundResult.filter(x => x === 2).length
+                )
+                    this.gameOver(server, 0, 1, ()=>{});
+                else
+                    this.gameOver(server, 0, 2, ()=>{});
+            }
+
             if (this.state[roomName].playerSurrendered === 1)
                 this.gameOver(server, roomName, 2, callback);
             else if (this.state[roomName].playerSurrendered === 1)
                 this.gameOver(server, roomName, 1, callback);
 
             if (!this.state[roomName].pause) {
-                if (!clients.has(playerOne.socketId)) {
+                if (!clients?.has(playerOne.socketId)) {
                     if (this.state[roomName].pause === false) {
                         this.state[roomName].pause = true;
                         this.state[roomName].pauseStartTime = new Date();
@@ -62,7 +72,7 @@ export class GameService {
                         this.state[roomName].pausePlayerOneCounter += 1;
                     }
                     return;
-                } else if (!clients.has(playerTwo.socketId)) {
+                } else if (!clients?.has(playerTwo.socketId)) {
                     if (this.state[roomName].pause === false) {
                         this.state[roomName].pause = true;
                         this.state[roomName].pauseStartTime = new Date();
@@ -82,13 +92,13 @@ export class GameService {
                         this.gameOver(server, roomName, 2, callback);
                     else if (this.state[roomName].pausePlayerTwoCounter > 0) // IF_DISCONNECTED
                         this.gameOver(server, roomName, 1, callback);
-                } else if (clients.has(playerOne.socketId) && clients.has(playerTwo.socketId)) {
+                } else if (clients?.has(playerOne.socketId) && clients?.has(playerTwo.socketId)) {
                     this.state[roomName].pause = false;
                 }
                 if (clients) {
                     for (let socketId of clients) {
-                        let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
-                        server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(gameState));
+                        //let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
+                        server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(this.state[roomName]));//JSON.stringify(gameState));
                     }
                 }
                 return;
@@ -97,15 +107,18 @@ export class GameService {
             let winner = this.gameLoop(this.state[roomName], mode);
             if (!winner && clients) {
                 for (let socketId of clients) {
-                    let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
-                    server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(gameState));
+                    //let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
+                    server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(this.state[roomName]));
                 }
-            } else if (winner && this.state[roomName].roundCounter < 5) {
+            } else if (winner) {
                 this.state[roomName].roundCounter++;
                 this.state[roomName].roundResult.push(winner);
                 this.state[roomName] = this.resetGameState(this.state[roomName], this.state[roomName].roundCounter % 2);
 
-                if (this.state[roomName].roundCounter === 5) {
+                if (
+                    this.state[roomName].roundResult.filter(x => x === 1).length === 3
+                    || this.state[roomName].roundResult.filter(x => x === 2).length === 3
+                ) {
                     if (this.state[roomName].roundResult.filter(winner => winner === 1).reduce((accumulator) => accumulator + 1) > 2)
                         winner = 1;
                     else
@@ -126,15 +139,15 @@ export class GameService {
         callback(winner);
     }
 
-    inverseState(playerTwoSocketId, socketId, gameState) {
-        const state = Object.assign({}, gameState);
-        if (playerTwoSocketId === socketId) {
-            state.players = [state.players[1], state.players[0]];
-            return (state);
-        } else {
-            return (state);
-        }
-    }
+    // inverseState(playerTwoSocketId, socketId, gameState) {
+    //     const state = Object.assign({}, gameState);
+    //     if (playerTwoSocketId === socketId) {
+    //         state.players = [state.players[1], state.players[0]];
+    //         return (state);
+    //     } else {
+    //         return (state);
+    //     }
+    // }
 
     resetGameState(state: GameStateInterface, ballPosition: number): GameStateInterface {
         state.players = [{

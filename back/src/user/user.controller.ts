@@ -2,7 +2,7 @@ import {
     Body,
     Controller,
     Delete,
-    Get,
+    Get, HttpException, HttpStatus,
     Param,
     ParseIntPipe,
     Put,
@@ -138,7 +138,11 @@ export class UserController {
     async getUsers(
         @Param('pageNumber') pageNumber: number,
     ) {
-        const [result, total] = await this.userService.getAllUsers(10, pageNumber);
+        const take = 10;
+        if (pageNumber < 1)
+            return new HttpException("Wrong page number", HttpStatus.BAD_REQUEST);
+        const skip = (pageNumber - 1) * take;
+        const [result, total] = await this.userService.getAllUsers(take, skip);
         return {
             result,
             total,

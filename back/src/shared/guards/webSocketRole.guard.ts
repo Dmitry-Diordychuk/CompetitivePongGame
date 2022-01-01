@@ -12,7 +12,7 @@ const WebSocketRoleGuard = (role: Role): Type<CanActivate> => {
 
             if (user?.role === Role.Owner)
                 return true;
-            else if (user?.role === Role.Admin && role !== Role.Owner)
+            else if (user?.role === Role.PO && role !== Role.Owner)
                 return true;
             else if (user?.role === Role.Banned)
                 return false;

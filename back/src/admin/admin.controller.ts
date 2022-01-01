@@ -1,12 +1,22 @@
-import {Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    UseGuards,
+    UsePipes,
+    ValidationPipe
+} from "@nestjs/common";
 import RoleGuard from "@app/shared/guards/role.guard";
 import Role from "@app/user/types/role.enum";
-import {UserService} from "@app/user/user.service";
 import {AdminService} from "@app/admin/admin.service";
-import {UserEntity} from "@app/user/user.entity";
 import {UpdateResult} from "typeorm";
-import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 import {UpdateChannelAdminDto} from "@app/admin/dto/updateChannelAdmin.dto";
+import {UserEntity} from "@app/user/user.entity";
+import {User} from "@app/user/decorators/user.decorator";
 
 @Controller('/api/admin')
 export class AdminController {
@@ -24,7 +34,19 @@ export class AdminController {
         }
     }
 
-    @UseGuards(RoleGuard(Role.Admin))
+    @UseGuards(RoleGuard(Role.PO))
+    @UsePipes(new ParseIntPipe())
+    @Post('/user/:id')
+    async makeUser(
+        @Param('id') targetId: number
+    ) {
+        const result: UpdateResult = await this.adminService.makeUser(targetId);
+        return {
+            affected: result.affected,
+        }
+    }
+
+    @UseGuards(RoleGuard(Role.PO))
     @UsePipes(new ParseIntPipe())
     @Post('/ban/:id')
     async banUser(
@@ -36,7 +58,7 @@ export class AdminController {
         }
     }
 
-    @UseGuards(RoleGuard(Role.Admin))
+    @UseGuards(RoleGuard(Role.PO))
     @UsePipes(new ParseIntPipe())
     @Post('/destroy/channel/:id')
     async destroyChannel(
@@ -46,43 +68,33 @@ export class AdminController {
         return channel;
     }
 
-    @UseGuards(RoleGuard(Role.Admin))
+    @UseGuards(RoleGuard(Role.PO))
     @UsePipes(new ValidationPipe())
     @Post('/make/channel/owner')
     async makeChannelOwner(
-        @Body('user') updateChannelAdminDto: UpdateChannelAdminDto
+        @Body() updateChannelAdminDto: UpdateChannelAdminDto
     ) {
-        const channel = await this.adminService.makeChannelOwner(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        const channel = await this.adminService.makeChannelOwner(updateChannelAdminDto.channelId, updateChannelAdminDto.userName);
         return channel;
     }
 
-    @UseGuards(RoleGuard(Role.Admin))
-    @UsePipes(new ParseIntPipe())
-    @Post('/remove/channel/owner/:id')
-    async removeChannelOwner(
-        @Param('id') channelId: number
-    ) {
-        const channel = await this.adminService.removeChannelOwner(channelId);
-        return channel;
-    }
-
-    @UseGuards(RoleGuard(Role.Admin))
+    @UseGuards(RoleGuard(Role.PO))
     @UsePipes(new ValidationPipe())
     @Post('/make/channel/admin')
     async makeChannelAdmin(
-        @Body('user') updateChannelAdminDto: UpdateChannelAdminDto
+        @Body() updateChannelAdminDto: UpdateChannelAdminDto
     ) {
-        const channel = await this.adminService.makeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        const channel = await this.adminService.makeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userName);
         return channel;
     }
 
-    @UseGuards(RoleGuard(Role.Admin))
+    @UseGuards(RoleGuard(Role.PO))
     @UsePipes(new ValidationPipe())
     @Post('/remove/channel/admin')
     async removeChannelAdmin(
-        @Body('user') updateChannelAdminDto: UpdateChannelAdminDto
+        @Body() updateChannelAdminDto: UpdateChannelAdminDto
     ) {
-        const channel = await this.adminService.removeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userId);
+        const channel = await this.adminService.removeChannelAdmin(updateChannelAdminDto.channelId, updateChannelAdminDto.userName);
         return channel;
     }
 }

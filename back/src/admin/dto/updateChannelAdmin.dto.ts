@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsNumber, IsPositive} from "class-validator";
+import {IsNotEmpty, IsNumber, IsPositive, IsString} from "class-validator";
 
 export class UpdateChannelAdminDto {
     @IsNotEmpty()
@@ -6,8 +6,6 @@ export class UpdateChannelAdminDto {
     @IsPositive()
     channelId: number;
 
-    @IsNotEmpty()
-    @IsNumber()
-    @IsPositive()
-    userId: number;
+    @IsString()
+    userName: string;
 }
