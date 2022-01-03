@@ -44,6 +44,12 @@ export class GameService {
         const intervalId = setInterval(() => {
             clients = server.sockets.adapter.rooms.get(roomName);
 
+            if (this.state[roomName].playerSurrendered === 1) {
+                this.gameOver(server, roomName, 2, callback);
+            } else if (this.state[roomName].playerSurrendered === 2) {
+                this.gameOver(server, roomName, 1, callback);
+            }
+
             if (!clients && Date.now() - this.state[roomName].pauseStartTime > 900000) {
                 if (
                     this.state[roomName].roundResult.filter(x => x === 1).length >
@@ -54,12 +60,7 @@ export class GameService {
                     this.gameOver(server, 0, 2, ()=>{});
             }
 
-            if (this.state[roomName].playerSurrendered === 1)
-                this.gameOver(server, roomName, 2, callback);
-            else if (this.state[roomName].playerSurrendered === 1)
-                this.gameOver(server, roomName, 1, callback);
-
-            if (!this.state[roomName].pause) {
+            if (!this.state[roomName]?.pause) {
                 if (!clients?.has(playerOne.socketId)) {
                     if (this.state[roomName].pause === false) {
                         this.state[roomName].pause = true;
@@ -97,8 +98,7 @@ export class GameService {
                 }
                 if (clients) {
                     for (let socketId of clients) {
-                        //let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
-                        server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(this.state[roomName]));//JSON.stringify(gameState));
+                        server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(this.state[roomName]));
                     }
                 }
                 return;
@@ -107,7 +107,6 @@ export class GameService {
             let winner = this.gameLoop(this.state[roomName], mode);
             if (!winner && clients) {
                 for (let socketId of clients) {
-                    //let gameState = this.inverseState(playerTwo.socketId, socketId, this.state[roomName]);
                     server.sockets.sockets.get(socketId).emit('game-state', JSON.stringify(this.state[roomName]));
                 }
             } else if (winner) {

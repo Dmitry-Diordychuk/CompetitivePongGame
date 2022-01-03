@@ -219,9 +219,9 @@ export class MatchmakingService {
     }
 
     acceptDuel(user: UserEntity, rivalId: number) {
-        const pair = this.waitDuel.find(duel => duel.clientB.user.id === user.id);
+        const pair = this.waitDuel.find(duel => duel.clientA.user.id === rivalId && duel.clientB.user.id === user.id);
         if (!pair) {
-            throw new WsException("The is now such invite");
+            throw new WsException("The is no such invite");
         }
         this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
         this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);
@@ -230,6 +230,14 @@ export class MatchmakingService {
     }
 
     declineDuel(user: UserEntity, rivalId: number) {
-        this.acceptDuel(user, rivalId);
+        const pair = this.waitDuel.find(duel => duel.clientA.user.id === rivalId && duel.clientB.user.id === user.id);
+        if (!pair) {
+            throw new WsException("The is no such invite");
+        }
+        const rivalSocketId = pair.clientA.socket.id;
+        this.schedulerRegistry.deleteTimeout(pair.timeoutFunctionName);
+        this.schedulerRegistry.deleteInterval(pair.intervalFunctionName);
+        this.waitDuel = this.waitDuel.filter(duel => duel.clientB.user.id !== user.id);
+        return rivalSocketId;
     }
 }

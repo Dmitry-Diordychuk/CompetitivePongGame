@@ -1,8 +1,9 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect} from "react";
 import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useChat} from "../contexts/chat.context";
 import Matchmacking from "./Matchmacking";
+import Duel from "./Duel";
 
 import '../styles/TopPanel.css'
 import {useSocketIO} from "../contexts/socket.io.context";
@@ -13,6 +14,7 @@ export default function TopPanel() {
     const auth = useAuth();
     const socket = useSocketIO();
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(()=>{}, [chat.currentChannelName])
 
@@ -31,7 +33,8 @@ export default function TopPanel() {
                 <Link to="/channels">Channels</Link>
                 <Link to="/contacts">Contacts</Link>
                 <Link to="/settings">Settigs</Link>
-                <Matchmacking />
+                {location.pathname !== '/game' ? <Matchmacking/> : <></>}
+                {location.pathname !== '/game' ? <Duel /> : <></>}
 
                 {auth.user ?
                     <a className={'right'} onClick={() => {

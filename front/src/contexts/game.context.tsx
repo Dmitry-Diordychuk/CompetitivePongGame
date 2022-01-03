@@ -23,10 +23,8 @@ interface GameContextType {
     ball: any;
     player: any;
     enemy: any;
-    wall: any;
-    freeze: any;
-    shake: any;
-    speed: any;
+    walls: any;
+    bonus: any;
 }
 
 const GameContext = React.createContext<GameContextType>(null!);
@@ -55,10 +53,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const [ball, setBall] = useState(null);
     const [player, setPlayer] = useState(null);
     const [enemy, setEnemy] = useState(null);
-    const [wall, setWall] = useState(null);
-    const [freeze, setFreeze] = useState(null);
-    const [shake, setShake] = useState(null);
-    const [speed, setSpeed] = useState(null);
+    const [walls, setWalls] = useState(null);
+    const [bonus, setBonus] = useState(null);
 
     useEffectOnce(() => {
         socket.on('game-init', ((init : number) => {
@@ -76,19 +72,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         socket.on('game-state', ((message : string) => {
             let gameState = JSON.parse(message);
 
-            setSpeed(gameState.speed);
-            setShake(gameState.shake);
-            setFreeze(gameState.freeze);
-            setBall(gameState.ball);
-            setWall(gameState.wall);
-            setPlayer(gameState.players[0]);
-            setEnemy(gameState.players[1]);
+            if (gameState) {
+                setBonus(gameState.bonus);
+                setBall(gameState.ball);
+                setPlayer(gameState.players[0]);
+                setEnemy(gameState.players[1]);
 
-            setRoundResult(gameState.roundResult);
-            setRoundCounter(gameState.roundCounter);
+                setRoundResult(gameState.roundResult);
+                setRoundCounter(gameState.roundCounter);
 
-            setIsPlaying(true);
-            setGameMessage(message);
+                setIsPlaying(true);
+                setGameMessage(message);
+
+                setWalls(gameState.active.filter((i: any) => i.type === 'wall').map((i: any) => i.wall));
+            }
         }))
         return (() => {
             socket.off('game-state', ()=>{});
@@ -125,10 +122,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         ball,
         player,
         enemy,
-        wall,
-        freeze,
-        shake,
-        speed,
+        walls,
+        bonus,
     };
 
     return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

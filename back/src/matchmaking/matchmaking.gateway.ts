@@ -123,9 +123,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     ) {
         const anotherClient = this.matchmakingService.removeFromWaitList(user);
         client.emit('matchmaking-declined');
-        if (anotherClient) {
-            anotherClient.emit('matchmaking-restart')
-        }
+        anotherClient?.emit('matchmaking-restart')
     }
 
     @SubscribeMessage('duel-invite')
@@ -147,6 +145,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             this.matchmakingService.inviteToDuel(user, client, rival, rivalSocket, gameMode);
             this.server.to(rivalSocket.id).emit('duel-invited', {
                 rivalId: user.id,
+                rivalUsername: user.username,
                 gameMode: gameMode,
             });
         } else {
@@ -168,10 +167,10 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         let roomName = pair.clientA.user.id.toString() + pair.clientB.user.id.toString() + this.gameService.makeId(5);
         this.gameService.initGame(roomName);
 
-        pair.clientA.socket.emit(`duel-init`, roomName);
+        pair.clientA.socket.emit(`game-init`, roomName);
         this.initClient(pair.clientA.user, pair.clientA.socket, roomName, 1);
 
-        pair.clientB.socket.emit(`duel-init`, roomName);
+        pair.clientB.socket.emit(`game-init`, roomName);
         this.initClient(pair.clientB.user, pair.clientB.socket, roomName, 2);
 
         this.gameService.startGameInterval(this.server, roomName, async (winner) => {
@@ -190,7 +189,9 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         @ConnectedSocket() client,
         @MessageBody() rivalId,
     ) {
-        this.matchmakingService.declineDuel(user, rivalId);
+        const anotherClient: any = this.matchmakingService.declineDuel(user, rivalId);
+        if (anotherClient)
+            this.server.to(anotherClient).emit('duel-declined');
     }
 
     @SubscribeMessage('is-in-game')

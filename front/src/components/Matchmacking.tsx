@@ -8,7 +8,6 @@ import {useSocketIO} from "../contexts/socket.io.context";
 
 export default function Matchmacking() {
     const socket = useSocketIO();
-    const game = useGame();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -16,7 +15,6 @@ export default function Matchmacking() {
     const [matchMakingStatus, setMatchMakingStatus] = useState<string>('false');
     const [stringOfTime, setStringOfTime] = useState<string>("00:00");
     const timerRef = useRef(-1);
-    //const [lastTime, setLastTime] = useState<number>(-1);
 
     function  startGameSearch()
     {
@@ -68,11 +66,6 @@ export default function Matchmacking() {
                     <b onClick={() => {
                         matchMakingStatusRef.current = 'accepted';
                         setMatchMakingStatus('accepted');
-                        if (game.duel)
-                        {
-                            socket.emit('duel-accept', game.duel.rivalId)
-                            game.setDuel(null);
-                        }
                         socket.emit('matchmaking-accept-game')}}>
                         {matchMakingStatus} </b>  {stringOfTime}
                     <b onClick={() => {
@@ -150,39 +143,13 @@ export default function Matchmacking() {
     })
 
     useEffectOnce(() => {
-        socket.on('duel-wait-for-players', (message: any) => {
-            if (message > 9000) {
-                matchMakingStatusRef.current = 'declined';
-                setMatchMakingStatus('declined');
-            }
-            if (timerRef.current === message / 1000)
-                return;
-            handleMatchmakingTime(10000 - message)
-            timerRef.current = message / 1000;
-        })
-        return (() => {
-            socket.off('duel-wait-for-players');
-        });
-    })
-
-    useEffectOnce(() => {
         socket.on('matchmaking-restart', (message: any) => {
-            if (matchMakingStatusRef.current === 'accept')
+            console.log(matchMakingStatusRef.current)
+            if (matchMakingStatusRef.current === 'accept' || matchMakingStatusRef.current === 'accepted')
                 startGameSearch();
         })
         return (() => {
             socket.off('matchmaking-restart');
-        });
-    });
-
-    useEffectOnce(() => {
-        socket.on('duel-invited', (message: any) => {
-            matchMakingStatusRef.current = 'accept';
-            setMatchMakingStatus('accept');
-            game.setDuel(message);
-        })
-        return (() => {
-            socket.off('duel-invited');
         });
     });
 
