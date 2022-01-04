@@ -1,9 +1,8 @@
-import {useChat} from "../contexts/chat.context";
-import {useGame} from "../contexts/game.context";
 import {useLocation, useNavigate} from "react-router-dom";
 import React, {useRef, useState} from "react";
 import {useEffectOnce} from "usehooks-ts";
 import {useSocketIO} from "../contexts/socket.io.context";
+import "../styles/Matchmacking.css";
 
 
 export default function Matchmacking() {
@@ -50,19 +49,19 @@ export default function Matchmacking() {
         if (matchMakingStatusRef.current === 'Leave queue')
         {
             return (
-                <a onClick={() => {
+                <button onClick={() => {
                     matchMakingStatusRef.current = 'false';
                     setMatchMakingStatus('false');
                     timerRef.current = -1;
                     socket.emit('matchmaking-leave-queue');
                 }}>
                     <b>{stringOfTime} </b> {matchMakingStatus}
-                </a>
+                </button>
             )
         }
         if (matchMakingStatusRef.current === 'accept')
             return (
-                <a>
+                <button>
                     <b onClick={() => {
                         matchMakingStatusRef.current = 'accepted';
                         setMatchMakingStatus('accepted');
@@ -72,29 +71,29 @@ export default function Matchmacking() {
                         matchMakingStatusRef.current = 'false';
                         setMatchMakingStatus('false');
                         socket.emit('matchmaking-decline-game')}}> Decline </b>
-                </a>
+                </button>
             )
         if (matchMakingStatusRef.current === 'accepted')
         {
             if (location.pathname === '/game')
-                return (<div></div>)
+                return (<></>)
             else
                 return (
-                    <a>
+                    <button>
                         <b> Accepted </b> {stringOfTime}
-                    </a>
+                    </button>
                 )
         }
         if (matchMakingStatusRef.current === 'declined')
         {
             return (
-                <a>
+                <button>
                     Match was {matchMakingStatus} <b onClick={() => cancelSearching()}>OK</b>
-                </a>
+                </button>
             )
         }
         return (
-            <div></div>
+            <></>
         )
     }
 
@@ -104,7 +103,7 @@ export default function Matchmacking() {
     }
 
     useEffectOnce(()=>{
-        socket.on('matchmaking-init', (message: any) => {
+        socket.on('matchmaking-init', () => {
             if (matchMakingStatusRef.current === 'accepted') {
                 matchMakingStatusRef.current = 'false';
                 setMatchMakingStatus('false');
@@ -117,7 +116,7 @@ export default function Matchmacking() {
     });
 
     useEffectOnce(() => {
-        socket.on('matchmaking-success', (message : any) => {
+        socket.on('matchmaking-success', () => {
             matchMakingStatusRef.current = 'accept';
             setMatchMakingStatus('accept');
         });
@@ -143,7 +142,7 @@ export default function Matchmacking() {
     })
 
     useEffectOnce(() => {
-        socket.on('matchmaking-restart', (message: any) => {
+        socket.on('matchmaking-restart', () => {
             console.log(matchMakingStatusRef.current)
             if (matchMakingStatusRef.current === 'accept' || matchMakingStatusRef.current === 'accepted')
                 startGameSearch();
@@ -167,7 +166,7 @@ export default function Matchmacking() {
 
     return (
         <>
-            <a className="topnav" onClick={() => startGameSearch() }>The GAME</a>
+            <button onClick={() => startGameSearch() }>The GAME</button>
             <GameBttn />
         </>
     )

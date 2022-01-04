@@ -1,6 +1,5 @@
 import {useAuth} from "../auth/auth.context";
 import {Navigate, useNavigate} from "react-router-dom";
-import {useChat} from "../contexts/chat.context";
 import {useSocketIO} from "../contexts/socket.io.context";
 
 export default function Logout() {

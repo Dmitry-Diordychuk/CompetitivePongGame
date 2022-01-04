@@ -37,16 +37,16 @@ export default function TopPanel() {
                 {location.pathname !== '/game' ? <Duel /> : <></>}
 
                 {auth.user ?
-                    <a className={'right'} onClick={() => {
+                    <button className={'right'} onClick={() => {
                         auth.signout(() => {
                             socket.disconnect();
                             navigate("/");
                         });
-                    }}>Sign out</a>
+                    }}>Sign out</button>
                         : <></>
                 }
-                {auth.user ? <a className={'right'}>Welcome {auth.user.username}!</a> : 0}
-                <a className={'right'}>{"Current channel: " + chat.currentChannelName}</a>
+                {auth.user ? <button className={'right'}>Welcome {auth.user.username}!</button> : 0}
+                <button className={'right'}>{"Current channel: " + chat.currentChannelName}</button>
             </div>
             <Outlet />
         </div>

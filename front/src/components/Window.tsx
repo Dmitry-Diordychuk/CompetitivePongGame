@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import '../styles/Window.css';
 import axios, { AxiosRequestConfig }  from 'axios';
 import {useModal} from "../contexts/modal.context";
@@ -17,7 +17,6 @@ function ModalWindow()
     const chat = useChat();
     const navigate = useNavigate();
 
-    const [requestType, setRequestType] = useState<string>('skip');
     const banTime = useRef<any>()
 
     let modal_position = {
@@ -25,42 +24,28 @@ function ModalWindow()
         top: modalWindow.y,
     }
 
-    useEffect(() =>
-    {
-        if (requestType === 'not_logged' || requestType === 'skip')
-            return;
-        axios(contact.generateRequestOptions(requestType))
-            .then((response : any) => contact.axiosLoading(response, requestType))
-            .catch(e => {});
-        setRequestType('skip');
-    })
-
     function friend_exit()
     {
         modalWindow.setIsActive(false);
         contact.addFriend(modalWindow.subject.id);
-        setRequestType('add_friend');
     }
 
     function kick_from_friends()
     {
         modalWindow.setIsActive(false);
         contact.deleteFriend(modalWindow.subject.id);
-        setRequestType('delete_friend');
     }
 
     function add_to_blacklist()
     {
         modalWindow.setIsActive(false);
         contact.ban(modalWindow.subject.id);
-        setRequestType('add_blacklist');
     }
 
     function  delete_from_blacklist()
     {
         modalWindow.setIsActive(false);
         contact.unban(modalWindow.subject.id);
-        setRequestType('delete_blacklist');
     }
 
     function mute_exit()
@@ -85,11 +70,11 @@ function ModalWindow()
             channel : modalWindow.subject.username,
             visitors : [
                 modalWindow.subject,
-                //			Omni.Account.profile_data
             ]
         }
         chat.addNewChannel(temp);
-        chat.setCurrentChannel(modalWindow.subject.username);
+        navigate("/channel/" + temp.id);
+        chat.setCurrentChannel(temp.id);
         modalWindow.setIsActive(false);
     }
 
@@ -125,10 +110,10 @@ function ModalWindow()
                     }
             }
         axios(putAdmin)
-            .then((answer : any) => {
+            .then(() => {
 //				console.log(answer)
             })
-            .catch(e => {})
+            .catch(() => {})
     }
 
     function AdminPart() {
@@ -154,29 +139,28 @@ function ModalWindow()
                 </div>
             )
         return (
-            <div></div>
+            <></>
         )
 
     }
 
-    function SpectateBttn()
+    function SpectateButton()
     {
-        const [spectrate, setSpectr] = useState('Spectrate')
+        const [isInGame, setIsInGame] = useState(false)
 
         socket.emit("is-in-game", modalWindow.subject.id);
-        socket.once("in-game", ((e : any) => setSpectr(e)));
+        socket.once("in-game", ((isInGame: any) => {
+            setIsInGame(isInGame)
+        }));
 
 
-        if (!spectrate)
-            return (<div></div>)
+        if (!isInGame)
+            return (<></>)
 
         return (
-            <div className='modal_div' onClick={() => {
-                //Omni.Game.playerNumber = 0
-                socket.emit("spectate-game", modalWindow.subject.id)
-                //Omni.setActScreen('game');
-
-            }}>Spectrate</div>
+            <div className='modal_div' onClick={() => {socket.emit("spectate-game", modalWindow.subject.id)}}>
+                Spectate
+            </div>
         )
     }
 
@@ -188,6 +172,7 @@ function ModalWindow()
                 gameMode : type //modded default
             }
         socket.emit('duel-invite', temp)
+        modalWindow.setIsActive(false);
     }
 
     function openProfile() {
@@ -216,7 +201,7 @@ function ModalWindow()
                     <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
                     <div className='modal_div' onClick={() => mute_exit()}>{mute_str}</div>
                     <div className='modal_div' onClick={() => openProfile()}>Profile</div>
-                    <SpectateBttn />
+                    <SpectateButton />
                     <div className='modal_div' onClick={() => friend_exit()}>Add to friends</div>
                     <div className='modal_div'>Something else</div>
                 </div>
@@ -225,8 +210,8 @@ function ModalWindow()
         )
     }
 
-    if (modalWindow.isActive === false)
-        return (<div></div>)
+    if (!modalWindow.isActive)
+        return (<></>)
     else
         return (
             <div className='myModal_screen' onClick={

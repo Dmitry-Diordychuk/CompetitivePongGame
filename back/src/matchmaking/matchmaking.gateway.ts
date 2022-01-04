@@ -201,9 +201,15 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     ) {
         const room = this.clientInfoService.getUserRoom(userId);
         if (room) {
-            client.emit('in-game', true);
+            client.emit('in-game', {
+                userId: userId,
+                isOnline: true,
+            });
         } else {
-            client.emit('in-game', false);
+            client.emit('in-game', {
+                userId: userId,
+                isOnline: false,
+            });
         }
     }
 

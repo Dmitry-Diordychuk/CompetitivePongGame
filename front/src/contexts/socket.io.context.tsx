@@ -1,5 +1,5 @@
 import {io, Socket} from "socket.io-client/build/esm-debug";
-import React, {useEffect, useRef} from "react";
+import React, {useRef} from "react";
 
 interface SocketIOContextType {
     socket: Socket | null;
@@ -15,13 +15,11 @@ interface SocketIOContextType {
 const SocketIOContext = React.createContext<SocketIOContextType>(null!);
 
 export function SocketIOProvider({ children }: { children: React.ReactNode }) {
-    const [token, setToken] = React.useState<string>('');
     const socketRef = useRef(io("http://localhost:3002", {
         autoConnect: false,
     }));
 
     const connect = (userToken: string) => {
-        setToken(userToken);
         if (socketRef.current.disconnected) {
             socketRef.current.io.opts.extraHeaders = {
                 Authorization: "Bearer " + userToken,

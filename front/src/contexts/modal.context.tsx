@@ -17,10 +17,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     const [y, setY] = useState(0);
     const [subject, setSubject] = useState(null);
 
-    let requestType : string = 'skip;'
-
     const summonModalWindow = (event: any, msg: any) => {
-        console.log(event.pageX, event.pageY);
         setX(event.pageX - window.scrollX);
         setY(event.pageY - window.scrollY);
         setSubject(msg);

@@ -1,193 +1,119 @@
 import React, {useState} from "react";
-import {AxiosRequestConfig} from "axios";
+import axios from "axios";
+import {useAuth} from "../auth/auth.context";
 
 interface ContactContextType {
     friendList: any;
-    isFriend: Function;
+    uploadFriendList: Function;
     addFriend: Function;
     deleteFriend: Function;
+    isFriend: Function;
 
     blackList: any;
-    isBanned: Function;
+    uploadBlackList: Function;
     ban: Function;
     unban: Function;
-
-    generateRequestOptions: Function;
-    axiosLoading: Function;
+    isBanned: Function;
 }
 
 const ContactContext = React.createContext<ContactContextType>(null!);
 
 export function ContactProvider({ children }: { children: React.ReactNode }) {
-
+    const auth = useAuth();
     const [friendList, setFriendList] = useState([]);
     const [blackList, setBlackList] = useState([]);
 
+    const uploadFriendList = () => {
+        axios({
+            method: 'get',
+            url: "http://localhost:3001/api/user/friends",
+            responseType: "json",
+            headers: {
+                "Authorization" : "Bearer " + auth.user.token,
+            },
+        }).then((response) => {
+            setFriendList(response.data.users);
+        }).catch(() => {})
+    }
+
+    const addFriend = (userID: number) => {
+        axios({
+            method: 'put',
+            url: "http://localhost:3001/api/user/friends/" + userID,
+            responseType: "json",
+            headers: {
+                "Authorization" : "Bearer " + auth.user.token,
+            },
+        }).then().catch()
+    }
+
+    const deleteFriend = (userID : number) => {
+        axios({
+            method: 'delete',
+            url: "http://localhost:3001/api/user/friends/" + userID,
+            responseType: "json",
+            headers: {
+                "Authorization" : "Bearer " + auth.user.token,
+            },
+        }).then().catch()
+    }
+
     const isFriend = (subject: any) => {
-        if (friendList.find((e : any) => e.id === subject.id))
-            return true;
-        return false;
+        return !!friendList.find((e: any) => e.id === subject.id);
+
+    }
+
+    const uploadBlackList = () => {
+        axios({
+            method: 'get',
+            url: "http://localhost:3001/api/user/blacklist",
+            responseType: "json",
+            headers: {
+                "Authorization" : "Bearer " + auth.user.token,
+            },
+        }).then((response) => {
+            setBlackList(response.data.users);
+        }).catch(() => null)
+    }
+
+    const ban = (userID : number) => {
+        axios({
+            method: 'put',
+            url: "http://localhost:3001/api/user/blacklist/" + userID,
+            responseType: "json",
+            headers: {
+                "Authorization" : "Bearer " + auth.user.token,
+            },
+        }).then().catch()
+    }
+
+    const unban = (userID: number) => {
+        axios({
+            method: 'delete',
+            url: "http://localhost:3001/api/user/blacklist/" + userID,
+            responseType: "json",
+            headers: {
+                "Authorization" : "Bearer " + auth.user.token,
+            },
+        }).then().catch()
     }
 
     const isBanned = (subject: any) => {
-        if (blackList.find((e : any) => e.id === subject.id))
-            return true;
-        return false;
+        return !!blackList.find((e: any) => e.id === subject.id);
     }
-
-    const addFriendRequest: any = {
-        method: 'put',
-        url: "http://localhost:3001/api/user/friends/",
-        responseType: "json",
-        headers: {
-            "authorization" : ""
-        }
-    }
-
-    const deleteFriendRequest: any = {
-        method: 'delete',
-        url: "http://localhost:3001/api/user/friends/",
-        responseType: "json",
-        headers: {
-            "authorization" : ""
-        }
-    }
-
-    const friendsRequest: AxiosRequestConfig = {
-        method: 'get',
-        url: "http://localhost:3001/api/user/friends/",
-        responseType: "json",
-        headers: {
-            "authorization" : ""
-        }
-    }
-
-    const blacklistRequest: AxiosRequestConfig = {
-        method: 'get',
-        url: "http://localhost:3001/api/user/blacklist/",
-        responseType: "json",
-        headers: {
-            "authorization" : ""
-        }
-    }
-
-    const addBlacklistRequest: AxiosRequestConfig = {
-        method: 'put',
-        url: "http://localhost:3001/api/user/blacklist/",
-        responseType: "json",
-        headers : {
-            "authorization" : ""
-        }
-    }
-
-    const deleteBlacklistRequest: AxiosRequestConfig = {
-        method: 'delete',
-        url: "http://localhost:3001/api/user/blacklist/",
-        responseType: "json",
-        headers : {
-            "authorization" : ""
-        }
-    }
-
-    const unban = (userID: number, token: string) => {
-        deleteBlacklistRequest.url = "http://localhost:3001/api/user/blacklist/" + userID;
-        deleteBlacklistRequest.headers = {
-            "authorization" : "Bearer " + token,
-        }
-    }
-
-    const ban = (userID : number, token: string) => {
-        addBlacklistRequest.url = "http://localhost:3001/api/user/blacklist/" + userID;
-        addBlacklistRequest.headers = {
-            "authorization" : "Bearer " + token,
-        }
-    }
-
-    const addFriend = (userID: number, token: string) => {
-        addFriendRequest.url = "http://localhost:3001/api/user/friends/" + userID;
-        addFriendRequest.headers = {
-            "authorization" : "Bearer " + token,
-        }
-    }
-
-    const deleteFriend = (userID : number, token: string) => {
-        deleteFriendRequest.url = "http://localhost:3001/api/user/friends/" + userID;
-        deleteFriendRequest.headers = {
-            "authorization" : "Bearer " + token,
-        }
-    }
-
-    // public init(react_state : Function) : void
-    //         {
-    //             [this.blacklist, this.setBlackList] = react_state([]);
-    //     [this.friends, this.setFriends] = react_state([]);
-    // }
-
-    const axiosLoading = (request: any, options: string) : void => {
-        if (options === 'friends' || options === 'add_friend' || options === 'delete_friend')
-            setFriendList(request.data.users);
-        if (options === 'blacklist' || options === 'delete_blacklist')
-            setBlackList(request.data.users);
-        if (options === 'add_blacklist')
-            setBlackList(request.data.users);
-    }
-
-    const generateRequestOptions = (options: string, token: string): AxiosRequestConfig => {
-        if (options === 'friends')
-        {
-            friendsRequest["headers"] = {"authorization" : "Baerer " + token}
-            return (friendsRequest);
-        }
-        else if (options === 'add_friend')
-        {
-            addFriendRequest["headers"] = {"authorization" : "Baerer " + token}
-            return (addFriendRequest);
-        }
-        else if (options === 'delete_friend')
-        {
-            deleteFriendRequest["headers"] = {"authorization" : "Baerer " + token}
-            return (deleteFriendRequest);
-        }
-        else if (options === 'add_blacklist')
-        {
-            addBlacklistRequest["headers"] = {"authorization" : "Baerer " + token}
-            return (addBlacklistRequest);
-        }
-        else if (options === 'delete_blacklist')
-        {
-            deleteBlacklistRequest["headers"] = {"authorization" : "Baerer " + token}
-            return (deleteBlacklistRequest)
-        }
-        else if (options === 'blacklist')
-        {
-            blacklistRequest["headers"] = {"authorization" : "Baerer " + token}
-            return (blacklistRequest);
-        }
-
-        return ({
-            method: 'head',
-            url: "",
-        });
-    }
-
-    // public getBlacklist() : any
-    //     {
-    //         return (this.blacklist);
-    //     }
 
     let value : ContactContextType = {
         friendList,
-        isFriend,
+        uploadFriendList,
         addFriend,
         deleteFriend,
+        isFriend,
 
         blackList,
-        isBanned,
+        uploadBlackList,
         ban,
         unban,
-
-        generateRequestOptions,
-        axiosLoading,
+        isBanned,
     };
 
     return <ContactContext.Provider value={value}>{children}</ContactContext.Provider>;

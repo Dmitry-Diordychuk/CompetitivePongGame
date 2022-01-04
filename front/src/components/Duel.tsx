@@ -1,7 +1,7 @@
 import {useSocketIO} from "../contexts/socket.io.context";
 import {useGame} from "../contexts/game.context";
 import {useNavigate} from "react-router-dom";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useEffectOnce} from "usehooks-ts";
 
 export default function Matchmacking() {
@@ -27,7 +27,7 @@ export default function Matchmacking() {
 
     useEffectOnce(() => {
         socket.on('duel-wait-for-players', (timer: any) => {
-            if (timer == 10000) {
+            if (timer === 10000) {
                 setInviteFlag(false);
                 setCurrentRivalId(null);
                 setDuelInviteMessage('');
@@ -40,7 +40,7 @@ export default function Matchmacking() {
     })
 
     useEffectOnce(() => {
-        socket.on('duel-declined', (message: any) => {
+        socket.on('duel-declined', () => {
             setDuelInviteMessage('Duel has been declined!');
         })
     })
@@ -66,12 +66,12 @@ export default function Matchmacking() {
     useEffect(()=>{}, [time]);
     return (
         <>
-            <a>
+            {inviteFlag && <button style={{ backgroundColor: "#FFFFFF" }}>
                 <div onClick={()=>handleDeclineMessage()}>{duelInviteMessage}</div>
-                {inviteFlag && <button onClick={()=>handleAccept()}>Accept</button>}
-                {inviteFlag && <button onClick={()=>handleDecline()}>Decline</button>}
-                {inviteFlag && <p>{10 - +time.toString()[0]}</p>}
-            </a>
+                <button onClick={()=>handleAccept()}>Accept</button>
+                <button onClick={()=>handleDecline()}>Decline</button>
+                <p>{10 - +time.toString()[0]}</p>
+            </button>}
         </>
     )
 }

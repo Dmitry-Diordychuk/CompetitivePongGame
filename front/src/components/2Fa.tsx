@@ -1,7 +1,5 @@
 import {useAuth} from "../auth/auth.context";
-import {useRef, useState} from "react";
-import {useFetch} from "usehooks-ts";
-import axios from "axios";
+import {useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 export default function SecondFa() {

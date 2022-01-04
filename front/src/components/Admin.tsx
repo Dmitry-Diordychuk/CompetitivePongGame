@@ -1,13 +1,10 @@
 import {useAuth} from "../auth/auth.context";
 import {Navigate, useNavigate} from "react-router-dom";
 import "../styles/Admin.css"
-import {useFetch, useInterval} from "usehooks-ts";
 import axios from "axios";
 import React, {useEffect, useState} from "react";
 import {useSocketIO} from "../contexts/socket.io.context";
-import {useChat} from "../contexts/chat.context";
 import { useModal } from "../contexts/modal.context";
-import { Modal } from "react-bootstrap";
 import ModalWindow from './Window'
 
 export default function Admin() {
@@ -54,7 +51,7 @@ function Users() {
         }).catch((error) => {
             setError(error);
         })
-    }, [currentPage, update])
+    }, [currentPage, update, auth.user.token])
 
     const handleSelectUserRole = (event: any, id: number) => {
         const role = event.target.value;
@@ -78,11 +75,11 @@ function Users() {
         axios(config).then(() => setUpdate(update + 1)).catch((error)=>console.log(error.message));
     }
 
-    const handleNext = (event: any) => {
+    const handleNext = () => {
         setCurrentPage(currentPage + 1);
     }
 
-    const handlePrev = (event: any) => {
+    const handlePrev = () => {
         let prev = currentPage - 1;
         if (prev < 1)
             prev = 1;
@@ -127,8 +124,8 @@ function Users() {
             </table>
             <br/>
             <div className="pagination">
-                <a onClick={handlePrev}>❮</a>
-                <a onClick={handleNext}>❯</a>
+                <button onClick={handlePrev}>❮</button>
+                <button onClick={handleNext}>❯</button>
             </div>
         </>
     )
@@ -137,7 +134,6 @@ function Users() {
 function Channels() {
     const auth = useAuth();
     const socket = useSocketIO();
-    const chat = useChat();
     const navigate = useNavigate();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -164,7 +160,7 @@ function Channels() {
         }).catch((error) => {
             setError(error);
         })
-    }, [currentPage, update])
+    }, [currentPage, update, auth.user.token])
 
 
 
@@ -187,7 +183,7 @@ function Channels() {
             headers: {
                 Authorization: "Bearer " + auth.user.token,
             },
-        }).then((response)=> {
+        }).then(()=> {
             event.target.value = '';
             event.placeholder = userName;
             setUpdate(true);
@@ -206,7 +202,7 @@ function Channels() {
             headers: {
                 Authorization: "Bearer " + auth.user.token,
             },
-        }).then((response)=> {
+        }).then(()=> {
             event.target.value = '';
             setUpdate(true);
         }).catch(()=> {
@@ -223,7 +219,7 @@ function Channels() {
             headers: {
                 Authorization: "Bearer " + auth.user.token,
             },
-        }).then((response)=> {
+        }).then(()=> {
             setUpdate(true);
         }).catch(()=> {
             setUpdate(true);
@@ -240,11 +236,11 @@ function Channels() {
         });
     }
 
-    const handleNext = (event: any) => {
+    const handleNext = () => {
         setCurrentPage(currentPage + 1);
     }
 
-    const handlePrev = (event: any) => {
+    const handlePrev = () => {
         let prev = currentPage - 1;
         if (prev < 1)
             prev = 1;
@@ -324,8 +320,8 @@ function Channels() {
             </table>
             <br/>
             <div className="pagination">
-                <a onClick={handlePrev}>❮</a>
-                <a onClick={handleNext}>❯</a>
+                <button onClick={handlePrev}>❮</button>
+                <button onClick={handleNext}>❯</button>
             </div>
         </>
     )

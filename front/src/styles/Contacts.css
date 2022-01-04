@@ -1,0 +1,12 @@
+.div-fr
+{
+	float: left;
+	width: 50%;
+	background-color: rgb(159, 204, 113);
+}
+.div-bl
+{
+	float: right;
+	width: 50%;
+	background-color: rgb(224, 58, 58);
+}

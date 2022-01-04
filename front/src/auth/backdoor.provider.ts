@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const url = `http://localhost:3001/api/user/login?code=`
-
 const backdoorProvider = {
     signin(username: string, successfulCallback: Function, errorCallback: VoidFunction) {
         let token = null;

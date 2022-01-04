@@ -1,4 +1,4 @@
-import React, {useState, useRef} from "react";
+import React, {useState} from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import {useGame} from "../contexts/game.context";
@@ -380,24 +380,24 @@ export default function Settings()
     function changeUpKey(e : any)
     {
         game.setUpButton(e.keyCode);
-        setCookie('up', e.keyCode)
+        setCookie('up', e.keyCode, {sameSite : 'lax'})
         e.target.value = ''
     }
 
     function changeDownKey(e : any)
     {
         game.setDownButton(e.keyCode);
-        setCookie('down', e.keyCode)
+        setCookie('down', e.keyCode, {sameSite : 'lax'})
         e.target.value = ''
     }
 
     function resetControls()
     {
-        setCookie('up', 38);
+        setCookie('up', 38, {sameSite : 'lax'});
         game.setUpButton(38);
-        setCookie('down', 40);
+        setCookie('down', 40, {sameSite : 'lax'});
         game.setDownButton(40);
-        setCookie('direction', 'right');
+        setCookie('direction', 'right', {sameSite : 'lax'});
     }
 
     function changeDirection()
@@ -405,12 +405,12 @@ export default function Settings()
         if (game.direction === 'left')
         {
             game.setDirection('right');
-            setCookie('direction', 'right');
+            setCookie('direction', 'right', {sameSite : 'lax'});
         }
         else
         {
             game.setDirection('left')
-            setCookie('direction', 'left');
+            setCookie('direction', 'left', {sameSite : 'lax'});
         }
     }
 
@@ -424,7 +424,7 @@ export default function Settings()
             <input placeholder='Set new nickname'
                    onKeyPress={e =>
                        (e.code === "Enter" || e.code === "NumpadEnter") ?
-                           setNewName(e.target) : 0}type='text'></input>
+                           setNewName(e.target) : 0} type='text' />
             <div>image input</div>
             <div><h3>Game settings</h3></div>
             <div>field orientation</div>

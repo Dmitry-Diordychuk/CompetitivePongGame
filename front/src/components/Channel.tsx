@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
 import {useChat} from "../contexts/chat.context";
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useModal} from "../contexts/modal.context";
 import uuidv4 from "../utils/uuid";
@@ -13,17 +13,10 @@ import {useSocketIO} from "../contexts/socket.io.context";
 
 
 export default function Channel() {
-    let { id } = useParams<"id">();
-    const chat = useChat();
-
-    chat.setCurrentChannel(id);
-
     return (
         <MessageInput/>
     )
 }
-
-
 
 function MessageInput()
 {
@@ -51,7 +44,7 @@ function MessageInput()
             if (arg.sanction.type === 'ban')
                 chat.deleteChannel(arg.sanction.channel)
         }),
-    [chat]);
+    [chat, socket]);
 
     function add_new_msg(value : any)
     {
@@ -77,7 +70,7 @@ function MessageInput()
                     username: auth.user.username,
                 }
             socket.emit("send_private_message", newone);
-            socket.on("exception", (arg : any) => {})
+            socket.on("exception", () => {})
             chat.addMessage(msg);
         }
         value.value = '';
@@ -92,7 +85,7 @@ function MessageInput()
                 <input onKeyPress={e =>
                     (e.code === "Enter" || e.code === "NumpadEnter") ?
                         add_new_msg(e.target) : 0}
-                            type='text'>
+                            type='text' autoFocus={true}>
                 </input>
             </div>
         )
@@ -129,7 +122,7 @@ function SingleMessage(msg : any)
     )
 }
 
-function ChatPart()
+export function ChatPart()
 {
     const chat = useChat();
     const [messages, setMessages] = useState([]);
@@ -150,7 +143,7 @@ function ChatPart()
     )
 }
 
-function Roster()
+export function Roster()
 {
     const chat: any = useChat();
     const socket = useSocketIO();
@@ -178,7 +171,7 @@ function Roster()
                 })
                 .catch(e => console.log('Chat roster: ' + e))}, 1000)
         return (() => {clearInterval(id)})
-    }, [setVisitors, chat, last, visibleId])
+    }, [setVisitors, chat, last, visibleId, auth.user.token])
 
     function OnlineLight(name : any)
     {
@@ -188,10 +181,15 @@ function Roster()
         let in_game = false;
         socket.emit('is-online', newone)
         socket.emit("is-in-game", newone);
+        
         useEffect(() => {
             socket.on('status', (message : any) => {
                 chat.onliner.set(message.info['userId'], message.info.status)})
             socket.on("in-game", ((e : any) => {in_game = e}));
+            return (()=> {
+                socket.off('status');
+                socket.off('in-game');
+            })
         })
 
 
@@ -208,7 +206,7 @@ function Roster()
 
         function InGame()
         {
-            if (in_game === true)
+            if (in_game)
                 return (
                     <div className='div-ingame'/>
                 )
@@ -232,6 +230,14 @@ function Roster()
                 <OnlineLight name={visitor.name} />
             </div>
         )
+    }
+
+    if (chat.getCurrentChannelID() < 0)
+    {
+        return (
+                <div className='div-roster'>
+                    Here are {chat.currentChannelName} and you
+                </div>)
     }
 
     return (

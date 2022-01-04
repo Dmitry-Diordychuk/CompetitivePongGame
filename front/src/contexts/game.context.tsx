@@ -36,7 +36,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     const [isPlaying, setIsPlaying] = useState(false);
 
-    if (isPlaying && location.pathname != "/game") {
+    if (isPlaying && location.pathname !== "/game") {
         navigate('/game', {replace: true});
     }
 
@@ -93,7 +93,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
 
     useEffectOnce(() => {
-        socket.on('game-over', ((over : any) => {
+        socket.on('game-over', (() => {
             setIsPlaying(false);
             navigate('/profile', {replace: true});
         }))
