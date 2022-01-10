@@ -33,6 +33,17 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     handleDisconnect() {
     }
 
+    @SubscribeMessage('leaveSpectate')
+    handleLeaveSpectate(
+        @ConnectedSocket() client
+    ) {
+        const clientInfo = this.clientInfoService.getClientInfo(client.id);
+        if (!clientInfo) {
+            return;
+        }
+        this.clientInfoService.removeClientInfo(clientInfo.roomName);
+    }
+
     @SubscribeMessage('giveUp')
     handleGiveUp(
         @ConnectedSocket() client

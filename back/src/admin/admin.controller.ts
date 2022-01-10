@@ -22,7 +22,7 @@ import {User} from "@app/user/decorators/user.decorator";
 export class AdminController {
     constructor(private readonly adminService: AdminService) {}
 
-    @UseGuards(RoleGuard(Role.Owner))
+    @UseGuards(RoleGuard(Role.PO))
     @UsePipes(new ParseIntPipe())
     @Post('/:id')
     async makeAdmin(
@@ -34,7 +34,7 @@ export class AdminController {
         }
     }
 
-    @UseGuards(RoleGuard(Role.PO))
+    @UseGuards(RoleGuard(Role.Admin))
     @UsePipes(new ParseIntPipe())
     @Post('/user/:id')
     async makeUser(
@@ -46,7 +46,7 @@ export class AdminController {
         }
     }
 
-    @UseGuards(RoleGuard(Role.PO))
+    @UseGuards(RoleGuard(Role.Admin))
     @UsePipes(new ParseIntPipe())
     @Post('/ban/:id')
     async banUser(
@@ -58,7 +58,7 @@ export class AdminController {
         }
     }
 
-    @UseGuards(RoleGuard(Role.PO))
+    @UseGuards(RoleGuard(Role.Admin))
     @UsePipes(new ParseIntPipe())
     @Post('/destroy/channel/:id')
     async destroyChannel(
@@ -68,7 +68,7 @@ export class AdminController {
         return channel;
     }
 
-    @UseGuards(RoleGuard(Role.PO))
+    @UseGuards(RoleGuard(Role.Admin))
     @UsePipes(new ValidationPipe())
     @Post('/make/channel/owner')
     async makeChannelOwner(
@@ -78,7 +78,7 @@ export class AdminController {
         return channel;
     }
 
-    @UseGuards(RoleGuard(Role.PO))
+    @UseGuards(RoleGuard(Role.Admin))
     @UsePipes(new ValidationPipe())
     @Post('/make/channel/admin')
     async makeChannelAdmin(
@@ -88,7 +88,7 @@ export class AdminController {
         return channel;
     }
 
-    @UseGuards(RoleGuard(Role.PO))
+    @UseGuards(RoleGuard(Role.Admin))
     @UsePipes(new ValidationPipe())
     @Post('/remove/channel/admin')
     async removeChannelAdmin(

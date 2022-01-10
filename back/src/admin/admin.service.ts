@@ -20,12 +20,12 @@ export class AdminService {
 
         if (!user) {
             throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
-        } else if (user.role === Role.PO || user.role === Role.Owner) {
+        } else if (user.role === Role.Admin || user.role === Role.PO) {
             throw new HttpException("User already admin!", HttpStatus.BAD_REQUEST);
         }
 
         return await this.userRepository.update(userId, {
-            role: Role.PO,
+            role: Role.Admin,
         })
     }
 
@@ -34,7 +34,7 @@ export class AdminService {
 
         if (!user) {
             throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
-        } else if (user.role === Role.Owner) {
+        } else if (user.role === Role.PO) {
             throw new HttpException("You can't remove owner!", HttpStatus.BAD_REQUEST);
         } else if (user.role === Role.User) {
             throw new HttpException("Already user!", HttpStatus.BAD_REQUEST);
@@ -50,7 +50,7 @@ export class AdminService {
 
         if (!user) {
             throw new HttpException('There is no such user!', HttpStatus.NOT_FOUND);
-        } else if (user.role === Role.Owner || user.role === Role.PO) {
+        } else if (user.role === Role.PO || user.role === Role.Admin) {
             throw new HttpException("You can't ban administrator!", HttpStatus.BAD_REQUEST);
         }
 

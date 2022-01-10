@@ -10,9 +10,9 @@ const WebSocketRoleGuard = (role: Role): Type<CanActivate> => {
             const client = context.switchToWs().getClient();
             const user = client.handshake.headers.user;
 
-            if (user?.role === Role.Owner)
+            if (user?.role === Role.PO)
                 return true;
-            else if (user?.role === Role.PO && role !== Role.Owner)
+            else if (user?.role === Role.Admin && role !== Role.PO)
                 return true;
             else if (user?.role === Role.Banned)
                 return false;

@@ -210,7 +210,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         }
     }
 
-    @UseGuards(WebSocketRoleGuard(Role.PO))
+    @UseGuards(WebSocketRoleGuard(Role.Admin))
     @SubscribeMessage('admin_join_channel')
     async handleJoinChannelAsAdmin(
         @ConnectedSocket() socket: Socket,

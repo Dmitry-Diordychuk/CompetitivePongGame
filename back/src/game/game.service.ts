@@ -258,8 +258,36 @@ export class GameService {
             ball.velocity.y *= -1;
         }
 
-        if (this.isBallCollideWithRacket(ball, playerOne) || this.isBallCollideWithRacket(ball, playerTwo)) {
+        const playerOneCollideResult = this.isBallCollideWithRacket(ball, playerOne);
+        if (playerOneCollideResult === 'left') {
             ball.velocity.x *= -1;
+            if (ball.velocity.y === 0) {
+                ball.velocity.y = -1;
+            }
+        } else if (playerOneCollideResult === 'middle') {
+            ball.velocity.x *= -1;
+            ball.velocity.y = 0;
+        } else if (playerOneCollideResult === 'right') {
+            ball.velocity.x *= -1;
+            if (ball.velocity.y === 0) {
+                ball.velocity.y = 1;
+            }
+        }
+
+        const playerTwoCollideResult = this.isBallCollideWithRacket(ball, playerTwo);
+        if (playerTwoCollideResult === 'left') {
+            ball.velocity.x *= -1;
+            if (ball.velocity.y === 0) {
+                ball.velocity.y = -1;
+            }
+        } else if (playerTwoCollideResult === 'middle') {
+            ball.velocity.x *= -1;
+            ball.velocity.y = 0;
+        } else if (playerTwoCollideResult === 'right') {
+            ball.velocity.x *= -1;
+            if (ball.velocity.y === 0) {
+                ball.velocity.y = 1;
+            }
         }
 
         ball.position.x += ball.velocity.x;
@@ -352,19 +380,24 @@ export class GameService {
         return false;
     }
 
-    isBallCollideWithRacket(ball: BallInterface, racket: PlayerRacketInterface): boolean {
+    isBallCollideWithRacket(ball: BallInterface, racket: PlayerRacketInterface): false | 'left' | 'middle' | 'right' {
         let ballNextPosition = {
             x: ball.position.x + ball.velocity.x,
             y: ball.position.y + ball.velocity.y,
         }
 
+        const racketMiddleBegin = 3
+        const racketMiddleEnd = 5
         for (let i = 0; i < racket.size; i++) {
-            if (ballNextPosition.x === racket.position.x && ballNextPosition.y === racket.position.y + i) {
-                return true;
-            }
-            if (Math.abs(ball.velocity.x) > 1) {
-                if (ballNextPosition.x === racket.position.x + 1 && ballNextPosition.y === racket.position.y + i) {
-                    return true;
+            if (ballNextPosition.x == racket.position.x) {
+                if (ballNextPosition.y === racket.position.y + i) {
+                    if (i < racketMiddleBegin) {
+                        return 'left';
+                    } else if (i > racketMiddleEnd) {
+                        return 'right';
+                    } else {
+                        return 'middle';
+                    }
                 }
             }
         }
