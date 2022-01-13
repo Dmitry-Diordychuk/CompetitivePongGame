@@ -4,7 +4,7 @@ import {GameStateInterface} from "@app/game/types/gameState.interface";
 import {BallInterface} from "@app/game/types/ball.interface";
 import {PlayerRacketInterface} from "@app/game/types/playerRacketInterface";
 import {Server} from "socket.io";
-import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
+import {ClientInfoService} from "@app/clientInfo/clientInfo.service";
 import {WsException} from "@nestjs/websockets";
 import {Interval, SchedulerRegistry} from "@nestjs/schedule";
 

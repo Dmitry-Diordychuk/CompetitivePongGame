@@ -11,7 +11,7 @@ import {Server} from "socket.io";
 import {GameService} from "@app/game/game.service";
 import {UseGuards} from "@nestjs/common";
 import {WebSocketAuthGuard} from "@app/shared/guards/webSocketAuth.guard";
-import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
+import {ClientInfoService} from "@app/clientInfo/clientInfo.service";
 
 @UseGuards(WebSocketAuthGuard)
 @WebSocketGateway(3002, { cors: true })

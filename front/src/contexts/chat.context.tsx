@@ -3,7 +3,7 @@ import uuidv4 from "../utils/uuid";
 import axios from "axios";
 import {useSocketIO} from "./socket.io.context";
 import {useAuth} from "../auth/auth.context";
-import {useEffectOnce} from "usehooks-ts";
+import {useEffectOnce, useInterval} from "usehooks-ts";
 import {useContact} from "./contact.context";
 
 
@@ -11,12 +11,14 @@ interface ChatContextType {
     channels: any;
     addNewChannel: Function;
     deleteChannel: Function;
+    updateChannel: Function;
 
     setCurrentChannel: Function;
     currentChannelName: string;
     getCurrentChannelID: Function;
-
     getCurrentChannelMessages: Function;
+
+    addMessage: Function;
 
     getVisibleChannelAdmins: Function;
     removeAdminChannels: Function;
@@ -41,6 +43,23 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     let inGame : Map<number, boolean> = new Map();
 
     const [pMI, setPMI] = useState<any[]>([]);
+
+    useEffect(() => {
+        socket.on('channel-info-response', updateChannel);
+        return (() => {
+            socket.off('channel-info-response')
+        })
+    }, [channels, socket]);
+
+    const updateChannel = useCallback((channel: any) => {
+        let index : any = channels.findIndex((item : any) => item.name === currentChannelName);
+        channels[index].admins = channel.admins;
+        channels[index].name = channel.name;
+        channels[index].owner = channel.owner;
+        channels[index].sanctions = channel.sanctions;
+        channels[index].visitors = channel.visitors;
+        setChannels([...channels]);
+    }, [socket, channels]);
 
     useEffect(() => {
         setCurrentChannelName('general');
@@ -240,14 +259,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     let value : ChatContextType = {
         channels,
+
         addNewChannel,
         deleteChannel,
+        updateChannel,
 
         setCurrentChannel,
         currentChannelName,
         getCurrentChannelID,
-
         getCurrentChannelMessages,
+
+        addMessage,
 
         getVisibleChannelAdmins,
         removeAdminChannels,

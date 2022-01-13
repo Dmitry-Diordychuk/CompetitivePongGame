@@ -53,7 +53,7 @@ function AddChannelButton()
                 <b> + </b>
             </button>
         </div>
-    )
+    );
 }
 
 interface NewChannelWindowInterface

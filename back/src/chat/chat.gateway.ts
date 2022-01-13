@@ -8,7 +8,7 @@ import {
 } from "@nestjs/websockets";
 import {Server, Socket} from 'socket.io'
 import {ChatService} from "@app/chat/chat.service";
-import {Logger, UseFilters, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
+import {Get, Logger, Param, ParseIntPipe, UseFilters, UseGuards, UsePipes, ValidationPipe} from "@nestjs/common";
 import {JoinChannelDto} from "@app/chat/dto/joinChannel.dto";
 import {ReceiveMessageDto} from "@app/chat/dto/receiveMessage.dto";
 import {LeaveChannelDto} from "@app/chat/dto/leaveChannel.dto";
@@ -23,7 +23,7 @@ import {IsUserOnlineDto} from "@app/chat/dto/isUserOnline.dto";
 import WebSocketRoleGuard from "@app/shared/guards/webSocketRole.guard";
 import Role from "@app/user/types/role.enum";
 import {banDto} from "@app/chat/dto/ban.dto";
-import {Interval} from "@nestjs/schedule";
+import {ClientInfoService} from "@app/clientInfo/clientInfo.service";
 
 
 @UseGuards(WebSocketRoleGuard(Role.User))
@@ -34,7 +34,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @WebSocketServer()
     server: Server;
 
-    constructor(private readonly chatService: ChatService) {}
+    constructor(
+        private readonly chatService: ChatService,
+        private readonly clientInfoService: ClientInfoService,
+    ) {}
 
     private  logger: Logger = new Logger('ChatGateway');
 
@@ -235,5 +238,30 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         //await this.chatService.banUser(banDto.userId);
         this.server.to(banDto.userId.toString()).emit('ban');
+    }
+
+    @UseGuards(WebSocketRoleGuard(Role.User))
+    @SubscribeMessage('channel-info')
+    async getChannelInfo(
+        @ConnectedSocket() socket: Socket,
+        @MessageBody() channelDto: LeaveChannelDto,
+    ) {
+        const channel = await this.chatService.getChannelByName(channelDto.name);
+
+        channel.visitors.forEach(user => {
+            if ([...this.server.sockets.sockets].find(s => s[1]["handshake"]["headers"]["user"]["id"] === user.id)) {
+                user.isOnline = true;
+            } else {
+                user.isOnline = false;
+            }
+
+            const room = this.clientInfoService.getUserRoom(user.id);
+            if (room) {
+                user.isInGame = true;
+            } else {
+                user.isInGame = false;
+            }
+        })
+        socket.emit('channel-info-response', channel);
     }
 }

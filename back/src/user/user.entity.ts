@@ -62,4 +62,7 @@ export class UserEntity {
 
     @OneToMany(() => SanctionEntity, sanction => sanction.target)
     sanctions: SanctionEntity[];
+
+    isOnline: boolean;
+    isInGame: boolean;
 }

@@ -18,6 +18,7 @@ import {ChannelResponseInterface} from "@app/chat/types/channelResponse.interfac
 import Role from "@app/user/types/role.enum";
 import RoleGuard from "@app/shared/guards/role.guard";
 
+
 @Controller("api/channel")
 @UseGuards(RoleGuard(Role.User))
 export class ChannelController {

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
 import {useChat} from "../contexts/chat.context";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useModal} from "../contexts/modal.context";
 import uuidv4 from "../utils/uuid";
@@ -14,48 +14,38 @@ import {useInterval} from 'usehooks-ts';
 
 
 export default function Channel() {
-    const chat = useChat();
+    const chat: any = useChat();
+    const socket = useSocketIO();
+    const navigate = useNavigate();
+
+    useInterval(() => {
+        socket.emit('channel-info', {name: chat.currentChannelName});
+    }, 1000);
 
     return (
         <>
             <h3>{chat.currentChannelName}</h3>
-            <MessageInput/>
+            <ChatOutput />
+            <ChatRoster
+                visitors={chat.channels.find((ch: any) => ch.name === chat.currentChannelName)?.visitors}
+                admins={chat.channels.find((ch: any) => ch.name === chat.currentChannelName)?.admins}
+                owner={chat.channels.find((ch: any) => ch.name === chat.currentChannelName)?.owner}
+            />
+            <ChatInput />
+            <div onClick={() => navigate('/channels', {replace: true})}>
+                <h3>Back</h3>
+            </div>
         </>
     )
 }
 
-function MessageInput()
+function ChatInput()
 {
-    const chat: any = useChat();
     const socket = useSocketIO();
-    const auth: any = useAuth();
-    const navigate = useNavigate();
+    const chat = useChat();
+    const auth = useAuth();
 
-    useEffect(() => {
-        socket.on("sanction", (arg : any) =>
-        {
-            let until = new Date(arg.sanction.expiry);
-            let msg : string = "At "+ arg.sanction.channel + " channel you are at " + arg.sanction.type + " until " + until;
-            let temp =
-                {
-                    channel : arg.sanction.channel,
-                    userId : 1023942,
-                    username : 'trans_tech_msg',
-                    id : uuidv4(),
-                    message : msg
-                };
-            chat.addMessage(temp);
-            if (chat.newMessageFlag)
-                chat.toggleNewMessageFlag();
-            if (arg.sanction.type === 'ban')
-                chat.deleteChannel(arg.sanction.channel)
-           
-        })
-        return (socket.off("sanction"))
-    },
-    [chat]);
-
-    function AddNewMessage(value : any)
+    function addNewMessage(value : any)
     {
         if (chat.getCurrentChannelID() > 0)
         {
@@ -84,29 +74,41 @@ function MessageInput()
         value.value = '';
     }
 
-
-    function InputField()
-    {
-        return (
-            <div>
-                <input onKeyPress={e =>
-                    (e.code === "Enter" || e.code === "NumpadEnter") ?
-                        AddNewMessage(e.target) : 0}
-                            type='text' autoFocus={true}>
-                </input>
-            </div>
-        )
-    }
     return (
         <div>
-            <ChatPart />
-            <Roster />
-            <InputField />
-            <div onClick={() => navigate('/channels', {replace: true})}>
-                <h3>Back</h3>
-            </div>
-        </div>)
+            <input onKeyPress={e =>
+                (e.code === "Enter" || e.code === "NumpadEnter") ?
+                    addNewMessage(e.target) : 0}
+                   type='text' autoFocus={true}>
+            </input>
+        </div>
+    )
 }
+
+    // useEffect(() => {
+    //     socket.on("sanction", (arg : any) =>
+    //     {
+    //         let until = new Date(arg.sanction.expiry);
+    //         let msg : string = "At "+ arg.sanction.channel + " channel you are at " + arg.sanction.type + " until " + until;
+    //         let temp =
+    //             {
+    //                 channel : arg.sanction.channel,
+    //                 userId : 1023942,
+    //                 username : 'trans_tech_msg',
+    //                 id : uuidv4(),
+    //                 message : msg
+    //             };
+    //         chat.addMessage(temp);
+    //         if (chat.newMessageFlag)
+    //             chat.toggleNewMessageFlag();
+    //         if (arg.sanction.type === 'ban')
+    //             chat.deleteChannel(arg.sanction.channel)
+    //
+    //     })
+    //     return (socket.off("sanction"))
+    // },
+    // [chat]);
+
 
 function SingleMessage(msg : any)
 {
@@ -130,12 +132,10 @@ function SingleMessage(msg : any)
     )
 }
 
-export function ChatPart()
+export function ChatOutput()
 {
     const chat = useChat();
     const [messages, setMessages] = useState([]);
-
-    //useEffect(() => chat.renewPMI(), [chat.pMI]);
 
     useEffect(() => {
         setMessages(chat.getCurrentChannelMessages());
@@ -153,117 +153,76 @@ export function ChatPart()
     );
 }
 
-export function Roster()
+export function ChatRoster(props: any)
 {
-    const chat: any = useChat();
-    const socket = useSocketIO();
-    const auth = useAuth();
-    const modal = useModal();
-
-    const [visitors, setVisitors] = useState<any[]>([]);
-    const [last, setLast] = useState(-15);
-
-
-    let visibleId : number = chat.getCurrentChannelID()
-    useEffect(() => {
-        if (visibleId === 10000000090 || visibleId < 0)
-            return
-        const id = setInterval(() => {
-            axios.get("http://localhost:3001/api/channel/" + visibleId,
-                {
-                    headers :
-                        {
-                            "authorization" : "Bearer " + auth.user.token,
-                        }
-                })
-                .then((answer : any) => {
-                    setLast(visibleId);
-                    setVisitors(answer.data.channel.visitors)
-                })
-                .catch(e => console.log('Chat roster: ' + e))}, 1000)
-        return (() => {clearInterval(id)})
-    }, [setVisitors, chat, last, visibleId])
-
-    function OnlineLight(name : any)
-    {
-        const newone = {
-            userId : name.name.id
-        }
-
-        useInterval(() => {
-            socket.emit('is-online', newone)
-            socket.emit("is-in-game", newone.userId)
-        }, 1000)
-        
-        useEffect(() => {
-            socket.on('status', (message : any) => {
-                chat.onliner.set(message.info['userId'], message.info.status)})
-            socket.on("in-game", (message : any) => {
-
-                chat.inGame.set(+message['userId'], message['isOnline']);
-            });
-            return (() => {
-                socket.off("in-game");
-                socket.off('status');
-            })
-        }, [])
-        
-
-        function Onliner()
-        {
-            if (chat.onliner.get(name.name.id) === true)
-                return (
-                    <div className='div-online'/>
-                )
-            return (
-                <div className='div-offline'/>
-            )
-        }
-
-        function InGame()
-        {
-            if (chat.inGame.get(newone.userId) === true)
-                return (
-                    <div className='div-ingame'></div>
-                )
-            return (
-                <div className='div-outgame'></div>
-            )
-        }
-        
-        return (
-            <div>
-                <Onliner />
-                <InGame />
-            </div>
-        )
-    }
-
-    function Visitor(visitor : any)
-    {
-        return (
-            <div onClick={(event) => modal.summonModalWindow(event, visitor.name)}>
-                {visitor.name.username}
-                <OnlineLight name={visitor.name} />
-            </div>
-        )
-    }
-    
-    if (chat.getCurrentChannelID() < 0)
-    {
-        return (
-                <div className='div-roster'>
-                    Here are {chat.currentChannelName} and you
-                </div>)
-    }
+    // if (chat.getCurrentChannelID() < 0)
+    // {
+    //     return (
+    //         <div className='div-roster'>
+    //             Here are {chat.currentChannelName} and you
+    //         </div>
+    //     )
+    // }
 
     return (
         <>
             <ModalWindow />
             <div className='div-roster'>
-                {visitors.map((visitor : any) =>
-                    <Visitor name={visitor} key={visitor.id}/>)}
+                {props.visitors.map((visitor : any) =>
+                    <Visitor
+                        username={visitor.username}
+                        isOnline={!!visitor.isOnline}
+                        isInGame={!!visitor.isInGame}
+                        key={visitor.id}
+                    />)}
             </div>
         </>
     );
+}
+
+function Visitor(props: any)
+{
+    const modal = useModal();
+
+    return (
+        <div onClick={(event) => modal.summonModalWindow(event, props.username)}>
+            {props.username}
+            <Status
+                isOnline={props.isOnline}
+                isInGame={props.isInGame}
+            />
+        </div>
+    )
+}
+
+function Status(props: any)
+{
+    function Online()
+    {
+        if (props.isOnline === true)
+            return (
+                <div className='div-online'/>
+            )
+        return (
+            <div className='div-offline'/>
+        )
+    }
+
+    function InGame()
+    {
+        if (props.isInGame === true)
+            return (
+                <div className='div-ingame'></div>
+            )
+        return (
+            <div className='div-outgame'></div>
+        )
+    }
+
+    return (
+        <div>
+            <Online />
+            <InGame />
+        </div>
+    )
 }

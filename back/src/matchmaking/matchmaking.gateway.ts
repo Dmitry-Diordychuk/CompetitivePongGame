@@ -16,7 +16,7 @@ import {Server, Socket} from "socket.io";
 import {WSUser} from "@app/chat/decorator/webSocketUser.decorator";
 import {UserEntity} from "@app/user/user.entity";
 import {ClientPairInterface} from "@app/matchmaking/types/clientPair.interface";
-import {ClientInfoService} from "@app/matchmaking/clientInfo.service";
+import {ClientInfoService} from "@app/clientInfo/clientInfo.service";
 import {ProfileService} from "@app/profile/profile.service";
 import WebSocketRoleGuard from "@app/shared/guards/webSocketRole.guard";
 import Role from "@app/user/types/role.enum";

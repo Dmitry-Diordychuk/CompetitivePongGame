@@ -14,6 +14,7 @@ import {MatchmakingModule} from "@app/matchmaking/matchmaking.module";
 import {AdminModule} from "@app/admin/admin.module";
 import {ServeStaticModule} from "@nestjs/serve-static";
 import { join } from 'path';
+import {ClientInfoModule} from "@app/clientInfo/clientInfo.module";
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { join } from 'path';
       AdminModule,
       ServeStaticModule.forRoot({
           rootPath: join(__dirname, '..', '../uploadedFiles'),
-      })
+      }),
+      ClientInfoModule,
   ],
   controllers: [AppController],
   providers: [AppService]
