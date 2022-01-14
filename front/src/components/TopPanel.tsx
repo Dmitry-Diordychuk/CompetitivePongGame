@@ -37,7 +37,6 @@ export default function TopPanel() {
             <div className="dropdown-content">
             {list.map((ch : any, i: number) : any =>
                         <div key={i} onClick={() => {
-                            chat.setCurrentChannel(+(ch.id));
                             navigate("/channel/" + ch.id)
                             chat.renewPMI()}}>
                             {ch.name}

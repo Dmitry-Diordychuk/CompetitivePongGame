@@ -4,7 +4,7 @@ import axios, { AxiosRequestConfig }  from 'axios';
 import {useModal} from "../contexts/modal.context";
 import {useContact} from "../contexts/contact.context";
 import {useChat} from "../contexts/chat.context";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useSocketIO} from "../contexts/socket.io.context";
 import {useGame} from "../contexts/game.context";
@@ -17,6 +17,7 @@ function ModalWindow()
     const socket = useSocketIO();
     const chat = useChat();
     const navigate = useNavigate();
+    const location = useLocation();
     const [spectrate, setSpectr] = useState(true)
 
     const banTime = useRef<any>()
@@ -84,7 +85,6 @@ function ModalWindow()
         }
         chat.addNewChannel(temp);
         navigate("/channel/" + temp.id);
-        chat.setCurrentChannel(temp.id);
         modalWindow.setIsActive(false);
     }
 
@@ -95,7 +95,7 @@ function ModalWindow()
 
         socket.emit('apply-sanction', {
             'channel' : chat.currentChannelName,
-            'userId' : modalWindow.subject.id,
+            'userId' : modalWindow.subject,
             'type' : type,
             'expiryAt' : date
         })
@@ -129,7 +129,7 @@ function ModalWindow()
 
     function AdminPart() {
         let temp : number[] = chat.getVisibleChannelAdmins().map((e : any) : any => e.id );
-        if (temp && temp.findIndex((e : any) => e === auth.user.id) > -1 && window.location.pathname.split('/')[1] !== 'admin')
+        if (temp && temp.findIndex((e : any) => e === auth.user.id) > -1 && location.pathname.split('/')[1] !== 'admin')
             return (
                 <div>
                     <div>admin part</div>

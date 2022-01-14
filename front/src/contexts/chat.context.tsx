@@ -12,8 +12,9 @@ interface ChatContextType {
     addNewChannel: Function;
     deleteChannel: Function;
     updateChannel: Function;
+    updateChannels: Function;
 
-    setCurrentChannel: Function;
+    setCurrentChannelName: Function;
     currentChannelName: string;
     getCurrentChannelID: Function;
     getCurrentChannelMessages: Function;
@@ -23,8 +24,6 @@ interface ChatContextType {
     getVisibleChannelAdmins: Function;
     removeAdminChannels: Function;
 
-    onliner: any;
-    inGame : Map<number, boolean>;
     pMI : any[];
     renewPMI : Function;
 }
@@ -39,9 +38,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const [channels, setChannels] = useState<any>([]);
     const [currentChannelName, setCurrentChannelName] = React.useState<any>(null);
 
-    let onliner : Map<number, boolean> = new Map();
-    let inGame : Map<number, boolean> = new Map();
-
     const [pMI, setPMI] = useState<any[]>([]);
 
     useEffect(() => {
@@ -52,17 +48,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, [channels, socket]);
 
     const updateChannel = useCallback((channel: any) => {
-        let index : any = channels.findIndex((item : any) => item.name === currentChannelName);
-        channels[index].admins = channel.admins;
-        channels[index].name = channel.name;
-        channels[index].owner = channel.owner;
-        channels[index].sanctions = channel.sanctions;
-        channels[index].visitors = channel.visitors;
+        let current : any = channels.find((item : any) => item.name === channel.name);
+
+        if (!current) {
+            return;
+        }
+
+        current.admins = channel.admins;
+        current.name = channel.name;
+        current.owner = channel.owner;
+        current.sanctions = channel.sanctions;
+        current.visitors = channel.visitors;
         setChannels([...channels]);
     }, [socket, channels]);
 
     useEffect(() => {
-        setCurrentChannelName('general');
         if (auth.user) {
             axios.get("http://localhost:3001/api/channel/all/current/", {
                 method: 'get',
@@ -72,12 +72,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     "authorization": 'Bearer ' + auth.user.token,
                 },
             })
-                .then((response: any) => {
-                    initChannels(response.data.channels);
-                })
-                .catch(
-                    e => console.log('Chat context roster failed: ' + e)
-                );
+            .then((response: any) => {
+                initChannels(response.data.channels);
+            })
+            .catch(
+                e => console.log('Channels first init failed: ' + e)
+            );
         }
     }, [socket, auth.user]);
 
@@ -114,6 +114,23 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         setCurrentChannelName(curr_channel);
     }, [channels, sessionStorage]);
+
+    const updateChannels = useCallback((data: any) => {
+        const channelsUpdated = data.map((ch: any) => {
+            const channel = channels.find((chan: any) => chan.name === ch.id);
+            if (channel) {
+                ch = {...ch, messages: channel.messages};
+            } else {
+                ch = {...ch, messages: []};
+            }
+            return ch;
+        });
+        const current = channelsUpdated.find((ch: any) => ch.name === currentChannelName);
+        if (!current) {
+            setCurrentChannelName('general');
+        }
+        setChannels([...channelsUpdated]);
+    }, [channels, currentChannelName]);
 
     const addNewChannel = useCallback( (channel: any) => {
         if (channels.find((i:any) => i.id === channel.id))
@@ -229,13 +246,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return (current.id);
     }, [channels, currentChannelName]);
 
-    const setCurrentChannel = useCallback((id: number) => {
-        let current : any = channels.find((item : any) => +item.id === +id);
-        if (!current)
-            return ;
-        setCurrentChannelName(current.name);
-    }, [channels]);
-
     const getCurrentChannelMessages = useCallback(() => {
         const channel = channels.find((ch: any) => ch.name === currentChannelName)
         if (channel)
@@ -263,8 +273,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         addNewChannel,
         deleteChannel,
         updateChannel,
+        updateChannels,
 
-        setCurrentChannel,
+        setCurrentChannelName,
         currentChannelName,
         getCurrentChannelID,
         getCurrentChannelMessages,
@@ -274,8 +285,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         getVisibleChannelAdmins,
         removeAdminChannels,
 
-        onliner,
-        inGame,
         pMI,
         renewPMI,
     };

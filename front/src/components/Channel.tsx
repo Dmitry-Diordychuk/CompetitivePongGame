@@ -1,12 +1,9 @@
 import React, {useEffect, useState} from "react";
-import axios from "axios";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useModal} from "../contexts/modal.context";
-import uuidv4 from "../utils/uuid";
 import ModalWindow from "./Window";
-
 import "../styles/ChannelChat.css";
 import '../styles/ChannelRoster.css';
 import {useSocketIO} from "../contexts/socket.io.context";
@@ -17,24 +14,33 @@ export default function Channel() {
     const chat: any = useChat();
     const socket = useSocketIO();
     const navigate = useNavigate();
+    const params = useParams();
+
+    chat.setCurrentChannelName(params.id);
 
     useInterval(() => {
         socket.emit('channel-info', {name: chat.currentChannelName});
     }, 1000);
 
+    const currentChannel = chat.channels.find((ch: any) => ch.name === chat.currentChannelName);
+
+    // console.log(currentChannel);
+    // console.log(chat.channels);
+
     return (
         <>
             <h3>{chat.currentChannelName}</h3>
-            <ChatOutput />
+            <ChatOutput messages={currentChannel?.messages} />
             <ChatRoster
-                visitors={chat.channels.find((ch: any) => ch.name === chat.currentChannelName)?.visitors}
-                admins={chat.channels.find((ch: any) => ch.name === chat.currentChannelName)?.admins}
-                owner={chat.channels.find((ch: any) => ch.name === chat.currentChannelName)?.owner}
+                visitors={currentChannel?.visitors}
+                admins={currentChannel?.admins}
+                owner={currentChannel?.owner}
+                sanctions={currentChannel?.sanctions}
             />
             <ChatInput />
-            <div onClick={() => navigate('/channels', {replace: true})}>
-                <h3>Back</h3>
-            </div>
+            <h3 onClick={() => navigate('/channels', {replace: true})}>
+                Back
+            </h3>
         </>
     )
 }
@@ -132,22 +138,15 @@ function SingleMessage(msg : any)
     )
 }
 
-export function ChatOutput()
+export function ChatOutput(props: any)
 {
-    const chat = useChat();
-    const [messages, setMessages] = useState([]);
-
-    useEffect(() => {
-        setMessages(chat.getCurrentChannelMessages());
-    }, [chat.channels]);
-
-    if (!messages) {
+    if (!props.messages) {
         return <div>LOADING... </div>
     }
 
     return (
         <div className='div-chat'>
-            {messages.map((msg : any) =>
+            {props.messages.map((msg : any) =>
                 <SingleMessage msg={msg} key={msg.id}/>)}
         </div>
     );
@@ -168,11 +167,15 @@ export function ChatRoster(props: any)
         <>
             <ModalWindow />
             <div className='div-roster'>
-                {props.visitors.map((visitor : any) =>
+                {props.visitors?.map((visitor : any) =>
                     <Visitor
+                        userid={visitor.id}
                         username={visitor.username}
                         isOnline={!!visitor.isOnline}
                         isInGame={!!visitor.isInGame}
+                        isAdmin={!!props.admins.find((user: any) => user.id === visitor.id)}
+                        isOwner={props.owner?.id === visitor.id}
+                        sanction={props.sanctions.find((sanction: any) => sanction.target.id === visitor.id)}
                         key={visitor.id}
                     />)}
             </div>
@@ -180,13 +183,27 @@ export function ChatRoster(props: any)
     );
 }
 
-function Visitor(props: any)
-{
+function Visitor(props: any) {
     const modal = useModal();
 
+    let usernameWithTitles = props.username;
+    if (props.isAdmin) {
+        usernameWithTitles = props.username + " Admin";
+    } else if (props.isOwner) {
+        usernameWithTitles = props.username + " Owner"
+    }
+
+    if (props.sanction) {
+        if (props.sanction.type === 'mute') {
+            usernameWithTitles += " (muted)";
+        } else if (props.sanction.type === 'ban') {
+            usernameWithTitles += " (banned)";
+        }
+    }
+
     return (
-        <div onClick={(event) => modal.summonModalWindow(event, props.username)}>
-            {props.username}
+        <div onClick={(event) => modal.summonModalWindow(event, props.userid)}>
+            {usernameWithTitles}
             <Status
                 isOnline={props.isOnline}
                 isInGame={props.isInGame}
@@ -194,6 +211,7 @@ function Visitor(props: any)
         </div>
     )
 }
+
 
 function Status(props: any)
 {

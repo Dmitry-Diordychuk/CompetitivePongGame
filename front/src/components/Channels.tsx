@@ -1,14 +1,41 @@
-import React, {useRef, useState} from "react";
+import React, {useCallback, useRef, useState} from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
 
 import '../styles/Channels.css'
 import {useSocketIO} from "../contexts/socket.io.context";
+import {useInterval} from "usehooks-ts";
+import axios from "axios";
+import {useAuth} from "../auth/auth.context";
 
 
 export default function Channels() {
     const navigate = useNavigate();
     const chat = useChat();
+    const auth = useAuth();
+
+    const fetchChannels = useCallback(() => {
+        if (auth.user) {
+            axios.get("http://localhost:3001/api/channel/all/current/", {
+                method: 'get',
+                url: "http://localhost:3001/api/channel/all/current/",
+                responseType: "json",
+                headers: {
+                    "authorization": 'Bearer ' + auth.user.token,
+                },
+            })
+            .then((response: any) => {
+                chat.updateChannels(response.data.channels);
+            })
+            .catch(
+                e => console.log('Channels fetching error: ' + e)
+            );
+        }
+    }, [auth.user, chat.channels, chat.currentChannelName]);
+
+    useInterval(() => {
+        fetchChannels();
+    }, 1000);
 
     if (!chat.channels.length) {
         return <progress/>
@@ -22,8 +49,7 @@ export default function Channels() {
                     <li className="chat_item" key={i}>
                         <span className="chat_name" onClick={(e) => {
                             e.preventDefault();
-                            chat.setCurrentChannel(+(ch.id));
-                            navigate("/channel/" + ch.id)}
+                            navigate("/channel/" + ch.name)}
                         }>
                             {ch.name}
                         </span>

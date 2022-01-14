@@ -3,6 +3,7 @@ import { useAuth } from "../auth/auth.context";
 import React, {useRef, useEffect} from "react";
 import { queryByTitle } from "@testing-library/react";
 import { ExitStatus } from "typescript";
+import {useEffectOnce} from "usehooks-ts";
 
 interface SocketIOContextType {
     socket: Socket | null;
@@ -21,6 +22,15 @@ export function SocketIOProvider({ children }: { children: React.ReactNode }) {
     const socketRef = useRef(io("http://localhost:3002", {
         autoConnect: false,
     }));
+
+    useEffectOnce(() => {
+        socketRef.current.on('exception', (response: any) => {
+            console.log(response);
+        });
+        return (() => {
+           socketRef.current.off('exception');
+        });
+    })
 
     const connect = (userToken: string) => {
         if (socketRef.current.disconnected) {
