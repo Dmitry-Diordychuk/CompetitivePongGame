@@ -16,6 +16,7 @@ import {UpdateChannelDto} from "@app/chat/dto/updateChannel.dto";
 import {SanctionDto} from "@app/chat/dto/sanction.dto";
 import {SanctionEntity} from "@app/sanction/sanction.entity";
 import Role from "@app/user/types/role.enum";
+import {Interval} from "@nestjs/schedule";
 
 
 @Injectable()
@@ -52,6 +53,11 @@ export class ChatService {
         return general;
     }
 
+    // @Interval(1000)
+    // async log() {
+    //     console.log((await this.userService.getChannelsByUserId(101)).map(i => i.name));
+    // }
+
     async createChannel(userId: number, createChannelDto: CreateChannelDto): Promise<any> {
         const user = await this.userService.getUserById(userId);
         const channel = await this.findChannelByName(createChannelDto.name);
@@ -66,6 +72,7 @@ export class ChatService {
 
         user.connections = await this.userService.getChannelsByUserId(user.id);
         user.connections.push(newChannel);
+        newChannel.visitors = [user];
 
         await this.userRepository.save(user);
         newChannel = await this.channelRepository.save(newChannel);

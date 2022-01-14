@@ -20,8 +20,6 @@ function ModalWindow()
     const location = useLocation();
     const [spectrate, setSpectr] = useState(true)
 
-    const banTime = useRef<any>()
-
     let modal_position = {
         left: modalWindow.x,
         top: modalWindow.y,
@@ -90,7 +88,7 @@ function ModalWindow()
     function sanctionHandle(type : string)
     {
         let date : Date = new Date();
-        date.setMinutes(date.getMinutes() + (+banTime.current.value));
+        date.setMinutes(date.getMinutes() + (+modalWindow.banTime.current.value));
 
         socket.emit('apply-sanction', {
             'channel' : chat.currentChannelName,
@@ -134,7 +132,7 @@ function ModalWindow()
                     <div>admin part</div>
                     <hr/>
                     <div>
-                        <select name='ban_time' ref={banTime}>
+                        <select name='ban_time' ref={modalWindow.banTime}>
                             <option value="1">1 min</option>
                             <option value="5">5 min</option>
                             <option value="10">10 min</option>

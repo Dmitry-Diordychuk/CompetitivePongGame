@@ -10,6 +10,17 @@ import {useAuth} from "../auth/auth.context";
 
 
 export default function Channels() {
+    const [isWindowActive, setWindowActive] = useState(false)
+
+    return (
+        <>
+            <AddChannelButton isWindowActive={isWindowActive} setWindowActive={setWindowActive} />
+            <Roster isWindowActive={isWindowActive} />
+        </>
+    )
+}
+
+function Roster(props: any) {
     const navigate = useNavigate();
     const chat = useChat();
     const auth = useAuth();
@@ -34,13 +45,15 @@ export default function Channels() {
         }
     }, [auth.user, chat.channels, chat.currentChannelName]);
 
-    useEffectOnce(() => fetchChannels());
+    useEffectOnce(() => {
+        if (!props.isWindowActive)
+            fetchChannels()
+    });
 
     useInterval(() => {
-        fetchChannels();
+        if (!props.isWindowActive)
+            fetchChannels();
     }, 1000);
-
-    console.log(chat.channels);
 
     if (!chat.channels.length) {
         return <progress/>
@@ -48,7 +61,6 @@ export default function Channels() {
 
     return (
         <>
-            <AddChannelButton />
             <ul className="chat_list">
                 {chat.channels.map((ch : any, i: number) : any =>
                     <li className="chat_item" key={i}>
@@ -73,14 +85,11 @@ export default function Channels() {
     )
 }
 
-function AddChannelButton()
-{
-    const [newChannelWindow, setNewChannelWindow] = useState(false)
-
+function AddChannelButton(props: any) {
     return (
         <div>
-            <AddChannelWindow setVisible={setNewChannelWindow} visible={newChannelWindow} />
-            <button className='new_chanel_button' onClick={() => setNewChannelWindow(true)}>
+            <AddChannelWindow setVisible={props.setWindowActive} visible={props.isWindowActive} />
+            <button className='new_chanel_button' onClick={() => props.setWindowActive(true)}>
                 <b> + </b>
             </button>
         </div>
@@ -93,19 +102,15 @@ interface NewChannelWindowInterface
     visible : any;
 }
 
-function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
-{
+function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface) {
     const chat = useChat();
     const socket = useSocketIO();
 
-    const [last_added_channel, setLastAdded] = useState<string>('');
     const [create_or_join, setCoJ] = useState(false);
     const [have_err, setError] = useState<any>(null);
     const [is_priv, setIs_priv] = useState(false);
     const pass_ref = useRef<any>("");
     const name_fer = useRef<any>("");
-
-    const navigate = useNavigate();
 
     function PassInput()
     {
@@ -114,53 +119,39 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
         return (
             <div>
                 <input type='text' ref={pass_ref} placeholder='Chanel password' onKeyPress={e => (e.code === "Enter" || e.code === "NumpadEnter") ?
-                    AddNewChannel() : 0} />
+                    addNewChannel() : 0} />
             </div>
         )
     }
 
-    function create_channel(new_chan : any, name : string)
+    function createChannel(new_chan : any, name : string)
     {
-        if (last_added_channel === name)
-            return ;
-        socket.emit("create_channel", new_chan)
-        socket.once("exception", (data : any) => {setError(data);})
         socket.once("created_channel", (data : any) =>
         {
-            if (last_added_channel === name)
-                return ;
             setVisible(false);
             chat.addNewChannel(data.message);
-            navigate('/channels', {replace: true});
         })
-        setLastAdded(name);
+        socket.once("exception", (data : any) => {setError(data);})
+        socket.emit("create_channel", new_chan)
     }
 
-    function Join_channel(new_chan : any, name : string)
+    function joinChannel(new_chan : any, name : string)
     {
-        if (last_added_channel === name)
-            return ;
-
-        socket.emit("join_channel", new_chan)
         socket.once("exception", (data : any) => {setError(data)})
         socket.once("joined_channel", (data : any) =>
         {
-            if (last_added_channel === name)
-                return ;
             setVisible(false);
             chat.addNewChannel(data.message);
-            
-            navigate('/channels', {replace: true})
         })
-        setLastAdded(name);
+        socket.emit("join_channel", new_chan)
     }
 
-    function AddNewChannel()
+    function addNewChannel()
     {
         var temp_pass;
         var value : string = name_fer.current.value
         name_fer.current.value = ''
-        if (pass_ref === null || pass_ref.current === '' )
+        if (pass_ref.current === null || pass_ref.current === '' )
             temp_pass = null;
         else
         {
@@ -176,9 +167,9 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
         if (!chat.channels.find((ch: any) => ch.name === value))
         {
             if (create_or_join)
-                create_channel(new_chan, value)
+                createChannel(new_chan, value)
             else
-                Join_channel(new_chan, value)
+                joinChannel(new_chan, value)
         }
     }
 
@@ -196,11 +187,11 @@ function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface)
                 <input placeholder='Chanel name' ref={name_fer}
                                    onKeyPress={e =>
                                        (e.code === "Enter" || e.code === "NumpadEnter") ?
-                                       AddNewChannel() : 0} />
+                                       addNewChannel() : 0} />
                 <PassInput/>
                     <div><input type="checkbox" checked={is_priv} 
                 onChange={() => setIs_priv(!is_priv)} /> With password</div>
-                    <button onClick={() => AddNewChannel()}>Do it</button>
+                    <button onClick={() => addNewChannel()}>Do it</button>
                 </div>
                 
             </div>

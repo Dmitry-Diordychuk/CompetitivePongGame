@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 
 interface ModalContextType {
     summonModalWindow: Function;
@@ -7,6 +7,7 @@ interface ModalContextType {
     y: number;
     isActive: boolean;
     setIsActive: Function;
+    banTime: any;
 }
 
 const ModalContext = React.createContext<ModalContextType>(null!);
@@ -16,6 +17,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     const [x, setX] = useState(0);
     const [y, setY] = useState(0);
     const [subject, setSubject] = useState(null);
+
+    const banTime = useRef<any>()
 
     const summonModalWindow = (event: any, msg: any) => {
         setX(event.pageX - window.scrollX);
@@ -31,6 +34,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         y,
         isActive,
         setIsActive,
+        banTime,
     };
 
     return <ModalContext.Provider value={value}>{children}</ModalContext.Provider>;
