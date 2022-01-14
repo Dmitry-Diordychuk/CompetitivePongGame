@@ -15,11 +15,13 @@ export default function Channel() {
     const socket = useSocketIO();
     const navigate = useNavigate();
     const params = useParams();
+    const modal = useModal();
 
     chat.setCurrentChannelName(params.id);
 
     useInterval(() => {
-        socket.emit('channel-info', {name: chat.currentChannelName});
+        if (!modal.isActive)
+            socket.emit('channel-info', {name: chat.currentChannelName});
     }, 1000);
 
     const currentChannel = chat.channels.find((ch: any) => ch.name === chat.currentChannelName);
@@ -87,30 +89,6 @@ function ChatInput()
         </div>
     )
 }
-
-    // useEffect(() => {
-    //     socket.on("sanction", (arg : any) =>
-    //     {
-    //         let until = new Date(arg.sanction.expiry);
-    //         let msg : string = "At "+ arg.sanction.channel + " channel you are at " + arg.sanction.type + " until " + until;
-    //         let temp =
-    //             {
-    //                 channel : arg.sanction.channel,
-    //                 userId : 1023942,
-    //                 username : 'trans_tech_msg',
-    //                 id : uuidv4(),
-    //                 message : msg
-    //             };
-    //         chat.addMessage(temp);
-    //         if (chat.newMessageFlag)
-    //             chat.toggleNewMessageFlag();
-    //         if (arg.sanction.type === 'ban')
-    //             chat.deleteChannel(arg.sanction.channel)
-    //
-    //     })
-    //     return (socket.off("sanction"))
-    // },
-    // [chat]);
 
 
 function SingleMessage(msg : any)
