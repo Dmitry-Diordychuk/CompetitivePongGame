@@ -86,8 +86,6 @@ export default function Profile() {
   else
     idNumber = +id;
 
-  console.log(data);
-
   return (
     <Container>
       <Row>

@@ -36,6 +36,7 @@ export default function Matches({ userId }: MatchesProps) {
     <ListGroup>
       {data.map((m, i) => (
         <ListGroup.Item variant={m.winner_id === userId ? "success" : "danger"} key={i}>
+          {m.match_type.toUpperCase() + ' '}
           {m.match_create_at.toString().split("T")[0] + " "}
           {m.match_create_at.toString().split("T")[1].split(".")[0] + " "}
           {m.winner_username + " "}

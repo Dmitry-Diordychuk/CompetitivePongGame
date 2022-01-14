@@ -117,7 +117,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     const updateChannels = useCallback((data: any) => {
         const channelsUpdated = data.map((ch: any) => {
-            const channel = channels.find((chan: any) => chan.name === ch.id);
+            const channel = channels.find((chan: any) => chan.name === ch.name);
             if (channel) {
                 ch = {...ch, messages: channel.messages};
             } else {
@@ -227,15 +227,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, [addMessage]);
 
     const deleteChannel = useCallback((name : string) => {
-        if (name === currentChannelName)
-        {
-            if (name === channels[0].name) {
-                setCurrentChannelName(channels[0].name);
-            } else {
-                setCurrentChannelName(channels[1].name);
-            }
+        if (name === currentChannelName) {
+            setCurrentChannelName('general');
         }
-        setChannels([...channels].filter((chan : any) => chan.name !== name))
+        setChannels([...channels].filter((ch : any) => ch.name !== name))
         socket.emit("leave_channel", {"name" : name});
     }, [channels, currentChannelName]);
 

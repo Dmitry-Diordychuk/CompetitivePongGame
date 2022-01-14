@@ -24,9 +24,6 @@ export default function Channel() {
 
     const currentChannel = chat.channels.find((ch: any) => ch.name === chat.currentChannelName);
 
-    // console.log(currentChannel);
-    // console.log(chat.channels);
-
     return (
         <>
             <h3>{chat.currentChannelName}</h3>
@@ -38,9 +35,9 @@ export default function Channel() {
                 sanctions={currentChannel?.sanctions}
             />
             <ChatInput />
-            <h3 onClick={() => navigate('/channels', {replace: true})}>
+            <button onClick={() => navigate('/channels', {replace: true})}>
                 Back
-            </h3>
+            </button>
         </>
     )
 }
@@ -169,6 +166,7 @@ export function ChatRoster(props: any)
             <div className='div-roster'>
                 {props.visitors?.map((visitor : any) =>
                     <Visitor
+                        visitor={visitor}
                         userid={visitor.id}
                         username={visitor.username}
                         isOnline={!!visitor.isOnline}
@@ -193,7 +191,7 @@ function Visitor(props: any) {
         usernameWithTitles = props.username + " Owner"
     }
 
-    if (props.sanction) {
+    if (props.sanction && (new Date(props.sanction?.expiry_at)).getTime() > Date.now()) {
         if (props.sanction.type === 'mute') {
             usernameWithTitles += " (muted)";
         } else if (props.sanction.type === 'ban') {
@@ -202,7 +200,7 @@ function Visitor(props: any) {
     }
 
     return (
-        <div onClick={(event) => modal.summonModalWindow(event, props.userid)}>
+        <div onClick={(event) => modal.summonModalWindow(event, props.visitor)}>
             {usernameWithTitles}
             <Status
                 isOnline={props.isOnline}

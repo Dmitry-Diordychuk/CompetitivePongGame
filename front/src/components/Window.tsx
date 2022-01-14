@@ -57,9 +57,8 @@ function ModalWindow()
         });
     }
 
-    function mute_exit()
+    function blacklistHandle()
     {
-        console.log('MUTE')
         if (contact.isFriend(modalWindow.subject))
         {
             kick_from_friends();
@@ -88,18 +87,18 @@ function ModalWindow()
         modalWindow.setIsActive(false);
     }
 
-    function sendDate(type : string)
+    function sanctionHandle(type : string)
     {
         let date : Date = new Date();
         date.setMinutes(date.getMinutes() + (+banTime.current.value));
 
         socket.emit('apply-sanction', {
             'channel' : chat.currentChannelName,
-            'userId' : modalWindow.subject,
+            'userId' : modalWindow.subject.id,
             'type' : type,
             'expiryAt' : date
-        })
-        modalWindow.setIsActive(false)
+        });
+        modalWindow.setIsActive(false);
     }
 
     function makeAdmin()
@@ -142,8 +141,8 @@ function ModalWindow()
                             <option value="30">30 min</option>
                             <option value="10000">infinite</option>
                         </select>
-                        <div onClick={() => sendDate('ban')}>Ban</div>
-                        <div onClick={() => sendDate('mute')}>Mute</div>
+                        <div onClick={() => sanctionHandle('ban')}>Ban</div>
+                        <div onClick={() => sanctionHandle('mute')}>Mute</div>
                         <hr/>
                         <div onClick={() => makeAdmin()}>Make admin</div>
                     </div>
@@ -162,8 +161,6 @@ function ModalWindow()
         if (e['userId'] === modalWindow.subject.id)
             setSpectr(e['isOnline'])
         }));
-
-        const game = useGame();
 
         if (!spectrate)
             return (<div></div>)
@@ -197,11 +194,11 @@ function ModalWindow()
     {
         const contact = useContact();
 
-        let mute_str : string = 'Mute';
+        let mute_str : string = 'Add to blacklist';
         if (contact.isFriend("mock_subject"))
             mute_str = 'Kick from friends';
         else if (contact.isBanned("mock_subject"))
-            mute_str = 'Unmute'
+            mute_str = 'Remove from blacklist';
 
         return (
             <div style={modal_position}
@@ -212,11 +209,10 @@ function ModalWindow()
                     <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
                     <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
                     <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
-                    <div className='modal_div' onClick={() => mute_exit()}>{mute_str}</div>
+                    <div className='modal_div' onClick={() => blacklistHandle()}>{mute_str}</div>
                     <div className='modal_div' onClick={() => openProfile()}>Profile</div>
                     <SpectateBttn />
                     <div className='modal_div' onClick={() => friend_exit()}>Add to friends</div>
-                    <div className='modal_div'>Something else</div>
                 </div>
                 <AdminPart />
             </div>

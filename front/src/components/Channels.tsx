@@ -1,10 +1,10 @@
-import React, {useCallback, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
 
 import '../styles/Channels.css'
 import {useSocketIO} from "../contexts/socket.io.context";
-import {useInterval} from "usehooks-ts";
+import {useEffectOnce, useInterval} from "usehooks-ts";
 import axios from "axios";
 import {useAuth} from "../auth/auth.context";
 
@@ -13,6 +13,7 @@ export default function Channels() {
     const navigate = useNavigate();
     const chat = useChat();
     const auth = useAuth();
+
 
     const fetchChannels = useCallback(() => {
         if (auth.user) {
@@ -33,9 +34,13 @@ export default function Channels() {
         }
     }, [auth.user, chat.channels, chat.currentChannelName]);
 
+    useEffectOnce(() => fetchChannels());
+
     useInterval(() => {
         fetchChannels();
     }, 1000);
+
+    console.log(chat.channels);
 
     if (!chat.channels.length) {
         return <progress/>

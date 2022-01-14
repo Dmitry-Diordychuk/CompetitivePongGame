@@ -164,7 +164,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @WSUser() user: UserEntity,
         @MessageBody() privateMessageDto: PrivateMessageDto
     ) {
-        //const userId = await this.chatService.getUserIdByUsername(privateMessageDto.to);
         this.server.to(privateMessageDto.to).emit('receive_private_message', {
             "message": {
                 userId: user.id,

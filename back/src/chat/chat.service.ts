@@ -350,6 +350,7 @@ export class ChatService {
         sanction.expiry_at = expiryDate;
         sanction.type = sanctionDto.type;
 
+        channel.sanctions = channel.sanctions.filter(sanction => sanction.target.id !== sanctionDto.userId);
         channel.sanctions.push(sanction);
         await this.channelRepository.save(channel);
         return sanction;
@@ -383,8 +384,7 @@ export class ChatService {
     }
 
     async isBanned(userId: number, channel: ChannelEntity) {
-        const user = await this.userService.getUserById(userId);
-        const sanction = channel.sanctions.find(s => s.target.id === user.id);
+        const sanction = channel.sanctions.find(s => s.target.id === userId);
         if (!sanction) {
             return false;
         }
