@@ -39,7 +39,7 @@ function Login()
 			<div onClick={() => auth.goBackdoor('B_user', ()=>{navigate("/settings", {replace: true})}, ()=>{})}>B_user</div>
 			<div onClick={() => auth.goBackdoor('C_user', ()=>{navigate("/settings", {replace: true})}, ()=>{})}>C_user</div>
 			<OauthPopup
-				url="https://api.intra.42.fr/oauth/authorize?client_id=28b3bd90a12b1869322ee8df91393d90bb716604da919d12f9296cb545b832de&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Flogin&response_type=code"
+				url="https://api.intra.42.fr/oauth/authorize?client_id=28b3bd90a12b1869322ee8df91393d90bb716604da919d12f9296cb545b832de&redirect_uri=http%3A%2F%2Flocalhost%3A80%2Flogin&response_type=code"
 				onCode={onCode}
 				onClose={onClose}
 				title='Intra Login Screen'

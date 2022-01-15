@@ -41,13 +41,11 @@
     background-color: azure;
 }
 
-
-
 .NC_active {
     display: flex;
     position: absolute;
     left: 45%;
-    bottom: 75%;
+    bottom: 50%;
 }
 
 .NC_Content {

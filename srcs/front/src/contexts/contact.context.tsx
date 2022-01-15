@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import axios from "axios";
 import {useAuth} from "../auth/auth.context";
-import {useEffectOnce} from "usehooks-ts";
+
 
 interface ContactContextType {
     friendList: any;

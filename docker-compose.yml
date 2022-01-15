@@ -4,9 +4,9 @@ services:
   nest:
     container_name: nest
     build:
-      context: ./back
+      context: ./srcs/back
     volumes:
-      - ./back:/app/back
+      - ./srcs/back:/app/back
       - /app/back/node_modules
     ports:
       - 3001:3001
@@ -36,7 +36,7 @@ services:
   react:
     container_name: react
     build:
-      context: ./front
+      context: ./srcs/front
     ports:
       - "80:80"
     volumes:

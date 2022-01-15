@@ -61,6 +61,7 @@ function Roster(props: any) {
 
     return (
         <>
+            <h3>Channels</h3>
             <ul className="chat_list">
                 {chat.channels.map((ch : any, i: number) : any =>
                     <li className="chat_item" key={i}>
@@ -73,6 +74,27 @@ function Roster(props: any) {
                         {ch.name !== 'general' && <span
                             onClick={() => {
                                 chat.deleteChannel(ch.name)
+                                navigate('/channels', {replace: true});
+                            }}
+                            className="delete_chat"
+                        >
+                            <button>x</button>
+                        </span>}
+                    </li>)}
+            </ul>
+            <h3>Private</h3>
+            <ul className="chat_list">
+                {chat.privateChannels.map((ch : any, i: number) : any =>
+                    <li className="chat_item" key={i}>
+                        <span className="chat_name" onClick={(e) => {
+                            e.preventDefault();
+                            navigate("/channel/" + ch.id)}
+                        }>
+                            {ch.name}
+                        </span>
+                        {ch.name !== 'general' && <span
+                            onClick={() => {
+                                chat.deletePrivateChannel(ch.name)
                                 navigate('/channels', {replace: true});
                             }}
                             className="delete_chat"

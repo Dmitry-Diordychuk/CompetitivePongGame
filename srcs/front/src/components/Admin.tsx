@@ -6,6 +6,7 @@ import React, {useEffect, useState} from "react";
 import {useSocketIO} from "../contexts/socket.io.context";
 import { useModal } from "../contexts/modal.context";
 import ModalWindow from './Window'
+import {useChat} from "../contexts/chat.context";
 
 export default function Admin() {
     const auth = useAuth();
@@ -141,6 +142,7 @@ function Users() {
 function Channels() {
     const auth = useAuth();
     const socket = useSocketIO();
+    const chat = useChat();
     const navigate = useNavigate();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -172,13 +174,16 @@ function Channels() {
 
 
     const handleJoinChannelAsAdmin = (event: any, id: number, name: string) => {
-        // socket.emit("admin_join_channel"
         const new_chan = {
             name: name,
-            password: ''
+            password: 'mock_password'
         }
+        socket.once("joined_channel", (data : any) =>
+        {
+            chat.addNewChannel(data.message);
+            navigate('/channel/' + name, {replace: true});
+        })
         socket.emit("admin_join_channel", new_chan);
-        navigate('/channel/' + id, {replace: true});
     }
 
     const handleSetOwner = (event: any, channelId: number) => {
@@ -319,7 +324,14 @@ function Channels() {
                         {channel.password ? 'V' : 'X'}
                     </td>
                     <td>
-                        <button className="delete-button" onClick={() => {handleDeleteChannel(channel.id)}}>x</button>
+                        {
+                            channel.name !== 'general'
+                            ?
+                            <button className="delete-button" onClick={() => {
+                                handleDeleteChannel(channel.id)
+                            }}>x</button>
+                                : <></>
+                        }
                     </td>
                 </tr>
                 )}
