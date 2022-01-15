@@ -324,7 +324,14 @@ function Channels() {
                         {channel.password ? 'V' : 'X'}
                     </td>
                     <td>
-                        <button className="delete-button" onClick={() => {handleDeleteChannel(channel.id)}}>x</button>
+                        {
+                            channel.name !== 'general'
+                            ?
+                            <button className="delete-button" onClick={() => {
+                                handleDeleteChannel(channel.id)
+                            }}>x</button>
+                                : <></>
+                        }
                     </td>
                 </tr>
                 )}
