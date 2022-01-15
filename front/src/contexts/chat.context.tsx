@@ -305,7 +305,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, [channels, currentChannelName]);
 
     const removeAdminChannels = useCallback(() : any => {
-        // console.log('chat.context removeAdminChannels');
         // setChannels(channels.filter((i: any) => i.asAdmin !== true))
     }, [channels]);
 
