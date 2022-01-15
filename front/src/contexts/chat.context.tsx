@@ -4,6 +4,7 @@ import axios from "axios";
 import {useSocketIO} from "./socket.io.context";
 import {useAuth} from "../auth/auth.context";
 import {useContact} from "./contact.context";
+import {useNavigate} from "react-router-dom";
 
 
 interface ChatContextType {
@@ -35,6 +36,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const socket = useSocketIO();
     const auth = useAuth();
     const contact = useContact();
+    const navigate = useNavigate();
 
     const [channels, setChannels] = useState<any>([]);
     const [currentChannelName, setCurrentChannelName] = React.useState<any>(null);
@@ -49,6 +51,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, [channels, socket]);
 
     const updateChannel = useCallback((channel: any) => {
+        if (!channel) {
+            setCurrentChannelName('general');
+            navigate('/channels', {replace: true});
+            return;
+        }
+
         let current : any = channels.find((item : any) => item.name === channel.name);
 
         if (!current) {
