@@ -22,31 +22,6 @@ export default function TopPanel() {
 
     useEffect(()=>{}, [chat.currentChannelName])
 
-    function HolddedPMC()
-    {
-        const [list, setList] = useState(chat.pMI)
-
-        useEffect(()=>{
-            setList(chat.pMI);
-        }, [chat.pMI.length])
-        if (list.length === 0)
-            return (<></>)
-        return(
-            <div className="dropdown">
-            <button className="dropbtn">Private chats:</button>
-            <div className="dropdown-content">
-            {list.map((ch : any, i: number) : any =>
-                        <div key={i} onClick={() => {
-                            navigate("/channel/" + ch.id)
-                            chat.renewPMI()}}>
-                            {ch.name}
-                        </div>)}
-            </div>
-          </div> 
-        )
-    }
-
-
     return (
         <>
             <Navbar bg="light" variant="light">
@@ -84,5 +59,32 @@ export default function TopPanel() {
             </Navbar>
             <Outlet />
         </>
+    )
+}
+
+function HolddedPMC()
+{
+    const chat = useChat();
+    const navigate = useNavigate();
+
+    useEffect(()=>{
+    }, [chat.privateChannels])
+
+    if (chat.privateChannels.length === 0)
+        return (<></>)
+
+
+    return(
+        <div className="dropdown">
+            <button className="dropbtn">Private chats:</button>
+            <div className="dropdown-content">
+                {chat.privateChannels.map((ch : any, i: number) : any =>
+                    <div key={i} onClick={() => {
+                        navigate("/channel/" + ch.id);
+                    }}>
+                        {ch.name}
+                    </div>)}
+            </div>
+        </div>
     )
 }

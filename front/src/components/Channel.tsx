@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
@@ -20,11 +20,19 @@ export default function Channel() {
     chat.setCurrentChannelName(params.id);
 
     useInterval(() => {
-        if (!modal.isActive)
+        if (!modal.isActive && !Number.isInteger(+chat.currentChannelName))
             socket.emit('channel-info', {name: chat.currentChannelName});
     }, 1000);
 
-    const currentChannel = chat.channels.find((ch: any) => ch.name === chat.currentChannelName);
+    let currentChannel = chat.channels.find((ch: any) => ch.name === chat.currentChannelName);
+    if (Number.isInteger(+chat.currentChannelName)) {
+        currentChannel = chat.privateChannels.find((ch: any) => ch.id === +chat.currentChannelName);
+    }
+
+    // console.log(chat.currentChannelName);
+    console.log(currentChannel)
+    console.log(chat.privateChannels)
+    //console.log(currentChannel?.message)
 
     return (
         <>
@@ -35,8 +43,15 @@ export default function Channel() {
                 admins={currentChannel?.admins}
                 owner={currentChannel?.owner}
                 sanctions={currentChannel?.sanctions}
+                currentChannelId={currentChannel?.id}
+                currentChannelName={currentChannel?.name}
+                isPrivate={Number.isInteger(+chat.currentChannelName)}
             />
-            <ChatInput />
+            <ChatInput
+                isPrivate={Number.isInteger(+chat.currentChannelName)}
+                channelId={+chat.currentChannelName}
+                channelName={currentChannel?.name}
+            />
             <button onClick={() => navigate('/channels', {replace: true})}>
                 Back
             </button>
@@ -44,7 +59,7 @@ export default function Channel() {
     )
 }
 
-function ChatInput()
+function ChatInput(props: any)
 {
     const socket = useSocketIO();
     const chat = useChat();
@@ -52,29 +67,25 @@ function ChatInput()
 
     function addNewMessage(value : any)
     {
-        if (chat.getCurrentChannelID() > 0)
-        {
-            const newone = {
+        if (!props.isPrivate) {
+            const newOne = {
                 channel: chat.currentChannelName,
                 message: value.value
             }
-            socket.emit("send_message", newone);
-        }
-        else
-        {
-            const newone = {
-                to: (-(chat.getCurrentChannelID())).toString(),
+            socket.emit("send_message", newOne);
+        } else {
+            const newOne = {
+                to: chat.currentChannelName,
                 message: value.value
             }
-            const msg = {
-                channel: chat.currentChannelName,
-                id: 1640290061388 + Date.now(),
+            const message = {
                 message: value.value,
+                userId: auth.user.id,
                 username: auth.user.username,
             }
-            socket.emit("send_private_message", newone);
-            socket.on("exception", (arg : any) => {})
-            chat.addMessage(msg);
+
+            socket.emit("send_private_message", newOne);
+            chat.addPrivateMessage({message}, props.channelId, props.channelName);
         }
         value.value = '';
     }
@@ -91,24 +102,22 @@ function ChatInput()
 }
 
 
-function SingleMessage(msg : any)
+function SingleMessage(props : any)
 {
-    const modal = useModal();
-
-    if (msg.username === 'trans_tech_msg')
+    if (props.username === 'trans_tech_msg')
     {
         return (
             <div style={{margin: '7px'}}>
-                <i>{msg.msg.message}</i>
+                <i>{props.message.message}</i>
             </div>
         )
     }
     return (
         <div style={{margin: '7px'}}>
-            <i onClick={(e) => modal.summonModalWindow(e, msg.msg)}>
-                {msg.msg.username}
+            <i>
+                {props.message.username}
             </i><br />
-            {msg.msg.message}
+            {props.message.message}
         </div>
     )
 }
@@ -116,27 +125,27 @@ function SingleMessage(msg : any)
 export function ChatOutput(props: any)
 {
     if (!props.messages) {
-        return <div>LOADING... </div>
+        return <div className='div-chat'></div>
     }
 
     return (
         <div className='div-chat'>
-            {props.messages.map((msg : any) =>
-                <SingleMessage msg={msg} key={msg.id}/>)}
+            {props.messages.map((message : any) =>
+                <SingleMessage message={message} key={message.id}/>)}
         </div>
     );
 }
 
 export function ChatRoster(props: any)
 {
-    // if (chat.getCurrentChannelID() < 0)
-    // {
-    //     return (
-    //         <div className='div-roster'>
-    //             Here are {chat.currentChannelName} and you
-    //         </div>
-    //     )
-    // }
+    if (props.isPrivate)
+    {
+        return (
+            <div className='div-roster'>
+                Here are {props.currentChannelName} and you
+            </div>
+        )
+    }
 
     return (
         <>

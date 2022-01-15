@@ -74,18 +74,18 @@ function ModalWindow()
     function openDirectChannel()
     {
         let temp : any = {
-            id : -(modalWindow.subject.id),
+            id : modalWindow.subject.id,
             channel : modalWindow.subject.username,
             visitors : [
                 modalWindow.subject,
             ]
         }
-        chat.addNewChannel(temp);
+        chat.addNewPrivateChannel(temp);
         navigate("/channel/" + temp.id);
         modalWindow.setIsActive(false);
     }
 
-    function sanctionHandle(type : string)
+    function handleSanction(type : string)
     {
         let date : Date = new Date();
         date.setMinutes(date.getMinutes() + (+modalWindow.banTime.current.value));
@@ -125,8 +125,10 @@ function ModalWindow()
     }
 
     function AdminPart() {
+        if (location.pathname.split('/')[1] !== 'channel')
+            return <></>
         let temp : number[] = chat.getVisibleChannelAdmins().map((e : any) : any => e.id );
-        if (temp && temp.findIndex((e : any) => e === auth.user.id) > -1 && location.pathname.split('/')[1] !== 'admin')
+        if (temp && temp.findIndex((e : any) => e === auth.user.id) > -1)
             return (
                 <div>
                     <div>admin part</div>
@@ -139,8 +141,8 @@ function ModalWindow()
                             <option value="30">30 min</option>
                             <option value="10000">infinite</option>
                         </select>
-                        <div onClick={() => sanctionHandle('ban')}>Ban</div>
-                        <div onClick={() => sanctionHandle('mute')}>Mute</div>
+                        <div onClick={() => handleSanction('ban')}>Ban</div>
+                        <div onClick={() => handleSanction('mute')}>Mute</div>
                         <hr/>
                         <div onClick={() => makeAdmin()}>Make admin</div>
                     </div>
@@ -192,11 +194,14 @@ function ModalWindow()
     {
         const contact = useContact();
 
-        let mute_str : string = 'Add to blacklist';
-        if (contact.isFriend("mock_subject"))
-            mute_str = 'Kick from friends';
-        else if (contact.isBanned("mock_subject"))
-            mute_str = 'Remove from blacklist';
+        const isFriend = contact.isFriend(modalWindow.subject);
+        const isBanned = contact.isBanned(modalWindow.subject);
+
+        let backlistString : string = 'Add to blacklist';
+        if (isFriend)
+            backlistString = 'Kick from friends';
+        else if (isBanned)
+            backlistString = 'Remove from blacklist';
 
         return (
             <div style={modal_position}
@@ -204,13 +209,20 @@ function ModalWindow()
                  onClick={e => e.stopPropagation()}>
                 <div className='myModalContent'>
                     <h3>{modalWindow.subject.username}</h3>
-                    <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
-                    <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
-                    <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
-                    <div className='modal_div' onClick={() => blacklistHandle()}>{mute_str}</div>
+                    {!isBanned ?
+                        <>
+                        <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
+                        <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
+                        <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
+                        </>
+                        :
+                        <></>
+                    }
+                    <div className='modal_div' onClick={() => blacklistHandle()}>{backlistString}</div>
                     <div className='modal_div' onClick={() => openProfile()}>Profile</div>
                     <SpectateBttn />
-                    <div className='modal_div' onClick={() => friend_exit()}>Add to friends</div>
+                    {isFriend || isBanned ? <></> :
+                        <div className='modal_div' onClick={() => friend_exit()}>Add to friends</div>}
                 </div>
                 <AdminPart />
             </div>
