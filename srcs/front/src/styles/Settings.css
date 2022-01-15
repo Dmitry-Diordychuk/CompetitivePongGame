@@ -1,0 +1,27 @@
+.myModal_screen {
+	position: fixed;
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0,0,0,0);
+	top: 0;
+	left: 0;
+}
+
+.myModalContent {
+	padding: 10px;
+	background: rgb(212, 93, 93);
+	border-radius: 6px;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.myModal_active {
+	display: flex;
+	position: absolute;
+	background: rgb(148, 101, 101);
+}
+
+.modal_div {
+	text-align: center;
+	background: rgb(212, 93, 93);
+}
