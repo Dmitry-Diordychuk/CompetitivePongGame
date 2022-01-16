@@ -67,7 +67,7 @@ export class UserController {
     ) {
         const updateUserDto = {
             "username": currentUser.username,
-            "image": "http://localhost:3001/avatars/" + file.path.split(`/`)[3], // Fix for linux / windows \\
+            "image": "http://localhost:3001/avatars/" + file.path.split(`\\`)[3], // Fix for linux / windows \\
         }
         return await this.userService.updateCurrentUserImage(currentUser.id, updateUserDto);
     }
@@ -119,8 +119,6 @@ export class UserController {
         @User('id') currentUserId: number,
         @Param('userId') targetUserId: number
     ): Promise<UsersResponseInterface> {
-        console.log(targetUserId);
-
         const friends = await this.userService.addUserToCurrentUserBlackList(currentUserId, targetUserId);
         return this.userService.buildUsersResponse(friends);
     }

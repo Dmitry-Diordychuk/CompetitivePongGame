@@ -1,12 +1,15 @@
 import {useAuth} from "../auth/auth.context";
-import {useState} from "react";
+import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {Alert, Button, Card, Form, Stack} from "react-bootstrap";
 
 export default function SecondFa() {
     const [code, setCode] = useState<string>('');
-    const [error, setError] = useState('');
     const auth = useAuth();
     const navigate = useNavigate();
+
+    const [alertVariant, setAlertVariant] = useState('');
+    const [message, setMessage] = useState('');
 
     if (!auth.user) {
         navigate('/login', {replace: true});
@@ -19,26 +22,35 @@ export default function SecondFa() {
             ()=> {
                 navigate("/settings", {replace: true});
             },
-            ()=> {
-                setError("Wrong input try again!");
+            (message: string)=> {
+                setMessage(message);
+                setAlertVariant('danger');
             },
         )
     }
 
     return (
-            <div>
-                <p>{error}</p>
-				<form onSubmit={handleSubmit}>
-                    <label>
-                        Enter QR code
-                        <input
-                            type="text"
-                            value={code}
-                            onChange={e => setCode(e.target.value)}
-                        />
-                    </label>
-                    <input type="submit" value="Submit" />
-                </form>
-			</div>
-    )
+        <Card style={{ width: '18rem' }}>
+            <Card.Body>
+                <Card.Title>Second factor login</Card.Title>
+                <Card.Text>Enter code</Card.Text>
+                <Alert show={message !== ''} variant={alertVariant}>{message}</Alert>
+                <Form onSubmit={handleSubmit}>
+                    <Form.Group className="mb-3" controlId="formBasicEmail">
+                        <Stack direction="horizontal" gap={3}>
+                            <Form.Control
+                                className="me-auto"
+                                placeholder="000000"
+                                onChange={(event: any) => {
+                                    setCode(event.target.value)
+                                }}
+                            />
+                            <Button onClick={handleSubmit} variant="success">Login</Button>
+                        </Stack>
+                    </Form.Group>
+                </Form>
+                <Button onClick={() => navigate('/login')} variant="primary">Back</Button>
+            </Card.Body>
+        </Card>
+    );
 }

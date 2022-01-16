@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userId = useRef<number>(0);
 
 
-    let changeUsername = (username: string, successfulCallback: Function, errorCallback: VoidFunction) => {
+    let changeUsername = (username: string, successfulCallback: Function, errorCallback: Function) => {
         axios({
             method: 'put',
             url: "http://localhost:3001/api/user",
@@ -51,10 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             sessionStorage.setItem('user', JSON.stringify(response.data.user))
             setUser(response.data.user);
-        }).catch();
+            successfulCallback();
+        }).catch((e: any) => {
+            errorCallback(e.response.data.message);
+        });
     }
 
-    let secondFactorAuthenticate = (code: string, successfulCallback: Function, errorCallback: VoidFunction) => {
+    let secondFactorAuthenticate = (code: string, successfulCallback: Function, errorCallback: Function) => {
         axios({
             url: 'http://127.0.0.1:3001/api/2fa/authenticate',
             method: 'post',
@@ -70,12 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('user', JSON.stringify(updatedUser))
             setUser(updatedUser);
             successfulCallback();
-        }).catch(() => {
-            errorCallback();
+        }).catch((e) => {
+            errorCallback(e.response.data.message.toString());
         })
     }
 
-    let secondFactorActivate = (code: string, successfulCallback: Function, errorCallback: VoidFunction) => {
+    let secondFactorActivate = (code: string, successfulCallback: Function, errorCallback: Function) => {
         axios({
             url: 'http://127.0.0.1:3001/api/2fa/turn-on',
             method: 'post',
@@ -90,12 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('user', JSON.stringify(user))
             setUser(user);
             successfulCallback();
-        }).catch(() => {
-            errorCallback();
+        }).catch((e) => {
+            errorCallback(e.response.data.message.toString());
         })
     }
 
-    let secondFactorDeactivate = (code: string, successfulCallback: Function, errorCallback: VoidFunction) => {
+    let secondFactorDeactivate = (code: string, successfulCallback: Function, errorCallback: Function) => {
         axios({
             url: 'http://127.0.0.1:3001/api/2fa/turn-off',
             method: 'post',
@@ -108,8 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }).then(() => {
             setUser(null);
             successfulCallback();
-        }).catch(() => {
-            errorCallback();
+        }).catch((e) => {
+            errorCallback(e.response.data.message.toString());
         })
     }
 
