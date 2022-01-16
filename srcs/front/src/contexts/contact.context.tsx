@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import axios from "axios";
 import {useAuth} from "../auth/auth.context";
+import {useNavigate} from "react-router-dom";
 
 
 interface ContactContextType {
@@ -24,6 +25,11 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
     const [friendList, setFriendList] = useState<any[]>([]);
     const [blackList, setBlackList] = useState<any[]>([]);
 
+    useEffect(() => {
+        uploadFriendList();
+        uploadBlackList();
+    }, [auth.user]);
+
     const uploadFriendList = useCallback(() => {
         if (!auth.user)
             return;
@@ -37,9 +43,9 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             setFriendList(response.data.users);
         }).catch(() => {})
-    }, [auth]);
+    }, [auth.user]);
 
-    const addFriend = (userID: number) => {
+    const addFriend = useCallback((userID: number) => {
         axios({
             method: 'put',
             url: "http://localhost:3001/api/user/friends/" + userID,
@@ -50,9 +56,9 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             setFriendList(response.data.users);
         }).catch(() => {});
-    }
+    }, [auth.user]);
 
-    const deleteFriend = (userID : number) => {
+    const deleteFriend = useCallback((userID : number) => {
         axios({
             method: 'delete',
             url: "http://localhost:3001/api/user/friends/" + userID,
@@ -64,11 +70,11 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             setFriendList(response.data.users);
         }).catch(() => {
         });
-    }
+    }, [auth.user]);
 
     const isFriend = useCallback((subject: any) => {
         return !!friendList.find((e: any) => +e.id === +subject.id);
-    }, [friendList]);
+    }, [friendList, auth.user, uploadFriendList, addFriend, deleteFriend]);
 
     const uploadBlackList = useCallback(() => {
         if (!auth.user)
@@ -83,9 +89,9 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             setBlackList([...response.data.users]);
         }).catch(() => null)
-    }, [auth]);
+    }, [auth.user]);
 
-    const ban = (userID : number, errorCallback: Function) => {
+    const ban = useCallback((userID : number, errorCallback: Function) => {
         axios({
             method: 'put',
             url: "http://localhost:3001/api/user/blacklist/" + userID,
@@ -93,14 +99,14 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
             },
-        }).then(() => {
-            uploadBlackList();
+        }).then((response) => {
+            setBlackList([...response.data.users]);
         }).catch(() => {
             errorCallback();
         })
-    }
+    }, [auth.user]);
 
-    const unban = (userID : number, errorCallback: Function) => {
+    const unban = useCallback((userID : number, errorCallback: Function) => {
         axios({
             method: 'delete',
             url: "http://localhost:3001/api/user/blacklist/" + userID,
@@ -108,19 +114,20 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
             },
-        }).then(() => {
-            uploadBlackList();
+        }).then((response) => {
+            setBlackList([...response.data.users]);
         }).catch(() => {
             errorCallback();
         })
-    }
+    }, [auth.user]);
 
     const isBanned = useCallback((subject: any) => {
-        return !!blackList.find((e: any) => +e.id === +subject.id);
-    }, [blackList]);
 
-    useEffect(uploadFriendList, [auth]);
-    useEffect(uploadBlackList, [auth]);
+        return !!blackList.find((e: any) => +e.id === +subject.id);
+    }, [blackList, auth.user, uploadBlackList, ban, unban]);
+
+    useEffect(uploadFriendList, [auth.user]);
+    useEffect(uploadBlackList, [auth.user]);
 
     let value : ContactContextType = {
         friendList,

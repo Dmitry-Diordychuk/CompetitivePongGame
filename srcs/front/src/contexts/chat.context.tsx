@@ -217,7 +217,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return (()=> {
             socket.off("receive_private_message");
         })
-    }, [privateChannels]);
+    }, [privateChannels, contact]);
 
     const addPrivateMessage = useCallback((message : any, toChannelId: number, toChannelName: string) =>
 	{
@@ -225,6 +225,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         message.id = uuidv4();
         message.toChannelId = toChannelId;
         message.toChannelName = toChannelName;
+
+        if (contact.isBanned({id: +message.userId})) {
+            return;
+        }
 
 		let current : any = privateChannels.find((ch : any) => ch.id === toChannelId);
 
@@ -245,7 +249,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('private' + auth.getId(), JSON.stringify([message]));
             setPrivateChannels([...privateChannels, newChannel]);
 		}
-	}, [privateChannels, auth.user]);
+	}, [privateChannels, auth.user, contact]);
 
 
     const addMessage = useCallback((data : any) => {
@@ -266,14 +270,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('public' + auth.getId() + '\n' + message.channel, pack);
             setChannels([...channels]);
         }
-    }, [channels, sessionStorage, contact.blackList]);
+    }, [channels, sessionStorage, contact]);
 
     useEffect(() => {
         socket.on("receive_message", addMessage);
         return (()=>{
             socket.off('receive_message');
         })
-    }, [addMessage]);
+    }, [addMessage, contact]);
 
     const deleteChannel = useCallback((name : string) => {
         console.log('Delete');

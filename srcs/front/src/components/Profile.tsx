@@ -135,24 +135,27 @@ export default function Profile() {
 function FriendButton(props: any) {
   const contact = useContact();
 
-  useEffect(() => {}, [contact.friendList]);
+  useEffect(() => {}, [contact]);
 
   if (!props.userId) {
     return <></>
   }
 
-  console.log(contact.isFriend({id: props.userId}))
+  if (contact.isBanned({id: props.userId})) {
+    return (<Button variant={"danger"} onClick={() => {
+      contact.unban(props.userId);
+    }}>Unban</Button>);
+  }
+
   if (!contact.isFriend({id: props.userId})) {
     return (<Button onClick={() => {
       contact.addFriend(props.userId);
-      contact.uploadFriendList();
     }}>Add to friends</Button>);
   }
 
   return (
       <Button onClick={() => {
         contact.deleteFriend(props.userId);
-        contact.uploadFriendList();
       }}>Remove from friends</Button>
   );
 }

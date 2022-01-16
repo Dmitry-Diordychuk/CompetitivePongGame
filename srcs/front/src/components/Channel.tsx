@@ -30,8 +30,8 @@ export default function Channel() {
     }
 
     // console.log(chat.currentChannelName);
-    console.log(currentChannel)
-    console.log(chat.channels);
+    // console.log(currentChannel)
+    // console.log(chat.channels);
     // console.log(chat.privateChannels)
     // console.log(currentChannel?.message)
 
