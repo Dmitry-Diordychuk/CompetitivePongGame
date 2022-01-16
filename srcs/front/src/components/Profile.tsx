@@ -11,6 +11,9 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Accordion from 'react-bootstrap/Accordion';
 import axios from "axios";
+import Stack from "react-bootstrap/Stack";
+import Button from "react-bootstrap/Button";
+import {useContact} from "../contexts/contact.context";
 
 const url = `http://localhost:3001/api/profile/`;
 
@@ -44,16 +47,17 @@ interface ProfileInterface {
 }
 
 export default function Profile() {
-  let { id } = useParams<"id">();
+  let params = useParams<"id">();
   const auth = useAuth();
   const [error, setError] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
-
 
   const [reset, setReset] = useState(false);
   useInterval(() => {
     setReset(true);
   }, 1000)
+
+  let id = params.id;
 
   if (id === undefined) {
     id = auth.user.id;
@@ -100,7 +104,10 @@ export default function Profile() {
           </Figure>
         </Col>
         <Col>
-          <h1>{data.profile.username}</h1>
+          <Stack direction="horizontal" gap={3}>
+            <h1>{data.profile.username}</h1>
+            <FriendButton userId={params.id} />
+          </Stack>
           <div>Level: {data.profile.level}</div>
           <div>Victories: {data.profile.victories}</div>
           <div>Losses: {data.profile.losses}</div>
@@ -122,5 +129,30 @@ export default function Profile() {
         </Col>
       </Row>
     </Container>
+  );
+}
+
+function FriendButton(props: any) {
+  const contact = useContact();
+
+  useEffect(() => {}, [contact.friendList]);
+
+  if (!props.userId) {
+    return <></>
+  }
+
+  console.log(contact.isFriend({id: props.userId}))
+  if (!contact.isFriend({id: props.userId})) {
+    return (<Button onClick={() => {
+      contact.addFriend(props.userId);
+      contact.uploadFriendList();
+    }}>Add to friends</Button>);
+  }
+
+  return (
+      <Button onClick={() => {
+        contact.deleteFriend(props.userId);
+        contact.uploadFriendList();
+      }}>Remove from friends</Button>
   );
 }

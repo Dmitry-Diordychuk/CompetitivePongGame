@@ -67,7 +67,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
     }
 
     const isFriend = useCallback((subject: any) => {
-        return !!friendList.find((e: any) => e.id === subject.id);
+        return !!friendList.find((e: any) => +e.id === +subject.id);
     }, [friendList]);
 
     const uploadBlackList = useCallback(() => {
@@ -116,7 +116,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
     }
 
     const isBanned = useCallback((subject: any) => {
-        return !!blackList.find((e: any) => e.id === subject.id);
+        return !!blackList.find((e: any) => +e.id === +subject.id);
     }, [blackList]);
 
     useEffect(uploadFriendList, [auth]);

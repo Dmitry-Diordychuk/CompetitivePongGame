@@ -44,8 +44,6 @@ export class TwoFactorAuthenticationController {
         @User() user: UserEntity,
         @Body() twoFactorAuthenticationsCodeDto: TwoFactorAuthenticationsCodeDto
     ) {
-        console.log(twoFactorAuthenticationsCodeDto);
-
         const isCodeValid = this.twoFactorAuthenticationService.isTwoFactorAuthenticationCodeValid(
             twoFactorAuthenticationsCodeDto.code,
             user.twoFactorAuthenticationsSecret
