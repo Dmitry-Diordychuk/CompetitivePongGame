@@ -24,6 +24,7 @@ import WebSocketRoleGuard from "@app/shared/guards/webSocketRole.guard";
 import Role from "@app/user/types/role.enum";
 import {banDto} from "@app/chat/dto/ban.dto";
 import {ClientInfoService} from "@app/clientInfo/clientInfo.service";
+import {Interval} from "@nestjs/schedule";
 
 
 @UseGuards(WebSocketRoleGuard(Role.User))
@@ -48,7 +49,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     // @Interval(1000)
     // consoleLog() {
-    //     console.log([...this.server.sockets.sockets].map(i => i[0]));
+    //     console.log([...this.server.sockets.sockets].map(i => {
+    //
+    //         return {
+    //             socketId: i[0],
+    //             userId: i[1].handshake.headers.user["id"],
+    //             username: i[1].handshake.headers.user["username"]
+    //         };
+    //     }));
     // }
 
     async handleConnection(
@@ -246,7 +254,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @MessageBody() channelDto: LeaveChannelDto,
     ) {
         const channel = await this.chatService.getChannelByName(channelDto.name);
-
         channel?.visitors.forEach(user => {
             if ([...this.server.sockets.sockets].find(s => s[1]["handshake"]["headers"]["user"]["id"] === user.id)) {
                 user.isOnline = true;

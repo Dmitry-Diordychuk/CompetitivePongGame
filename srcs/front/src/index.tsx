@@ -19,8 +19,8 @@ ReactDOM.render(
     <React.StrictMode>
         <BrowserRouter>
             <CookiesProvider>
-                <SocketIOProvider>
-                    <AuthProvider>
+                <AuthProvider>
+                    <SocketIOProvider>
                         <GameProvider>
                             <ModalProvider>
                                 <ContactProvider>
@@ -30,8 +30,8 @@ ReactDOM.render(
                                 </ContactProvider>
                             </ModalProvider>
                         </GameProvider>
-                    </AuthProvider>
-                </SocketIOProvider>
+                    </SocketIOProvider>
+                </AuthProvider>
             </CookiesProvider>
         </BrowserRouter>
     </React.StrictMode>,

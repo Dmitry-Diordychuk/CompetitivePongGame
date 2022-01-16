@@ -1,12 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useAuth } from "../auth/auth.context";
-
 import '../styles/Login.css';
 import OauthPopup from 'react-oauth-popup';
 import logo from '../static/42_logo.svg';
 import {useNavigate, useLocation, Navigate} from "react-router-dom";
 
-import {createBrowserHistory} from 'history';
 
 function Login()
 {
@@ -15,14 +13,15 @@ function Login()
 	let location = useLocation();
 
 	const from = location.state?.from?.pathname;
-	if (auth.user && from)
-		return <Navigate to={from} replace />;
+	if (auth.user && from && from !== '/logout') {
+		return <Navigate to={from} replace/>;
+	}
 
 	function onCode(code: string, params: any) {
 		auth.signin(
 			code,
 			() => {
-				navigate("/settings", {replace: true});
+				navigate('/settings', {replace: true});
 			},
 			() => {
 				navigate("/401", {replace: true});

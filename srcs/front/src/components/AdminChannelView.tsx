@@ -1,44 +1,70 @@
-import React from "react";
-import {useChat} from "../contexts/chat.context";
+import React, {useCallback, useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import {useAuth} from "../auth/auth.context";
 import {useModal} from "../contexts/modal.context";
 import ModalWindow from "./Window";
 import "../styles/ChannelChat.css";
 import '../styles/ChannelRoster.css';
 import {useSocketIO} from "../contexts/socket.io.context";
 import {useInterval} from 'usehooks-ts';
+import uuidv4 from "../utils/uuid";
 
 
-export default function Channel() {
-    const chat: any = useChat();
+export default function AdminChannelView() {
     const socket = useSocketIO();
     const navigate = useNavigate();
-    const params = useParams();
-    const modal = useModal();
 
-    chat.setCurrentChannelName(params.id);
+    const [currentChannel, setCurrentChannel] = useState<any>(null);
+    const [messages, setMessages] = useState<any[]>([]);
+    const [flag, setFlag] = useState(false);
+
+    const params = useParams();
+    const currentChannelName = params["id"];
+
+    socket.emit('admin_join_channel', {
+        name: currentChannelName,
+        password: 'secret',
+    })
+    socket.once("exception", (data : any) => {
+        navigate('/404');
+    })
 
     useInterval(() => {
-        if (!modal.isActive && !Number.isInteger(+chat.currentChannelName))
-            socket.emit('channel-info', {name: chat.currentChannelName});
+        socket.emit('channel-info', {name: currentChannelName});
+        setFlag(true);
     }, 1000);
+    useEffect(() => {
+        socket.once('channel-info-response', (data: any) => {
+            setCurrentChannel(data);
+            setFlag(false);
+        });
+        return (() => {
+            socket.off('channel-info-response')
+        })
+    }, [flag]);
 
-    let currentChannel = chat.channels.find((ch: any) => ch.name === chat.currentChannelName);
-    if (Number.isInteger(+chat.currentChannelName)) {
-        currentChannel = chat.privateChannels.find((ch: any) => ch.id === +chat.currentChannelName);
-    }
+    const addMessage = useCallback((data : any) => {
+        const message: any = {
+            id: uuidv4(),
+            ...data.message,
+        };
 
-    // console.log(chat.currentChannelName);
-    console.log(currentChannel)
-    console.log(chat.channels);
-    // console.log(chat.privateChannels)
-    // console.log(currentChannel?.message)
+        if (message.channel === currentChannelName) {
+            messages.unshift(message);
+            setMessages([...messages]);
+        }
+    }, [messages, currentChannelName]);
+
+    useEffect(() => {
+        socket.on("receive_message", addMessage);
+        return (()=>{
+            socket.off('receive_message');
+        })
+    }, [addMessage]);
 
     return (
         <>
-            <h3>{chat.currentChannelName}</h3>
-            <ChatOutput messages={currentChannel?.messages} />
+            <h3>{currentChannel?.currentChannelName}</h3>
+            <ChatOutput messages={messages} />
             <ChatRoster
                 visitors={currentChannel?.visitors}
                 admins={currentChannel?.admins}
@@ -46,62 +72,14 @@ export default function Channel() {
                 sanctions={currentChannel?.sanctions}
                 currentChannelId={currentChannel?.id}
                 currentChannelName={currentChannel?.name}
-                isPrivate={Number.isInteger(+chat.currentChannelName)}
+                isPrivate={Number.isInteger(+currentChannel?.currentChannelName)}
             />
-            <ChatInput
-                isPrivate={Number.isInteger(+chat.currentChannelName)}
-                channelId={+chat.currentChannelName}
-                channelName={currentChannel?.name}
-            />
-            <button onClick={() => navigate('/channels', {replace: true})}>
+            <button onClick={() => navigate('/admin', {replace: true})}>
                 Back
             </button>
         </>
     )
 }
-
-function ChatInput(props: any)
-{
-    const socket = useSocketIO();
-    const chat = useChat();
-    const auth = useAuth();
-
-    function addNewMessage(value : any)
-    {
-        if (!props.isPrivate) {
-            const newOne = {
-                channel: chat.currentChannelName,
-                message: value.value
-            }
-            socket.emit("send_message", newOne);
-        } else {
-            const newOne = {
-                to: chat.currentChannelName,
-                message: value.value
-            }
-            const message = {
-                message: value.value,
-                userId: auth.user.id,
-                username: auth.user.username,
-            }
-
-            socket.emit("send_private_message", newOne);
-            chat.addPrivateMessage({message}, props.channelId, props.channelName);
-        }
-        value.value = '';
-    }
-
-    return (
-        <div>
-            <input onKeyPress={e =>
-                (e.code === "Enter" || e.code === "NumpadEnter") ?
-                    addNewMessage(e.target) : 0}
-                   type='text' autoFocus={true}>
-            </input>
-        </div>
-    )
-}
-
 
 function SingleMessage(props : any)
 {

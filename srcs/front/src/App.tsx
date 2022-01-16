@@ -21,6 +21,7 @@ import Admin from "./components/Admin";
 import {useEffectOnce} from "usehooks-ts";
 
 import {useSocketIO} from './contexts/socket.io.context'
+import AdminChannelView from "./components/AdminChannelView";
 
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -45,6 +46,8 @@ function RequireAdmin({ children }: { children: JSX.Element }) {
     let auth = useAuth();
     let location = useLocation();
 
+    //console.log()
+
     useEffectOnce(() => {
         if (!auth.user) {
             auth.resignin();
@@ -66,9 +69,14 @@ function App()
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/logout" element={<Logout/>} />
             <Route path="/401" element={<Unauthorized />} />
             <Route path="/2fa" element={<SecondFa />} />
+
+            <Route path="/logout" element={
+                <RequireAuth>
+                    <Logout/>
+                </RequireAuth>
+            } />
 
             <Route element={<TopPanel/>}>
                 <Route path="/admin" element={
@@ -76,6 +84,11 @@ function App()
                         <Admin/>
                     </RequireAdmin>
                 } />
+                    <Route path="/admin/channel/:id" element={
+                        <RequireAdmin>
+                            <AdminChannelView/>
+                        </RequireAdmin>
+                    } />
                 <Route path="/" element={
                     <RequireAuth>
                         <Home />

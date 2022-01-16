@@ -229,8 +229,6 @@ function ModalWindow()
         )
     }
 
-    console.log('Context', modalWindow.subject);
-
     if (modalWindow.isActive === false || modalWindow.subject.id === auth.user.id)
         return (<div></div>)
     else

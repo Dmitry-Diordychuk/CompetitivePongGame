@@ -49,7 +49,7 @@ export default function TopPanel() {
                             <Button variant="primary" onClick={() => {
                                 auth.signout(() => {
                                     socket.disconnect();
-                                    navigate("/logout");
+                                    //navigate("/logout");
                                 });
                             }}>Sign out</Button>
                             : <></>

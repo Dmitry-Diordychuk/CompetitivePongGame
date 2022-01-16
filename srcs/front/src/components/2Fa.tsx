@@ -8,8 +8,9 @@ export default function SecondFa() {
     const auth = useAuth();
     const navigate = useNavigate();
 
-    if (!auth.user)
+    if (!auth.user) {
         navigate('/login', {replace: true});
+    }
 
     const handleSubmit = (event: any) => {
         event.preventDefault();

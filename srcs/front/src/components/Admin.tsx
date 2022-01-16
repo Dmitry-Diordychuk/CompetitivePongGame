@@ -11,8 +11,9 @@ import {useChat} from "../contexts/chat.context";
 export default function Admin() {
     const auth = useAuth();
 
-    if (auth.user.role !== 'Admin' && auth.user.role !== 'PO')
-        return <Navigate to={"/login"} />;
+    if (auth.user.role !== 'Admin' && auth.user.role !== 'PO') {
+        return <Navigate to={"/login"}/>;
+    }
 
     return (
         <>
@@ -174,16 +175,7 @@ function Channels() {
 
 
     const handleJoinChannelAsAdmin = (event: any, id: number, name: string) => {
-        const new_chan = {
-            name: name,
-            password: 'mock_password'
-        }
-        socket.once("joined_channel", (data : any) =>
-        {
-            chat.addNewChannel(data.message);
-            navigate('/channel/' + name, {replace: true});
-        })
-        socket.emit("admin_join_channel", new_chan);
+        navigate('/admin/channel/' + name);
     }
 
     const handleSetOwner = (event: any, channelId: number) => {
