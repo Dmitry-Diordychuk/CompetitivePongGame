@@ -46,8 +46,10 @@ function Roster(props: any) {
     }, [auth.user, chat.channels, chat.currentChannelName]);
 
     useEffectOnce(() => {
-        if (!props.isWindowActive)
+        if (!props.isWindowActive) {
             fetchChannels()
+            console.log('Tick');
+        }
     });
 
     useInterval(() => {

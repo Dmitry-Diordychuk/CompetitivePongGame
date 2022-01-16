@@ -33,34 +33,8 @@ const AuthContext = React.createContext<AuthContextType>(null!);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     let [user, setUser] = React.useState<any>(null);
-    const socket = useSocketIO();
     const userId = useRef<number>(0);
-    const navigate = useNavigate();
 
-    useEffect(() => {
-        socket.disconnect();
-        if (user) {
-            socket.connect(user.token);
-        }
-    }, [user]);
-
-    useEffect(() => {
-        socket.on('disconnect', ()=>{
-            navigate('/logout', {replace: true});
-        })
-        return (()=> {
-            socket.off('disconnect');
-        })
-    },[]);
-
-    useEffect(() => {
-        socket.on('ban', ()=>{
-            navigate('/logout', {replace: true});
-        })
-        return (()=> {
-            socket.off('ban');
-        })
-    }, [socket]);
 
     let changeUsername = (username: string, successfulCallback: Function, errorCallback: VoidFunction) => {
         axios({
@@ -174,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
-    let getId = () => 
+    let getId = () =>
     {
         return (userId.current.toString())
     }

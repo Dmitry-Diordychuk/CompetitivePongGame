@@ -12,8 +12,6 @@ import '../styles/Settings.css';
 
 export default function Settings()
 {
-    console.log('Settings')
-
     const [cookies, setCookie, removeCookie] = useCookies(["up", 'down', 'direction']);
     const game = useGame();
     const auth = useAuth();

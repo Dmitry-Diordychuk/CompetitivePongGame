@@ -1,9 +1,8 @@
 import {io, Socket} from "socket.io-client/build/esm-debug";
 import { useAuth } from "../auth/auth.context";
 import React, {useRef, useEffect} from "react";
-import { queryByTitle } from "@testing-library/react";
-import { ExitStatus } from "typescript";
 import {useEffectOnce} from "usehooks-ts";
+import {useNavigate} from "react-router-dom";
 
 interface SocketIOContextType {
     socket: Socket | null;
@@ -19,9 +18,38 @@ interface SocketIOContextType {
 const SocketIOContext = React.createContext<SocketIOContextType>(null!);
 
 export function SocketIOProvider({ children }: { children: React.ReactNode }) {
+    const auth = useAuth();
+    const navigate = useNavigate();
+
     const socketRef = useRef(io("http://localhost:3002", {
         autoConnect: false,
     }));
+
+    useEffect(() => {
+        if (auth.user) {
+            connect(auth.user.token);
+        } else {
+            disconnect();
+        }
+    }, [auth.user]);
+
+    useEffect(() => {
+        on('disconnect', ()=>{
+            navigate('/logout', {replace: true});
+        })
+        return (()=> {
+            socketRef.current.off('disconnect');
+        })
+    },[auth.user]);
+
+    useEffect(() => {
+        on('ban', ()=>{
+            navigate('/logout', {replace: true});
+        })
+        return (()=> {
+            socketRef.current.off('ban');
+        })
+    }, [auth.user]);
 
     useEffectOnce(() => {
         socketRef.current.on('exception', (response: any) => {
@@ -45,9 +73,7 @@ export function SocketIOProvider({ children }: { children: React.ReactNode }) {
     }
     
     const disconnect = () => {
-        if (socketRef.current.connected) {
-            socketRef.current.disconnect();
-        }
+        socketRef.current.disconnect();
     }
 
     const isConnected = () => {
