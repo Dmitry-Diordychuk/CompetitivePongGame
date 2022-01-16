@@ -68,6 +68,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         current.owner = channel.owner;
         current.sanctions = channel.sanctions;
         current.visitors = channel.visitors;
+        current.isHasPassword = channel.isHasPassword;
         setChannels([...channels]);
     }, [socket, channels]);
 

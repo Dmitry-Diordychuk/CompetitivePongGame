@@ -48,6 +48,7 @@ export class ChatService {
             newChannel.name = "general";
             newChannel.password = null;
             newChannel.owner = null;
+            newChannel.isHasPassword = false;
             return await this.channelRepository.save(newChannel);
         }
         return general;
@@ -68,6 +69,11 @@ export class ChatService {
 
         let newChannel = new ChannelEntity();
         Object.assign(newChannel, createChannelDto);
+        if (createChannelDto.password) {
+            newChannel.isHasPassword = true;
+        } else {
+            newChannel.isHasPassword = false;
+        }
         newChannel.owner = user;
 
         user.connections = await this.userService.getChannelsByUserId(user.id);
@@ -75,6 +81,7 @@ export class ChatService {
         newChannel.visitors = [user];
 
         await this.userRepository.save(user);
+
         newChannel = await this.channelRepository.save(newChannel);
         return {
             "owner" : {
@@ -177,7 +184,13 @@ export class ChatService {
             throw new WsException("Wrong password");
         }
 
-        channel.password = await hash(updateChannelDto.newPassword, 10);
+        if (!updateChannelDto.newPassword) {
+            channel.password = null;
+            channel.isHasPassword = false;
+        } else {
+            channel.password = await hash(updateChannelDto.newPassword, 10);
+            channel.isHasPassword = true;
+        }
         await this.channelRepository.save(channel);
 
         return {
@@ -220,9 +233,11 @@ export class ChatService {
     }
 
     async isChannelPassword(channel: ChannelEntity, password: string): Promise<boolean> {
-        if (channel.password === null && password === null) {
+        if (!channel.password) {
             return true;
-        } else if (channel.password === null || password === null) {
+        }
+
+        if (!password) {
             return false;
         }
 

@@ -315,7 +315,7 @@ export class UserService {
         return user.id;
     }
 
-    async getChannelsByUserId(currentUserId): Promise<ChannelEntity[]> {
+    async getChannelsByUserId(currentUserId, password = false): Promise<ChannelEntity[]> {
         const user = await this.userRepository.findOne({
             relations: ['connections'],
             where: { id: currentUserId }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {Props, useRef, useState} from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
@@ -8,12 +8,15 @@ import "../styles/ChannelChat.css";
 import '../styles/ChannelRoster.css';
 import {useSocketIO} from "../contexts/socket.io.context";
 import {useInterval} from 'usehooks-ts';
+import {Alert, Form, Stack} from "react-bootstrap";
+import Button from "react-bootstrap/Button";
 
 
 export default function Channel() {
+    const auth = useAuth();
+    const navigate = useNavigate();
     const chat: any = useChat();
     const socket = useSocketIO();
-    const navigate = useNavigate();
     const params = useParams();
     const modal = useModal();
 
@@ -30,14 +33,21 @@ export default function Channel() {
     }
 
     // console.log(chat.currentChannelName);
-    // console.log(currentChannel)
+    console.log(currentChannel)
     // console.log(chat.channels);
     // console.log(chat.privateChannels)
     // console.log(currentChannel?.message)
 
     return (
         <>
-            <h3>{chat.currentChannelName}</h3>
+            <Stack direction="horizontal" gap={3}>
+                <h3>{chat.currentChannelName}</h3>
+                <AddPassword
+                    isOwner={currentChannel?.owner?.id === auth?.user?.id}
+                    currentChannelName={currentChannel?.name}
+                    isHasPassword={currentChannel?.isHasPassword}
+                />
+            </Stack>
             <ChatOutput messages={currentChannel?.messages} />
             <ChatRoster
                 visitors={currentChannel?.visitors}
@@ -229,4 +239,69 @@ function Status(props: any)
             <InGame />
         </div>
     )
+}
+
+function AddPassword(props: any) {
+    const socket = useSocketIO();
+    const [password, setPassword] = useState('');
+    const [alertVariant, setAlertVariant] = useState('');
+    const [message, setMessage] = useState('');
+
+    const controlRef = useRef<any>(null);
+
+    if (!props.isOwner || !props.currentChannelName) {
+        return (<></>);
+    }
+
+    let buttonName = '';
+    let request = {};
+    if (props.isHasPassword) {
+        buttonName = 'Delete';
+    } else {
+        buttonName = 'Add';
+    }
+
+    function handleSubmit(event: React.FormEvent<any>) {
+        event.preventDefault();
+
+        if (props.isHasPassword) {
+            request = {
+                name: props.currentChannelName,
+                oldPassword: password,
+            }
+        } else {
+            request = {
+                name: props.currentChannelName,
+                newPassword: password,
+            }
+        }
+        socket.once('exception', (data: any) => {
+            setAlertVariant('danger');
+            if (data.errors)
+                setMessage(data.errors.join());
+            else if (data.message)
+                setMessage(data.message);
+        });
+        socket.emit('update_channel', request);
+        socket.off('exception');
+        controlRef.current.value = '';
+    }
+
+    return (
+        <Form className="ms-auto" onSubmit={handleSubmit}>
+            <Form.Group className="mb-3" controlId="formPassword">
+
+                <Stack direction="horizontal" gap={3}>
+                    <Alert show={message !== ''} variant={alertVariant}>{message}</Alert>
+                    <Form.Label>{buttonName} password</Form.Label>
+                    <Form.Control
+                        ref={controlRef}
+                        className="me-auto"
+                        placeholder="Password"
+                        onChange={e => setPassword(e.target.value)} />
+                    <Button type='submit' variant="secondary">{buttonName}</Button>
+                </Stack>
+            </Form.Group>
+        </Form>
+    );
 }

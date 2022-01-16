@@ -254,6 +254,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @MessageBody() channelDto: LeaveChannelDto,
     ) {
         const channel = await this.chatService.getChannelByName(channelDto.name);
+
         channel?.visitors.forEach(user => {
             if ([...this.server.sockets.sockets].find(s => s[1]["handshake"]["headers"]["user"]["id"] === user.id)) {
                 user.isOnline = true;
