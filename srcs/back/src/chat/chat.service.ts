@@ -319,16 +319,45 @@ export class ChatService {
         return await this.channelRepository.save(channel);
     }
 
-    async isAdminOrOwner(channel: ChannelEntity, userId) {
-        let admin;
+    async removeAdmin(currentUserId, userId: number, channelId: number) {
+        if (currentUserId === userId) {
+            throw new HttpException("User is owner", HttpStatus.BAD_REQUEST);
+        }
+
+        const channel = await this.channelRepository.findOne(channelId, { relations: ["owner", "admins"] });
+
+        if (channel.owner.id !== currentUserId) {
+            throw new HttpException("Current user isn't channel owner", HttpStatus.BAD_REQUEST);
+        }
+
+        const user = await this.userRepository.findOne(userId);
+
+        if (!user) {
+            throw new HttpException("Such user doesn't exist", HttpStatus.BAD_REQUEST);
+        }
+
+        const userChannels = await this.userService.getChannelsByUserId(user.id);
+
+        if (!userChannels.find(ch => ch.id === channel.id)) {
+            throw new HttpException("User isn't in the channel", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!channel.admins.find(u => u.id === user.id)) {
+            throw new HttpException("User isn't admin", HttpStatus.BAD_REQUEST);
+        }
+        channel.admins = channel.admins.filter(u => u.id !== user.id);
+        return await this.channelRepository.save(channel);
+    }
+
+    isAdminOrOwner(channel: ChannelEntity, userId) {
+        let admin = null;
 
         if (channel.owner.id === userId) {
             admin = channel.owner;
         } else {
             admin = channel.admins.find(u => u.id === userId);
         }
-
-        return admin;
+        return !!admin;
     }
 
     async getChannelByName(channelName: string): Promise<ChannelEntity> {
@@ -344,16 +373,12 @@ export class ChatService {
             throw new WsException("Channel doesn't exist");
         }
 
-        if (!await this.isAdminOrOwner(channel, currentUserId)) {
+        if (this.isAdminOrOwner(channel, currentUserId)) {
             throw new WsException("You're not allowed");
         }
 
-        if (currentUserId === sanctionDto.userId) {
-            throw new WsException("You can't ban yourself");
-        }
-
-        if (channel.admins.find(u => u.id === sanctionDto.userId)) {
-            throw new WsException("You can't ban other admin");
+        if (this.isAdminOrOwner(channel, sanctionDto.userId)) {
+            throw new WsException("You can't ban owner or admin");
         }
 
         const targetUser = channel.visitors.find(u => u.id === sanctionDto.userId);

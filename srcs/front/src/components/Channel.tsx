@@ -33,7 +33,7 @@ export default function Channel() {
     }
 
     // console.log(chat.currentChannelName);
-    console.log(currentChannel)
+    // console.log(currentChannel)
     // console.log(chat.channels);
     // console.log(chat.privateChannels)
     // console.log(currentChannel?.message)
@@ -173,6 +173,7 @@ export function ChatRoster(props: any)
                         isOwner={props.owner?.id === visitor.id}
                         sanction={props.sanctions.find((sanction: any) => sanction.target.id === visitor.id)}
                         key={visitor.id}
+                        ownerId={props.owner?.id}
                     />)}
             </div>
         </>
@@ -196,6 +197,10 @@ function Visitor(props: any) {
             usernameWithTitles += " (banned)";
         }
     }
+
+    props.visitor.isAdmin = props.isAdmin;
+    props.visitor.isOwner = props.isOwner;
+    props.visitor.channelOwnerId = props.ownerId;
 
     return (
         <div onClick={(event) => modal.summonModalWindow(event, props.visitor)}>

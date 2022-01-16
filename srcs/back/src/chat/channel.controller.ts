@@ -38,22 +38,6 @@ export class ChannelController {
         return await this.chatService.getUserOpenChannels(currentUserId);
     }
 
-    @UsePipes(new ParseIntPipe())
-    @Get(':id')
-    async getChannelInfo(
-        @Param('id') channel_id: number
-    ): Promise<ChannelResponseInterface> {
-        return await this.chatService.getChannel(channel_id);
-    }
-
-    @UsePipes(new ParseIntPipe())
-    @Delete(':id')
-    async deleteChannel(
-        @Param('id') channel_id: number
-    ) {
-        await this.chatService.deleteChannel(channel_id);
-    }
-
     @UsePipes(new ValidationPipe())
     @Put('admin')
     async makeUserChannelAdmin(
@@ -61,6 +45,16 @@ export class ChannelController {
         @Body() makeAdminDto: MakeAdminDto
     ): Promise<ChannelResponseInterface> {
         const channel = await this.chatService.makeAdmin(currentUserId, makeAdminDto.userId, makeAdminDto.channelId);
+        return {channel};
+    }
+
+    @UsePipes(new ValidationPipe())
+    @Delete('admin')
+    async removeUserChannelAdmin(
+        @User('id') currentUserId: number,
+        @Body() makeAdminDto: MakeAdminDto
+    ): Promise<ChannelResponseInterface> {
+        const channel = await this.chatService.removeAdmin(currentUserId, makeAdminDto.userId, makeAdminDto.channelId);
         return {channel};
     }
 
@@ -78,5 +72,21 @@ export class ChannelController {
             result,
             total,
         };
+    }
+
+    @UsePipes(new ParseIntPipe())
+    @Get(':id')
+    async getChannelInfo(
+        @Param('id') channel_id: number
+    ): Promise<ChannelResponseInterface> {
+        return await this.chatService.getChannel(channel_id);
+    }
+
+    @UsePipes(new ParseIntPipe())
+    @Delete(':id')
+    async deleteChannel(
+        @Param('id') channel_id: number
+    ) {
+        await this.chatService.deleteChannel(channel_id);
     }
 }

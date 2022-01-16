@@ -101,21 +101,18 @@ function ModalWindow()
 
     function makeAdmin()
     {
-        let putAdmin : AxiosRequestConfig =
-            {
-                method: 'put',
-                url: "http://localhost:3001/api/channel/admin/",
-                responseType: "json",
-                headers :
-                    {
-                        "authorization" : "Bearer " + auth.user.token,
-                    },
-                data :
-                    {
-                        userId : modalWindow.subject.id,
-                        channelId : chat.getCurrentChannelID(),
-                    }
+        let putAdmin : AxiosRequestConfig = {
+            method: 'put',
+            url: "http://localhost:3001/api/channel/admin/",
+            responseType: "json",
+            headers : {
+                "authorization" : "Bearer " + auth.user.token,
+            },
+            data : {
+                userId : modalWindow.subject.id,
+                channelId : chat.getCurrentChannelID(),
             }
+        }
         axios(putAdmin)
             .then((answer : any) => {
 //				console.log(answer)
@@ -124,9 +121,38 @@ function ModalWindow()
             modalWindow.setIsActive(false);
     }
 
+    function deleteAdmin()
+    {
+        let putAdmin : AxiosRequestConfig = {
+            method: 'delete',
+            url: "http://localhost:3001/api/channel/admin/",
+            responseType: "json",
+            headers : {
+                "authorization" : "Bearer " + auth.user.token,
+            },
+            data : {
+                userId : +modalWindow.subject.id,
+                channelId : +chat.getCurrentChannelID(),
+            }
+        }
+        console.log(putAdmin.data);
+        axios(putAdmin)
+            .then((answer : any) => {
+//				console.log(answer)
+            })
+            .catch(e => {console.log(e.response)})
+        modalWindow.setIsActive(false);
+    }
+
+    console.log(modalWindow.subject);
+
     function AdminPart() {
         if (location.pathname.split('/')[1] !== 'channel')
-            return <></>
+            return <></>;
+        if (modalWindow.subject.isOwner) {
+            return <></>;
+        }
+
         let temp : number[] = chat.getVisibleChannelAdmins().map((e : any) : any => e.id );
         if (temp && temp.findIndex((e : any) => e === auth.user.id) > -1)
             return (
@@ -144,7 +170,13 @@ function ModalWindow()
                         <div onClick={() => handleSanction('ban')}>Ban</div>
                         <div onClick={() => handleSanction('mute')}>Mute</div>
                         <hr/>
-                        <div onClick={() => makeAdmin()}>Make admin</div>
+                        {
+                            auth.user.id === modalWindow.subject.channelOwnerId ?
+                                (!modalWindow.subject.isAdmin
+                                ? <div onClick={() => makeAdmin()}>Make admin</div>
+                                : <div onClick={() => deleteAdmin()}>Kick from admin</div>)
+                                : <></>
+                        }
                     </div>
                 </div>
             )
