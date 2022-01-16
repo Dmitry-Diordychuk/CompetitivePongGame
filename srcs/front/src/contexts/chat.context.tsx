@@ -69,6 +69,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         current.sanctions = channel.sanctions;
         current.visitors = channel.visitors;
         current.isHasPassword = channel.isHasPassword;
+
+        if (!current.visitors.find((u: any) => u.id === auth.user.id)) {
+            navigate('/channels');                                                                          // Last change
+        }
+
         setChannels([...channels]);
     }, [socket, channels]);
 
@@ -182,7 +187,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             newChannel.asAdmin = true;
         else
             newChannel.asAdmin = false;
-        newChannel.visitors = channel['visitors']
+        newChannel.visitors = channel['visitors'];
+
         let act : any = channels.find((item : any) => item.id === newChannel.id);
         if (act)
             return;

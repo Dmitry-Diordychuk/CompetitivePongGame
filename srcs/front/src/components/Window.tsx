@@ -87,6 +87,15 @@ function ModalWindow()
 
     function handleSanction(type : string)
     {
+        if (type === 'kick') {
+            socket.emit('kick', {
+                'channel' : chat.currentChannelName,
+                'userId' : modalWindow.subject.id,
+            });
+            modalWindow.setIsActive(false);
+            return;
+        }
+
         let date : Date = new Date();
         date.setMinutes(date.getMinutes() + (+modalWindow.banTime.current.value));
 
@@ -135,16 +144,14 @@ function ModalWindow()
                 channelId : +chat.getCurrentChannelID(),
             }
         }
-        console.log(putAdmin.data);
+
         axios(putAdmin)
             .then((answer : any) => {
 //				console.log(answer)
             })
-            .catch(e => {console.log(e.response)})
+            .catch(e => {})
         modalWindow.setIsActive(false);
     }
-
-    console.log(modalWindow.subject);
 
     function AdminPart() {
         if (location.pathname.split('/')[1] !== 'channel')
@@ -169,6 +176,7 @@ function ModalWindow()
                         </select>
                         <div onClick={() => handleSanction('ban')}>Ban</div>
                         <div onClick={() => handleSanction('mute')}>Mute</div>
+                        <div onClick={() => handleSanction('kick')}>Kick</div>
                         <hr/>
                         {
                             auth.user.id === modalWindow.subject.channelOwnerId ?

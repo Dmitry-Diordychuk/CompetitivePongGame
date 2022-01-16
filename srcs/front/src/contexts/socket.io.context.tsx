@@ -31,6 +31,9 @@ export function SocketIOProvider({ children }: { children: React.ReactNode }) {
         } else {
             disconnect();
         }
+        return (() => {
+            disconnect();
+        })
     }, [auth.user]);
 
     useEffect(() => {

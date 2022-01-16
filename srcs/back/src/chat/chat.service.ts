@@ -349,17 +349,6 @@ export class ChatService {
         return await this.channelRepository.save(channel);
     }
 
-    isAdminOrOwner(channel: ChannelEntity, userId) {
-        let admin = null;
-
-        if (channel.owner.id === userId) {
-            admin = channel.owner;
-        } else {
-            admin = channel.admins.find(u => u.id === userId);
-        }
-        return !!admin;
-    }
-
     async getChannelByName(channelName: string): Promise<ChannelEntity> {
         return await this.channelRepository.findOne({
                 name: channelName,
@@ -368,17 +357,28 @@ export class ChatService {
         });
     }
 
-    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto, channel: ChannelEntity): Promise<SanctionEntity> {
-        if (!channel) {
-            throw new WsException("Channel doesn't exist");
-        }
+    checkIfOperationAllowed(currentUserId: number, targetUserId: number, channel: ChannelEntity) {
+        const isCurrentUserOwner = channel.owner.id === currentUserId;
+        const isCurrentUserAdmin = !!channel.admins.find(u => u.id === currentUserId);
+        const isTargetOwner = channel.owner.id === targetUserId;
+        const isTargetAdmin = !!channel.admins.find(u => u.id === targetUserId);
 
-        if (this.isAdminOrOwner(channel, currentUserId)) {
+        if (!isCurrentUserOwner && !isCurrentUserAdmin) {
             throw new WsException("You're not allowed");
         }
 
-        if (this.isAdminOrOwner(channel, sanctionDto.userId)) {
-            throw new WsException("You can't ban owner or admin");
+        if (isTargetOwner) {
+            throw new WsException("You're not allowed");
+        }
+
+        if (isCurrentUserAdmin && isTargetAdmin) {
+            throw new WsException("You're not allowed");
+        }
+    }
+
+    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto, channel: ChannelEntity): Promise<SanctionEntity> {
+        if (!channel) {
+            throw new WsException("Channel doesn't exist");
         }
 
         const targetUser = channel.visitors.find(u => u.id === sanctionDto.userId);
@@ -386,6 +386,8 @@ export class ChatService {
         if (!targetUser) {
             throw new WsException("There is no such user in the chat visitors list");
         }
+
+        this.checkIfOperationAllowed(currentUserId, targetUser.id, channel);
 
         const expiryDate = new Date(sanctionDto.expiryAt);
         if ((expiryDate.getTime() - Date.now()) < 0) {
