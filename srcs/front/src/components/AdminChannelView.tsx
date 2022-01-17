@@ -63,7 +63,7 @@ export default function AdminChannelView() {
 
     return (
         <>
-            <h3>{currentChannel?.currentChannelName}</h3>
+            <h3>{currentChannelName}</h3>
             <ChatOutput messages={messages} />
             <ChatRoster
                 visitors={currentChannel?.visitors}

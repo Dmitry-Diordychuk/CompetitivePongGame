@@ -28,7 +28,8 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="4959a946-877f-4f5e-8ce5-936721656d2d">
-      <console name="ft_transcendent" type="STANDARD" schema="information_schema" session="Main"><![CDATA[select * from "public".achievements]]></console>
+      <console name="ft_transcendent" type="STANDARD" schema="information_schema" session="Main"><![CDATA[select * from "public".channels;
+select * from "public".users_connections_channels;]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">

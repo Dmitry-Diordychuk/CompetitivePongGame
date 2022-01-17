@@ -37,11 +37,12 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     handleLeaveSpectate(
         @ConnectedSocket() client
     ) {
-        const clientInfo = this.clientInfoService.getClientInfo(client.id);
-        if (!clientInfo) {
+        const room = this.clientInfoService.getClientRoom(client.id);
+        if (!room) {
             return;
         }
-        this.clientInfoService.removeClientInfo(clientInfo.roomName);
+        client.leave(room);
+        this.clientInfoService.removeSocket(client.id);
     }
 
     @SubscribeMessage('giveUp')
@@ -62,6 +63,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
         const clientInfo = this.clientInfoService.getClientInfo(client.id);
         if (!clientInfo) {
+            return;
+        } else if (clientInfo.playerNumber === 0) {
             return;
         }
 

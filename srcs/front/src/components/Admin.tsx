@@ -7,6 +7,7 @@ import {useSocketIO} from "../contexts/socket.io.context";
 import { useModal } from "../contexts/modal.context";
 import ModalWindow from './Window'
 import {useChat} from "../contexts/chat.context";
+import {Alert} from "react-bootstrap";
 
 export default function Admin() {
     const auth = useAuth();
@@ -122,7 +123,7 @@ function Users() {
                         <select value={user.role} onChange={(event)=>handleSelectUserRole(event, user.id)}>
                             <option value="User">User</option>
                             <option value="Banned">Banned</option>
-                            <option value="Admin">Admin</option>
+                            {auth.user.role === 'PO' ? <option value="Admin">Admin</option> : <></>}
                         </select>
                         :
                         <>{user.role}</>}
@@ -149,7 +150,7 @@ function Channels() {
     const [currentPage, setCurrentPage] = useState(1);
     const [update, setUpdate] = useState(false);
     const [data, setData] = useState<any>(null);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState('');
 
     const modal = useModal()
 
@@ -235,8 +236,11 @@ function Channels() {
             headers: {
                 Authorization: "Bearer " + auth.user.token,
             }
-        }).then(()=>{
-            setUpdate(true)
+        }).then((response)=>{
+            setUpdate(true);
+        }).catch((e) => {
+            setError(e.response.data.message);
+            setUpdate(true);
         });
     }
 
@@ -251,18 +255,16 @@ function Channels() {
         setCurrentPage(prev);
     }
 
-
-
-    if (error) {
-        return <>Error!</>
-    } else if (!data) {
-        return <progress/>
+    if (!data) {
+        return <progress/>;
     }
+
     return (
         <>
         <ModalWindow />
             <h1>Channels</h1>
 
+            <Alert variant={'danger'} show={error !== ''}>{error}</Alert>
             <table>
                 <thead/>
                 <tbody>
@@ -281,22 +283,32 @@ function Channels() {
                         {channel.name}
                     </td>
                     <td>
-                        <input placeholder={channel.owner?.username} onKeyPress={e =>
-                            (e.code === "Enter" || e.code === "NumpadEnter") ? handleSetOwner(e, channel.id) : 0} type='text'>
-                        </input>
+                        {
+                            channel.name !== 'general'
+                                ? <input placeholder={channel.owner?.username} onKeyPress={e =>
+                                    (e.code === "Enter" || e.code === "NumpadEnter") ? handleSetOwner(e, channel.id) : 0}
+                                       type='text'>
+                                </input>
+                                : <></>
+                        }
                     </td>
                     <td>
-                        <ul>
-                        {channel.admins?.map((user: any, i: number) =>
-                            <li onClick={(event) => modal.summonModalWindow(event, user)} key={i + 100}>
-                                {user.username}
-                                <button className="delete-button" onClick={() => {handleDeleteAdmin(user.username, channel.id)}}>x</button>
-                            </li>
-                        )}
-                        </ul>
-                        <input onKeyPress={e =>
-                            (e.code === "Enter" || e.code === "NumpadEnter") ? handleSetAdmin(e, channel.id) : 0} type='text'>
-                        </input>
+                        {
+                            channel.name !== 'general'
+                            ? <>
+                                <ul>
+                                {channel.admins?.map((user: any, i: number) =>
+                                    <li onClick={(event) => modal.summonModalWindow(event, user)} key={i + 100}>
+                                        {user.username}
+                                        <button className="delete-button" onClick={() => {handleDeleteAdmin(user.username, channel.id)}}>x</button>
+                                    </li>
+                                )}
+                                </ul>
+                                <input onKeyPress={e =>
+                                    (e.code === "Enter" || e.code === "NumpadEnter") ? handleSetAdmin(e, channel.id) : 0} type='text'>
+                                </input>
+                                </>
+                                :<></>}
                     </td>
                     <td>
                         <ul>

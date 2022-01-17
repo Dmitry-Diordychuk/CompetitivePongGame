@@ -249,20 +249,20 @@ function ModalWindow()
                  onClick={e => e.stopPropagation()}>
                 <div className='myModalContent'>
                     <h3>{modalWindow.subject.username}</h3>
+                    <div className='modal_div' onClick={() => openProfile()}>Profile</div>
                     {!isBanned ?
                         <>
-                        <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
-                        <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
-                        <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
+                            <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
+                            <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
+                            <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
+                            <SpectateBttn />
                         </>
                         :
                         <></>
                     }
-                    <div className='modal_div' onClick={() => blacklistHandle()}>{backlistString}</div>
-                    <div className='modal_div' onClick={() => openProfile()}>Profile</div>
-                    <SpectateBttn />
                     {isFriend || isBanned ? <></> :
                         <div className='modal_div' onClick={() => friend_exit()}>Add to friends</div>}
+                    <div className='modal_div' onClick={() => blacklistHandle()}>{backlistString}</div>
                 </div>
                 <AdminPart />
             </div>
