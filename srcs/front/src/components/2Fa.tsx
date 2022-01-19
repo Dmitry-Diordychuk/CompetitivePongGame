@@ -1,5 +1,5 @@
 import {useAuth} from "../auth/auth.context";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Alert, Button, Card, Form, Stack} from "react-bootstrap";
 
@@ -11,9 +11,11 @@ export default function SecondFa() {
     const [alertVariant, setAlertVariant] = useState('');
     const [message, setMessage] = useState('');
 
-    if (!auth.user) {
-        navigate('/login', {replace: true});
-    }
+    useEffect(() => {
+        if (!auth.user) {
+            navigate('/login', {replace: true});
+        }
+    }, [navigate, auth.user]);
 
     const handleSubmit = (event: any) => {
         event.preventDefault();

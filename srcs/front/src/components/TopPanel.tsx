@@ -1,23 +1,21 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useChat} from "../contexts/chat.context";
 import Matchmacking from "./Matchmacking";
 import Duel from "./Duel";
-
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
-
 import '../styles/TopPanel.css'
 import {useSocketIO} from "../contexts/socket.io.context";
+
 
 export default function TopPanel() {
     const chat = useChat();
     const auth = useAuth();
     const socket = useSocketIO();
-    const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(()=>{}, [chat.currentChannelName])
@@ -68,11 +66,11 @@ function HolddedPMC()
     const navigate = useNavigate();
 
     useEffect(()=>{
-    }, [chat.privateChannels])
+    }, [chat.privateChannels]);
 
-    if (chat.privateChannels.length === 0)
+    if (chat.privateChannels.length === 0) {
         return (<></>)
-
+    }
 
     return(
         <div className="dropdown">

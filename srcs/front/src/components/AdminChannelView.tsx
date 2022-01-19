@@ -40,7 +40,7 @@ export default function AdminChannelView() {
         return (() => {
             socket.off('channel-info-response')
         })
-    }, [flag]);
+    }, [flag, socket]);
 
     const addMessage = useCallback((data : any) => {
         const message: any = {
@@ -59,7 +59,7 @@ export default function AdminChannelView() {
         return (()=>{
             socket.off('receive_message');
         })
-    }, [addMessage]);
+    }, [addMessage, socket]);
 
     return (
         <>

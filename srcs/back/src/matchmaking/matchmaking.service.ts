@@ -97,11 +97,6 @@ export class MatchmakingService {
 
     @Interval(POOL_POLL_INTERVAL)
     loopMatchmaking() {
-        // console.log(new Date());
-        // console.log('Queue: ', this.queue.map((client) => client.user.username));
-        // console.log('Wait list: ', this.waitList.map((pair) => pair.clientA.user + ' ' + pair.clientB.user));
-        // console.log('Wait duel: ', this.waitDuel);
-
         for (const clientA of this.queue) {
             let timeSinceStart = 0;
             for (const clientB of this.queue) {

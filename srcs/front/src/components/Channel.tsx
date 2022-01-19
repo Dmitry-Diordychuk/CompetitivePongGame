@@ -1,4 +1,4 @@
-import React, {Props, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
@@ -7,7 +7,7 @@ import ModalWindow from "./Window";
 import "../styles/ChannelChat.css";
 import '../styles/ChannelRoster.css';
 import {useSocketIO} from "../contexts/socket.io.context";
-import {useInterval} from 'usehooks-ts';
+import {useEffectOnce, useInterval} from 'usehooks-ts';
 import {Alert, Form, Stack} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 
@@ -20,8 +20,14 @@ export default function Channel() {
     const params = useParams();
     const modal = useModal();
 
-    chat.setCurrentChannelName(params.id);
+    useEffect(() => {
+        chat.setCurrentChannelName(params.id);
+    });
 
+    useEffectOnce(() => {
+        if (!modal.isActive && !Number.isInteger(+chat.currentChannelName))
+            socket.emit('channel-info', {name: chat.currentChannelName});
+    })
     useInterval(() => {
         if (!modal.isActive && !Number.isInteger(+chat.currentChannelName))
             socket.emit('channel-info', {name: chat.currentChannelName});
@@ -31,12 +37,6 @@ export default function Channel() {
     if (Number.isInteger(+chat.currentChannelName)) {
         currentChannel = chat.privateChannels.find((ch: any) => ch.id === +chat.currentChannelName);
     }
-
-    // console.log(chat.currentChannelName);
-    // console.log(currentChannel)
-    // console.log(chat.channels);
-    // console.log(chat.privateChannels)
-    // console.log(currentChannel?.message)
 
     return (
         <>

@@ -1,4 +1,5 @@
 import {MigrationInterface, QueryRunner} from "typeorm";
+import {APP_IP} from "@app/config";
 
 export class SeedDb1630422445889 implements MigrationInterface {
     name = 'SeedDb1630422445889'
@@ -6,13 +7,13 @@ export class SeedDb1630422445889 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Profiles
         await queryRunner.query(
-            `INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'http://${APP_IP}:3001/avatars/avatar.jpg');`
         );
         await queryRunner.query(
-            `INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'http://${APP_IP}:3001/avatars/avatar.jpg');`
         );
         await queryRunner.query(
-            `INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'http://${APP_IP}:3001/avatars/avatar.jpg');`
         );
 
         // Users

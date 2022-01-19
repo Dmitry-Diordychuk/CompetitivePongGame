@@ -1,8 +1,8 @@
 import {io, Socket} from "socket.io-client/build/esm-debug";
-import { useAuth } from "../auth/auth.context";
-import React, {useRef, useEffect} from "react";
+import React, {useRef} from "react";
 import {useEffectOnce} from "usehooks-ts";
-import {useNavigate} from "react-router-dom";
+import {API_URL, SOCKET_IO_PORT} from "../config";
+
 
 interface SocketIOContextType {
     socket: Socket | null;
@@ -18,45 +18,12 @@ interface SocketIOContextType {
 const SocketIOContext = React.createContext<SocketIOContextType>(null!);
 
 export function SocketIOProvider({ children }: { children: React.ReactNode }) {
-    const auth = useAuth();
-    const navigate = useNavigate();
-
-    const socketRef = useRef(io("http://localhost:3002", {
+    const socketRef = useRef(io(`${API_URL}:${SOCKET_IO_PORT}`, {
         autoConnect: false,
     }));
 
-    useEffect(() => {
-        if (auth.user) {
-            connect(auth.user.token);
-        } else {
-            disconnect();
-        }
-        return (() => {
-            disconnect();
-        })
-    }, [auth.user]);
-
-    useEffect(() => {
-        on('disconnect', ()=>{
-            navigate('/logout', {replace: true});
-        })
-        return (()=> {
-            socketRef.current.off('disconnect');
-        })
-    },[auth.user]);
-
-    useEffect(() => {
-        on('ban', ()=>{
-            navigate('/logout', {replace: true});
-        })
-        return (()=> {
-            socketRef.current.off('ban');
-        })
-    }, [auth.user]);
-
     useEffectOnce(() => {
         socketRef.current.on('exception', (response: any) => {
-            console.log(response);
         });
         return (() => {
            socketRef.current.off('exception');
@@ -69,7 +36,6 @@ export function SocketIOProvider({ children }: { children: React.ReactNode }) {
                 Authorization: "Bearer " + userToken,
             }
             socketRef.current.once("connect_error", (err) => {
-                console.log(`connect_error due to ${err.message}`);
             });
             socketRef.current.connect();
         }

@@ -8,10 +8,8 @@ export class WebSocketExceptionFilter extends BaseWsExceptionFilter {
             const errors = exception["response"]["message"];
             exception = new WsException({errors});
         } else if (exception instanceof QueryFailedError) {
-            console.log(exception);
             exception = new WsException("Database query exception");
         } else if (!(exception instanceof WsException)) {
-            console.log(exception);
             exception = new WsException("Unknown exception type");
         } else {
             let errors;

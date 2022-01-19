@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import '../styles/Window.css';
 import axios, { AxiosRequestConfig }  from 'axios';
 import {useModal} from "../contexts/modal.context";
@@ -7,7 +7,8 @@ import {useChat} from "../contexts/chat.context";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useSocketIO} from "../contexts/socket.io.context";
-import {useGame} from "../contexts/game.context";
+import {API_URL, HTTP_PORT} from "../config";
+
 
 function ModalWindow()
 {
@@ -42,7 +43,6 @@ function ModalWindow()
         contact.ban(modalWindow.subject.id, () => {
             modalWindow.setIsActive(false);
         }, () => {
-            console.log('Ban failed!');
         });
     }
 
@@ -112,7 +112,7 @@ function ModalWindow()
     {
         let putAdmin : AxiosRequestConfig = {
             method: 'put',
-            url: "http://localhost:3001/api/channel/admin/",
+            url: `${API_URL}:${HTTP_PORT}/api/channel/admin/`,
             responseType: "json",
             headers : {
                 "authorization" : "Bearer " + auth.user.token,
@@ -124,7 +124,6 @@ function ModalWindow()
         }
         axios(putAdmin)
             .then((answer : any) => {
-//				console.log(answer)
             })
             .catch(e => {})
             modalWindow.setIsActive(false);
@@ -134,7 +133,7 @@ function ModalWindow()
     {
         let putAdmin : AxiosRequestConfig = {
             method: 'delete',
-            url: "http://localhost:3001/api/channel/admin/",
+            url: `${API_URL}:${HTTP_PORT}/api/channel/admin/`,
             responseType: "json",
             headers : {
                 "authorization" : "Bearer " + auth.user.token,
@@ -147,7 +146,6 @@ function ModalWindow()
 
         axios(putAdmin)
             .then((answer : any) => {
-//				console.log(answer)
             })
             .catch(e => {})
         modalWindow.setIsActive(false);

@@ -1,13 +1,14 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import {useGame} from "../contexts/game.context";
 import {useAuth} from "../auth/auth.context";
 import {useEffectOnce} from "usehooks-ts";
 import {useNavigate} from "react-router-dom";
-import {Alert, Button, Card, Col, Container, Form, FormControl, Row, Stack} from "react-bootstrap";
+import {Alert, Button, Card, Col, Container, Form, Row, Stack} from "react-bootstrap";
 
 import '../styles/Settings.css';
+import {API_URL, HTTP_PORT} from "../config";
 
 
 export default function Settings()
@@ -36,7 +37,6 @@ export default function Settings()
 
 function Nickname() {
     const auth = useAuth();
-    const navigate = useNavigate();
 
     const [nickname, setNickname] = useState('');
     const [alertVariant, setAlertVariant] = useState('');
@@ -46,9 +46,8 @@ function Nickname() {
         event.preventDefault();
         auth.changeUsername(nickname,
             () => {
-                setMessage('Nickname changed');
-                setAlertVariant('success');
-                navigate('/profile');
+                // setMessage('Username changed');
+                // setAlertVariant('success');
             },
             (errorMessage: any) => {
                 setMessage(errorMessage.toString());
@@ -78,7 +77,7 @@ function Avatar() {
     const navigate = useNavigate();
 
     const [selectedFile, setSelectedFile] = useState('');
-    const [isFilePicked, setIsFilePicked] = useState(false);
+    const [, setIsFilePicked] = useState(false);
     const [alertVariant, setAlertVariant] = useState('');
     const [message, setMessage] = useState('');
 
@@ -87,7 +86,7 @@ function Avatar() {
         formData.append('file', selectedFile);
 
         axios.put(
-            "http://localhost:3001/api/user/avatar",
+            `${API_URL}:${HTTP_PORT}/api/user/avatar`,
             formData,
             {
                 headers: {
@@ -141,18 +140,22 @@ function SecondFactorAuth()
     const [message, setMessage] = useState('');
 
     useEffectOnce(() => {
+        let isMounted = true;
+
         axios({
-            url: 'http://127.0.0.1:3001/api/2fa/generate',
+            url: `${API_URL}:${HTTP_PORT}/api/2fa/generate`,
             method: 'post',
             headers: {
                 'Authorization': "Bearer " + auth.user.token,
             },
             responseType: "blob",
         }).then((response) => {
-            setQR(response.data);
+            if (isMounted) setQR(response.data);
         }).catch((e) => {
 
         });
+
+        return (() => { isMounted = false; })
     });
 
     const handleSubmitActivate = (event: any) => {
@@ -278,7 +281,6 @@ function SetKey(props: any) {
         event.preventDefault();
         const keyCode = keyboardMap.findIndex(i => i === event.key.toUpperCase());
         if (key === 'Up') {
-            console.log(keyCode);
             game.setUpButton(keyCode);
             setCookie('up', keyCode, {sameSite: 'lax'})
         } else {

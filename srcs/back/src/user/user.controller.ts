@@ -22,6 +22,9 @@ import {diskStorage} from 'multer';
 import RoleGuard from "@app/shared/guards/role.guard";
 import Role from "@app/user/types/role.enum";
 import {randomInt} from "crypto";
+import * as path from 'path'
+import {APP_IP} from "@app/config";
+
 
 @Controller("api/user")
 export class UserController {
@@ -30,6 +33,8 @@ export class UserController {
     @Get('/login')
     async createUser(@Query("code") code: string): Promise<UserResponseInterface> {
         const user = await this.userService.ftAuth(code);
+        if (user.isCreated)
+            return this.userService.buildUserResponse(user, false, true);
         return this.userService.buildUserResponse(user);
     }
 
@@ -65,9 +70,13 @@ export class UserController {
         @User() currentUser,
         @UploadedFile() file: Express.Multer.File
     ) {
+        if (!file) {
+            throw new HttpException("There is no file", HttpStatus.BAD_REQUEST);
+        }
+
         const updateUserDto = {
             "username": currentUser.username,
-            "image": "http://localhost:3001/avatars/" + file.path.split(`\\`)[3], // Fix for linux / windows \\
+            "image": "http://" + APP_IP + ":3001/avatars/" + file.path.split(path.sep)[3],
         }
         return await this.userService.updateCurrentUserImage(currentUser.id, updateUserDto);
     }

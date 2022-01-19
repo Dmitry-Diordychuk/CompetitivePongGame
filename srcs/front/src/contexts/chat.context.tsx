@@ -1,17 +1,17 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import uuidv4 from "../utils/uuid";
 import axios from "axios";
 import {useSocketIO} from "./socket.io.context";
 import {useAuth} from "../auth/auth.context";
 import {useContact} from "./contact.context";
 import {useNavigate} from "react-router-dom";
+import {API_URL, HTTP_PORT} from "../config";
 
 
 interface ChatContextType {
     channels: any;
     addNewChannel: Function;
     deleteChannel: Function;
-    updateChannel: Function;
     updateChannels: Function;
 
     setCurrentChannelName: Function;
@@ -23,7 +23,6 @@ interface ChatContextType {
     addPrivateMessage: Function;
 
     getVisibleChannelAdmins: Function;
-    removeAdminChannels: Function;
 
     addNewPrivateChannel: Function;
     deletePrivateChannel: Function;
@@ -40,48 +39,85 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     const [channels, setChannels] = useState<any>([]);
     const [currentChannelName, setCurrentChannelName] = React.useState<any>(null);
-
     const [privateChannels, setPrivateChannels] = useState<any>([]);
 
+    const [, setIsError] = useState<any>();
+
     useEffect(() => {
+        const updateChannel = (channel: any) => {
+            if (!channel) {
+                setCurrentChannelName('general');
+                navigate('/channels', {replace: true});
+                return;
+            }
+
+            let current: any = channels.find((item: any) => item.name === channel.name);
+
+            if (!current) {
+                return;
+            }
+
+            current.admins = channel.admins;
+            current.name = channel.name;
+            current.owner = channel.owner;
+            current.sanctions = channel.sanctions;
+            current.visitors = channel.visitors;
+            current.isHasPassword = channel.isHasPassword;
+
+            if (!current.visitors.find((u: any) => u.id === auth.user.id)) {
+                navigate('/channels');
+            }
+
+            setChannels([...channels]);
+        }
+
         socket.on('channel-info-response', updateChannel);
         return (() => {
             socket.off('channel-info-response')
         })
-    }, [channels, socket]);
-
-    const updateChannel = useCallback((channel: any) => {
-        if (!channel) {
-            setCurrentChannelName('general');
-            navigate('/channels', {replace: true});
-            return;
-        }
-
-        let current : any = channels.find((item : any) => item.name === channel.name);
-
-        if (!current) {
-            return;
-        }
-
-        current.admins = channel.admins;
-        current.name = channel.name;
-        current.owner = channel.owner;
-        current.sanctions = channel.sanctions;
-        current.visitors = channel.visitors;
-        current.isHasPassword = channel.isHasPassword;
-
-        if (!current.visitors.find((u: any) => u.id === auth.user.id)) {
-            navigate('/channels');                                                                          // Last change
-        }
-
-        setChannels([...channels]);
-    }, [socket, channels]);
+    }, [channels, socket, auth.user?.id, navigate]);
 
     useEffect(() => {
+        function initChannels(data : any) {
+            setChannels([...data.map((ch : any) : any => {
+                let messages : any = sessionStorage.getItem( 'public' + auth.user.id + '\n' + ch.name);
+                if (messages) {
+                    messages = JSON.parse(messages);
+                } else {
+                    messages = []
+                }
+                return ({...ch, messages});
+            })]);
+
+            const refreshedPrivateChannels: any[] = [];
+            const sessionPrivateMessagesData = sessionStorage.getItem('private' + auth.user.id);
+            if (sessionPrivateMessagesData) {
+                const privateMessages: any = JSON.parse(sessionPrivateMessagesData);
+                for (let i = 0; i < privateMessages.length; i++) {
+                    let current = refreshedPrivateChannels.find((ch: any) => ch.id === privateMessages[i].toChannelId);
+                    if (current) {
+                        current.messages.push(privateMessages[i]);
+                    } else {
+                        refreshedPrivateChannels.push({
+                            id: privateMessages[i].toChannelId,
+                            name: privateMessages[i].toChannelName,
+                            owner: null,
+                            admins: [],
+                            sanctions: [],
+                            visitors: [],
+                            messages: [privateMessages[i]],
+                        });
+                    }
+                }
+                setPrivateChannels(refreshedPrivateChannels);
+            }
+            setCurrentChannelName('general');
+        }
+
         if (auth.user) {
-            axios.get("http://localhost:3001/api/channel/all/current/", {
+            axios.get(`${API_URL}:${HTTP_PORT}/api/channel/all/current/`, {
                 method: 'get',
-                url: "http://localhost:3001/api/channel/all/current/",
+                url: `${API_URL}:${HTTP_PORT}/api/channel/all/current/`,
                 responseType: "json",
                 headers: {
                     "authorization": 'Bearer ' + auth.user.token,
@@ -90,68 +126,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             .then((response: any) => {
                 initChannels(response.data.channels);
             })
-            .catch(
-                e => console.log('Channels first init failed: ' + e)
-            );
+            .catch((error: any) => {
+                setIsError(true);
+            });
         }
-    }, [socket, auth.user]);
-
-    const initChannels = useCallback((data : any) => {
-        let move_on : boolean = false;
-        let curr_channel : string = 'general';
-        let number_or_not : any = 0;
-
-        console.log('INIT');
-
-        setChannels([...(data.map((ch : any) : any => {
-            let msgs : any = sessionStorage.getItem( 'public' + auth.getId() + '\n' + ch.name);
-            if (msgs)
-            {
-                move_on = true;
-                msgs = JSON.parse(msgs);
-            }
-            else
-                msgs = []
-            return (Object.assign({}, ch, {messages: msgs}))
-        }))]);
-
-        const refreshedPrivateChannels: any[] = [];
-        const sessionPrivateMessagesData = sessionStorage.getItem('private' + auth.getId());
-        if (sessionPrivateMessagesData) {
-            const privateMessages: any = JSON.parse(sessionPrivateMessagesData);
-            for (let i = 0; i < privateMessages.length; i++) {
-                let current = refreshedPrivateChannels.find((ch: any) => ch.id === privateMessages[i].toChannelId);
-                if (current) {
-                    current.messages.push(privateMessages[i]);
-                } else {
-                    refreshedPrivateChannels.push({
-                        id: privateMessages[i].toChannelId,
-                        name: privateMessages[i].toChannelName,
-                        owner: null,
-                        admins: [],
-                        sanctions: [],
-                        visitors: [],
-                        messages: [privateMessages[i]],
-                    });
-                }
-            }
-            setPrivateChannels(refreshedPrivateChannels);
-        }
-
-        if (move_on)
-        {
-            number_or_not = Number(window.location.pathname.split('/')[2])
-            if (number_or_not && number_or_not > -1) {
-                curr_channel = channels.find((item: any) =>
-                    item.id === number_or_not).name;
-            }
-        }
-        setCurrentChannelName(curr_channel);
-    }, [channels, sessionStorage, privateChannels]);
+    }, [auth.user]);
 
     const updateChannels = useCallback((data: any) => {
-        console.log('updateChannels');
-
         const channelsUpdated = data.map((ch: any) => {
             const channel = channels.find((chan: any) => chan.name === ch.name);
             if (channel) {
@@ -217,17 +198,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setPrivateChannels([...privateChannels, newChannel]);
     }, [privateChannels]);
 
-    useEffect(() => {
-        socket.on("receive_private_message", (message: any) => {
-            addPrivateMessage(message, message.message.userId, message.message.username);
-        });
-        return (()=> {
-            socket.off("receive_private_message");
-        })
-    }, [privateChannels, contact]);
 
     const addPrivateMessage = useCallback((message : any, toChannelId: number, toChannelName: string) =>
-	{
+    {
         message = message.message;
         message.id = uuidv4();
         message.toChannelId = toChannelId;
@@ -237,9 +210,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-		let current : any = privateChannels.find((ch : any) => ch.id === toChannelId);
+        let current : any = privateChannels.find((ch : any) => ch.id === toChannelId);
 
-		if (current) {
+        if (current) {
             current.messages = [message, ...current.messages];
             sessionStorage.setItem('private' + auth.getId(), JSON.stringify(current.messages));
             setPrivateChannels([...privateChannels]);
@@ -255,8 +228,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             };
             sessionStorage.setItem('private' + auth.getId(), JSON.stringify([message]));
             setPrivateChannels([...privateChannels, newChannel]);
-		}
-	}, [privateChannels, auth.user, contact]);
+        }
+    }, [privateChannels, contact, auth]);
+
+    useEffect(() => {
+        socket.on("receive_private_message", (message: any) => {
+            addPrivateMessage(message, message.message.userId, message.message.username);
+        });
+        return (()=> {
+            socket.off("receive_private_message");
+        })
+    }, [privateChannels, contact, addPrivateMessage, socket]);
 
 
     const addMessage = useCallback((data : any) => {
@@ -277,24 +259,22 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('public' + auth.getId() + '\n' + message.channel, pack);
             setChannels([...channels]);
         }
-    }, [channels, sessionStorage, contact]);
+    }, [channels, contact, auth]);
 
     useEffect(() => {
         socket.on("receive_message", addMessage);
         return (()=>{
             socket.off('receive_message');
         })
-    }, [addMessage, contact]);
+    }, [addMessage, contact, socket]);
 
     const deleteChannel = useCallback((name : string) => {
-        console.log('Delete');
-
         if (name === currentChannelName) {
             setCurrentChannelName('general');
         }
         setChannels([...channels].filter((ch : any) => ch.name !== name))
         socket.emit("leave_channel", {"name" : name});
-    }, [channels, currentChannelName]);
+    }, [channels, currentChannelName, socket]);
 
     const deletePrivateChannel = useCallback((name : string) => {
         const sessionPrivateMessagesData = sessionStorage.getItem('private' + auth.getId());
@@ -307,7 +287,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
         setCurrentChannelName('general');
         setPrivateChannels(privateChannels.filter((ch : any) => ch.name !== name))
-    }, [channels, currentChannelName, sessionStorage]);
+    }, [auth, privateChannels]);
 
     const getCurrentChannelID = useCallback((): number => {
         let current : any = channels.find((item : any) => item.name === currentChannelName);
@@ -332,16 +312,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return ([...current.admins, current.owner]);
     }, [channels, currentChannelName]);
 
-    const removeAdminChannels = useCallback(() : any => {
-        // setChannels(channels.filter((i: any) => i.asAdmin !== true))
-    }, [channels]);
-
     let value : ChatContextType = {
         channels,
 
         addNewChannel,
         deleteChannel,
-        updateChannel,
         updateChannels,
 
         setCurrentChannelName,
@@ -353,7 +328,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         addPrivateMessage,
 
         getVisibleChannelAdmins,
-        removeAdminChannels,
 
         addNewPrivateChannel,
         deletePrivateChannel,

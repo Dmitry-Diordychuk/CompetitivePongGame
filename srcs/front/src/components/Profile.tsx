@@ -1,10 +1,9 @@
 import React, {useEffect, useState} from "react";
 import Matches from "./Matches";
 import {useAuth} from "../auth/auth.context";
-import {useNavigate, useParams} from "react-router-dom";
+import {useParams} from "react-router-dom";
 import NotFound from "./NotFound";
-import {useFetch, useInterval, useTimeout} from "usehooks-ts";
-
+import {useInterval} from "usehooks-ts";
 import Figure from 'react-bootstrap/Figure';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -14,37 +13,9 @@ import axios from "axios";
 import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
 import {useContact} from "../contexts/contact.context";
+import {API_URL, HTTP_PORT} from "../config";
 
-const url = `http://localhost:3001/api/profile/`;
-
-interface AchievementInterface {
-  id: number;
-  title: string;
-  description: string;
-}
-
-interface MatchInterface {
-  id: number;
-  type: "ladder" | "duel";
-  create_at: Date;
-}
-
-interface UserProfileInterface {
-  id: number;
-  username: string;
-  victories: number;
-  losses: number;
-  exp: number;
-  level: number;
-  image: string;
-  achievements: AchievementInterface[];
-  winMatches: MatchInterface[];
-  lossMatches: MatchInterface[];
-}
-
-interface ProfileInterface {
-  profile: UserProfileInterface;
-}
+const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
 
 export default function Profile() {
   let params = useParams<"id">();
@@ -52,7 +23,7 @@ export default function Profile() {
   const [error, setError] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
 
-  const [reset, setReset] = useState(false);
+  const [, setReset] = useState(false);
   useInterval(() => {
     setReset(true);
   }, 1000)

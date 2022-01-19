@@ -1,4 +1,4 @@
-import React, {useState, useRef} from "react";
+import React, {useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useEffectOnce} from "usehooks-ts";
 import {useSocketIO} from "./socket.io.context";
