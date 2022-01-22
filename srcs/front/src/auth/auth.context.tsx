@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const socket = useSocketIO();
     const navigate = useNavigate();
-    const location = useLocation();
+    const {state} = useLocation();
 
     useEffect(() => {
         socket.on('ban', ()=>{
@@ -68,7 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             sessionStorage.setItem('user', JSON.stringify(response.data.user));
             setUser(response.data.user);
-            location.state.isUserTryingAuthenticate = true;
+            // @ts-ignore
+            state.isUserTryingAuthenticate = true;
             socket.disconnect();
             socket.connect(response.data.user.token);
             successfulCallback();
@@ -93,7 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             updatedUser.isTwoFactorAuthenticationValid = true;
             sessionStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
-            location.state.isUserTryingAuthenticate = true;
+            // @ts-ignore
+            state.isUserTryingAuthenticate = true;
             socket.disconnect();
             socket.connect(response.data.user.token);
             successfulCallback();
@@ -191,7 +193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         socket.on('disconnect', ()=>{
-            if (!location.state?.isUserTryingAuthenticate) {
+            // @ts-ignore
+            if (!state?.isUserTryingAuthenticate) {
                 signout(()=>{
                     navigate('/login', {replace: true});
                 });
@@ -200,7 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return (()=> {
             socket.off('disconnect');
         })
-    },[user, navigate, socket, signout, location.state]);
+    },[user, navigate, socket, signout, state]);
 
     let getId = () =>
     {

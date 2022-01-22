@@ -23,6 +23,7 @@ function Login()
 	}, [auth]);
 
 	useEffect(() => {
+		// @ts-ignore
 		let from = location.state?.from?.pathname;
 		if (auth.user && from && from !== '/logout') {
 			navigate(from, {replace: true});

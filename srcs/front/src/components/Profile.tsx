@@ -11,9 +11,15 @@ import Col from 'react-bootstrap/Col';
 import Accordion from 'react-bootstrap/Accordion';
 import axios from "axios";
 import Stack from "react-bootstrap/Stack";
-import Button from "react-bootstrap/Button";
+// import Button from "react-bootstrap/Button";
 import {useContact} from "../contexts/contact.context";
 import {API_URL, HTTP_PORT} from "../config";
+import "../styles/Profile.css";
+// import Button from '@mui/material/Button';
+import { Button } from '@mui/material';
+
+import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
+import Nav from "react-bootstrap/Nav";
 
 const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
 
@@ -63,6 +69,54 @@ export default function Profile() {
 
   return (
     <Container>
+
+      <Container className='user'>
+        <Row>
+          <Col>
+            <img className='avatar' alt={"avatar"} src={data.profile.image}/>
+          </Col>
+          <Col>
+            <Stack>
+              <div>
+                <h2 className='username'>{data.profile.username}</h2>
+              </div>
+              <div>
+                <Button /*variant="contained" */ className='settings'>settings</Button>
+              </div>
+            </Stack>
+          </Col>
+        </Row>
+
+        <Row>
+          <Col>
+            <Container className='stat'>
+              <Container className='stat.text'>
+                <Stack>
+                  <div><h3 className='stat.text.name'>Stat</h3></div>
+                  <div>Level: {data.profile.level}</div>
+                  <div>Victories: {data.profile.victories}</div>
+                  <div>Losses: {data.profile.losses}</div>
+                </Stack>
+              </Container>
+            </Container>
+          </Col>
+          <Col>
+            <Container className='matches'>
+              <Stack>
+                <div><h4 className='matches.name'>Matches</h4></div>
+                <Container className='matches.history'>
+                  <div><Matches userId={idNumber} /></div>
+                </Container>
+              </Stack>
+            </Container>
+          </Col>
+        </Row>
+
+      </Container>
+
+{/*
+
+      <Row>
       <Row>
         <Col>
           <Figure>
@@ -99,6 +153,9 @@ export default function Profile() {
           <Matches userId={idNumber} />
         </Col>
       </Row>
+      </Row>
+*/}
+
     </Container>
   );
 }
@@ -113,7 +170,7 @@ function FriendButton(props: any) {
   }
 
   if (contact.isBanned({id: props.userId})) {
-    return (<Button variant={"danger"} onClick={() => {
+    return (<Button variant={"contained"} onClick={() => {
       contact.unban(props.userId);
     }}>Unban</Button>);
   }
