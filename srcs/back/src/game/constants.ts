@@ -1,4 +1,4 @@
-export const FRAME_RATE = 10;
+export const FRAME_RATE = 50;
 export const GRID_SIZE = 40;
 
 export const MAX_TIME_IN_QUEUE = 45000;
