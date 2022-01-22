@@ -14,6 +14,7 @@ import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
 import {useContact} from "../contexts/contact.context";
 import {API_URL, HTTP_PORT} from "../config";
+import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
 
 const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
 
@@ -63,6 +64,36 @@ export default function Profile() {
 
   return (
     <Container>
+      <Col>
+        <Row>
+          <Figure>
+            <Figure.Image
+                width={171}
+                height={180}
+                alt="avatar"
+                src={data.profile.image}
+            />
+          </Figure>
+          <Stack direction="horizontal" gap={3}>
+            <h1>{data.profile.username}</h1>
+            {/* what is it?*/}
+            <FriendButton userId={params.id} />
+          </Stack>
+        </Row>
+        <Row>
+          <Col>
+
+          </Col>
+          <Col>
+
+          </Col>
+        </Row>
+      </Col>
+      <Col>
+
+      </Col>
+
+
       <Row>
         <Col>
           <Figure>
@@ -82,6 +113,10 @@ export default function Profile() {
           <div>Level: {data.profile.level}</div>
           <div>Victories: {data.profile.victories}</div>
           <div>Losses: {data.profile.losses}</div>
+        </Col>
+        <Col>
+          <Col.Link as="span"><Link style={{ textDecoration: 'none' }} to="/contacts">Contacts</Link></Col.Link>
+          <Col.Link as="span"><Link style={{ textDecoration: 'none' }} to="/settings">Settigs</Link></Col.Link>
         </Col>
       </Row>
       <Row>
