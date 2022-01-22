@@ -112,7 +112,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             await this.profileService.unlockAchievements(pair.clientA.user.id);
             await this.profileService.unlockAchievements(pair.clientB.user.id);
 
-            this.clientInfoService.removeClientInfo(roomName);
+            this.clientInfoService.destroyRoom(roomName);
         });
     }
     
@@ -179,7 +179,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
             } else {
                 await this.profileService.addMatch('duel', pair.clientB.user, pair.clientA.user);
             }
-            this.clientInfoService.removeClientInfo(roomName);
+            this.clientInfoService.destroyRoom(roomName);
         }, pair.gameMode);
     }
 

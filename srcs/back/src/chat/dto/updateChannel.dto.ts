@@ -12,6 +12,7 @@ export class UpdateChannelDto {
     @Length(6, 100)
     readonly oldPassword: string;
 
+    @IsOptional()
     @IsString()
     @Length(6, 100)
     readonly newPassword: string;

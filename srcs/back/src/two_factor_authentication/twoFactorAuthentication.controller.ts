@@ -1,4 +1,14 @@
-import {Body, Controller, HttpCode, HttpException, HttpStatus, Post, Res, UseGuards} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    HttpCode,
+    HttpException,
+    HttpStatus,
+    Post,
+    Res,
+    UseGuards, UsePipes,
+    ValidationPipe
+} from "@nestjs/common";
 import {UserEntity} from "@app/user/user.entity";
 import {User} from "@app/user/decorators/user.decorator";
 import {TwoFactorAuthenticationService} from "@app/two_factor_authentication/twoFactorAuthentication.service";
@@ -27,6 +37,7 @@ export class TwoFactorAuthenticationController {
         return this.twoFactorAuthenticationService.pipeQrCodeStream(response, otpAuthUrl);
     }
 
+    @UsePipes(new ValidationPipe)
     @HttpCode(200)
     @Post('turn-on')
     async turnOnTwoFactorAuthentication(
@@ -39,12 +50,13 @@ export class TwoFactorAuthenticationController {
         );
 
         if (!isCodeValid) {
-            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+            throw new HttpException("Invalid code", HttpStatus.BAD_REQUEST);
         }
 
         await this.userService.turnOnTwoFactorAuthentication(user.id);
     }
 
+    @UsePipes(new ValidationPipe)
     @HttpCode(200)
     @Post('turn-off')
     async turnOffTwoFactorAuthentication(
@@ -57,12 +69,13 @@ export class TwoFactorAuthenticationController {
         );
 
         if (!isCodeValid) {
-            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+            throw new HttpException("Invalid code", HttpStatus.BAD_REQUEST);
         }
 
         await this.userService.turnOffTwoFactorAuthentication(user.id);
     }
 
+    @UsePipes(new ValidationPipe)
     @HttpCode(200)
     @Post('authenticate')
     async authenticate(
@@ -75,7 +88,7 @@ export class TwoFactorAuthenticationController {
         );
 
         if (!isCodeValid) {
-            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+            throw new HttpException("Invalid code", HttpStatus.BAD_REQUEST);
         }
 
         return this.userService.buildUserResponse(user, true);

@@ -65,4 +65,5 @@ export class UserEntity {
 
     isOnline: boolean;
     isInGame: boolean;
+    isCreated: boolean;
 }

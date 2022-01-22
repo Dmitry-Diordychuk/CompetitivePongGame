@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import axios from "axios";
 import {useAuth} from "../auth/auth.context";
+import {API_URL, HTTP_PORT} from "../config";
 
 
 interface ContactContextType {
@@ -29,7 +30,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             return;
         axios({
             method: 'get',
-            url: "http://localhost:3001/api/user/friends",
+            url: `${API_URL}:${HTTP_PORT}/api/user/friends`,
             responseType: "json",
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
@@ -37,12 +38,12 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             setFriendList(response.data.users);
         }).catch(() => {})
-    }, [auth]);
+    }, [auth.user]);
 
-    const addFriend = (userID: number) => {
+    const addFriend = useCallback((userID: number) => {
         axios({
             method: 'put',
-            url: "http://localhost:3001/api/user/friends/" + userID,
+            url: `${API_URL}:${HTTP_PORT}/api/user/friends/` + userID,
             responseType: "json",
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
@@ -50,12 +51,12 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             setFriendList(response.data.users);
         }).catch(() => {});
-    }
+    }, [auth.user]);
 
-    const deleteFriend = (userID : number) => {
+    const deleteFriend = useCallback((userID : number) => {
         axios({
             method: 'delete',
-            url: "http://localhost:3001/api/user/friends/" + userID,
+            url: `${API_URL}:${HTTP_PORT}/api/user/friends/` + userID,
             responseType: "json",
             headers: {
                 "Authorization": "Bearer " + auth.user.token,
@@ -64,10 +65,10 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             setFriendList(response.data.users);
         }).catch(() => {
         });
-    }
+    }, [auth.user]);
 
     const isFriend = useCallback((subject: any) => {
-        return !!friendList.find((e: any) => e.id === subject.id);
+        return !!friendList.find((e: any) => +e.id === +subject.id);
     }, [friendList]);
 
     const uploadBlackList = useCallback(() => {
@@ -75,7 +76,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             return;
         axios({
             method: 'get',
-            url: "http://localhost:3001/api/user/blacklist",
+            url: `${API_URL}:${HTTP_PORT}/api/user/blacklist`,
             responseType: "json",
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
@@ -83,44 +84,47 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         }).then((response) => {
             setBlackList([...response.data.users]);
         }).catch(() => null)
-    }, [auth]);
+    }, [auth.user]);
 
-    const ban = (userID : number, errorCallback: Function) => {
+    const ban = useCallback((userID : number, errorCallback: Function) => {
         axios({
             method: 'put',
-            url: "http://localhost:3001/api/user/blacklist/" + userID,
+            url: `${API_URL}:${HTTP_PORT}/api/user/blacklist/` + userID,
             responseType: "json",
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
             },
-        }).then(() => {
-            uploadBlackList();
+        }).then((response) => {
+            setBlackList([...response.data.users]);
         }).catch(() => {
             errorCallback();
         })
-    }
+    }, [auth.user]);
 
-    const unban = (userID : number, errorCallback: Function) => {
+    const unban = useCallback((userID : number, errorCallback: Function) => {
         axios({
             method: 'delete',
-            url: "http://localhost:3001/api/user/blacklist/" + userID,
+            url: `${API_URL}:${HTTP_PORT}/api/user/blacklist/` + userID,
             responseType: "json",
             headers: {
                 "Authorization" : "Bearer " + auth.user.token,
             },
-        }).then(() => {
-            uploadBlackList();
+        }).then((response) => {
+            setBlackList([...response.data.users]);
         }).catch(() => {
             errorCallback();
         })
-    }
+    }, [auth.user]);
 
     const isBanned = useCallback((subject: any) => {
-        return !!blackList.find((e: any) => e.id === subject.id);
+
+        return !!blackList.find((e: any) => +e.id === +subject.id);
     }, [blackList]);
 
-    useEffect(uploadFriendList, [auth]);
-    useEffect(uploadBlackList, [auth]);
+    useEffect(() => {
+        uploadFriendList();
+        uploadBlackList();
+    }, [auth.user, uploadBlackList, uploadFriendList]);
 
     let value : ContactContextType = {
         friendList,

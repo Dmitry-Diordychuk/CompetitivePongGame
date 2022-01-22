@@ -1,4 +1,5 @@
 import axios from "axios";
+import {API_URL, HTTP_PORT} from "../config";
 
 const backdoorProvider = {
     signin(username: string, successfulCallback: Function, errorCallback: VoidFunction) {
@@ -12,7 +13,7 @@ const backdoorProvider = {
         } else {
             errorCallback();
         }
-        axios.get("http://localhost:3001/api/user", {
+        axios.get(`${API_URL}:${HTTP_PORT}/api/user`, {
             headers : {
                 "authorization": "Bearer " + token,
             }

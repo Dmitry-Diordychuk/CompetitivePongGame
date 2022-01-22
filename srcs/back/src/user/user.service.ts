@@ -1,7 +1,7 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {UserEntity} from "@app/user/user.entity";
 import {sign, verify} from "jsonwebtoken";
-import {APP_REDIRECT, APP_SECRET, APP_UID, JWT_EXPIRATION_TIME, JWT_SECRET} from "@app/config";
+import {ADMIN_NAME, APP_REDIRECT, APP_SECRET, APP_UID, JWT_SECRET} from "@app/config";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {ChannelEntity} from "@app/chat/channel.entity";
@@ -11,6 +11,7 @@ import {UserResponseInterface} from "@app/user/types/userResponse.interface";
 import {UpdateUserDto} from "@app/user/dto/updateUser.dto";
 import {ProfileEntity} from "@app/profile/profile.entity";
 import {UsersResponseInterface} from "@app/user/types/usersResponse.interface";
+import Role from "@app/user/types/role.enum";
 
 
 @Injectable()
@@ -82,6 +83,9 @@ export class UserService {
         const newUser = new UserEntity();
         newUser.username = username;
         newUser.ftId = ftId;
+        if (newUser.username === ADMIN_NAME) {
+            newUser.role = Role.PO;
+        }
 
         const newProfile = new ProfileEntity();
         newProfile.ftProfile = ftProfile;
@@ -91,6 +95,7 @@ export class UserService {
         newProfile.victories = 0;
 
         newUser.profile = newProfile;
+        newUser.isCreated = true;
         return await this.userRepository.save(newUser);
     }
 
@@ -265,7 +270,11 @@ export class UserService {
         return user.blacklist;
     }
 
-    buildUserResponse(user: UserEntity, isSecondFactorAuthenticated: boolean = false): UserResponseInterface {
+    buildUserResponse(
+        user: UserEntity,
+        isSecondFactorAuthenticated: boolean = false,
+        isAccountJustCreated: boolean = false
+    ): UserResponseInterface {
         if (!user) {
             return;
         }
@@ -280,7 +289,8 @@ export class UserService {
             user: {
                 ...user,
                 image: image,
-                token: token
+                token: token,
+                isAccountJustCreated: isAccountJustCreated
             }
         }
     }
@@ -315,7 +325,7 @@ export class UserService {
         return user.id;
     }
 
-    async getChannelsByUserId(currentUserId): Promise<ChannelEntity[]> {
+    async getChannelsByUserId(currentUserId, password = false): Promise<ChannelEntity[]> {
         const user = await this.userRepository.findOne({
             relations: ['connections'],
             where: { id: currentUserId }

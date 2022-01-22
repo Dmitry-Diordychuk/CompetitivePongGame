@@ -1,4 +1,5 @@
 import {MigrationInterface, QueryRunner} from "typeorm";
+import {APP_IP} from "@app/config";
 
 export class SeedDb1630422445889 implements MigrationInterface {
     name = 'SeedDb1630422445889'
@@ -6,13 +7,13 @@ export class SeedDb1630422445889 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Profiles
         await queryRunner.query(
-            `INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (101, 'link_1', 'http://${APP_IP}:3001/avatars/avatar.jpg');`
         );
         await queryRunner.query(
-            `INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (102, 'link_2', 'http://${APP_IP}:3001/avatars/avatar.jpg');`
         );
         await queryRunner.query(
-            `INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png');`
+            `INSERT INTO profiles (id, "ftProfile", image) VALUES (103, 'link_3', 'http://${APP_IP}:3001/avatars/avatar.jpg');`
         );
 
         // Users
@@ -71,13 +72,13 @@ export class SeedDb1630422445889 implements MigrationInterface {
 
 
         // Channels
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_1', null, 101);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_2', null, 101);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('channel_3', null, 101);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('A_channel', null, 102);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('B_channel', null, 102);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('C_channel', null, 103);`);
-        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId") VALUES ('X_channel', null, 103);`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('channel_1', null, 101, 'false');`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('channel_2', null, 101, 'false');`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('channel_3', null, 101, 'false');`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('A_channel', null, 102, 'false');`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('B_channel', null, 102, 'false');`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('C_channel', null, 103, 'false');`);
+        await queryRunner.query(`INSERT INTO channels (name, password, "ownerId", "isHasPassword") VALUES ('X_channel', null, 103, 'false');`);
 
 
         // Add connections

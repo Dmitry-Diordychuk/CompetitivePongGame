@@ -3,15 +3,12 @@ import React, {useRef, useState} from "react";
 import {useEffectOnce} from "usehooks-ts";
 import {useSocketIO} from "../contexts/socket.io.context";
 import "../styles/Matchmacking.css";
-import {useGame} from "../contexts/game.context";
 
 
 export default function Matchmacking() {
     const socket = useSocketIO();
     const location = useLocation();
     const navigate = useNavigate();
-    const game = useGame();
-
     const matchMakingStatusRef = useRef('false');
     const [matchMakingStatus, setMatchMakingStatus] = useState<string>('false');
     const [stringOfTime, setStringOfTime] = useState<string>("00:00");

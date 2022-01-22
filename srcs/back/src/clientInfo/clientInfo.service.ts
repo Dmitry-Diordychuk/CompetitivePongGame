@@ -1,4 +1,5 @@
 import {Injectable} from "@nestjs/common";
+import {Interval} from "@nestjs/schedule";
 
 @Injectable()
 export class ClientInfoService {
@@ -31,21 +32,25 @@ export class ClientInfoService {
     }
 
     getClientRoom(clientId) {
-        const record = this.clientInfo.find(i => i.clientId === clientId);
+        const record = this.clientInfo.find(i => i.socketId === clientId);
         if (record)
             return record.roomName;
         return null;
     }
 
     getClientPlayerNumber(clientId) {
-        const record = this.clientInfo.find(i => i.clientId === clientId);
+        const record = this.clientInfo.find(i => i.socketId === clientId);
         if (record)
             return record.playerNumber;
         return null;
     }
 
-    removeClientInfo(roomName) {
+    destroyRoom(roomName) {
         this.clientInfo = this.clientInfo.filter(i => i.roomName !== roomName);
+    }
+
+    removeSocket(socketId) {
+        this.clientInfo = this.clientInfo.filter(i => i.socketId !== socketId);
     }
 
     renewClientSocket(userId, socketId) {

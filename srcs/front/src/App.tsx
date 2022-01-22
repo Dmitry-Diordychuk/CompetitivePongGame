@@ -1,9 +1,7 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import './App.css';
-
 import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 import {useAuth} from "./auth/auth.context";
-
 import Login from './components/Login';
 import Profile from "./components/Profile";
 import TopPanel from "./components/TopPanel";
@@ -11,28 +9,19 @@ import NotFound from "./components/NotFound";
 import Channels from "./components/Channels";
 import Unauthorized from "./components/Unauthorized";
 import Home from "./components/Home";
-import Channel from "./components/Channel"
+import Channel from "./components/Channel";
 import Contacts from "./components/Contacts";
 import Settings from "./components/Settings";
 import Game from "./components/Game";
 import SecondFa from "./components/2Fa";
 import Logout from "./components/Logout";
 import Admin from "./components/Admin";
-import {useEffectOnce} from "usehooks-ts";
-
-import {useSocketIO} from './contexts/socket.io.context'
 import AdminChannelView from "./components/AdminChannelView";
 
 
 function RequireAuth({ children }: { children: JSX.Element }) {
     let auth = useAuth();
     let location = useLocation();
-
-    useEffectOnce(() => {
-        if (!auth.user) {
-            auth.resignin();
-        }
-    });
 
     if (!auth.user) {
         return <Navigate to="/login" state={{ from: location }} replace />;
@@ -45,14 +34,6 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 function RequireAdmin({ children }: { children: JSX.Element }) {
     let auth = useAuth();
     let location = useLocation();
-
-    //console.log()
-
-    useEffectOnce(() => {
-        if (!auth.user) {
-            auth.resignin();
-        }
-    });
 
     if (!auth.user) {
         return <Navigate to="/login" state={{ from: location }} replace />;

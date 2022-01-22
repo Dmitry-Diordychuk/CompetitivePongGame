@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import '../styles/Window.css';
 import axios, { AxiosRequestConfig }  from 'axios';
 import {useModal} from "../contexts/modal.context";
@@ -7,7 +7,8 @@ import {useChat} from "../contexts/chat.context";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useSocketIO} from "../contexts/socket.io.context";
-import {useGame} from "../contexts/game.context";
+import {API_URL, HTTP_PORT} from "../config";
+
 
 function ModalWindow()
 {
@@ -42,7 +43,6 @@ function ModalWindow()
         contact.ban(modalWindow.subject.id, () => {
             modalWindow.setIsActive(false);
         }, () => {
-            console.log('Ban failed!');
         });
     }
 
@@ -87,6 +87,15 @@ function ModalWindow()
 
     function handleSanction(type : string)
     {
+        if (type === 'kick') {
+            socket.emit('kick', {
+                'channel' : chat.currentChannelName,
+                'userId' : modalWindow.subject.id,
+            });
+            modalWindow.setIsActive(false);
+            return;
+        }
+
         let date : Date = new Date();
         date.setMinutes(date.getMinutes() + (+modalWindow.banTime.current.value));
 
@@ -101,32 +110,54 @@ function ModalWindow()
 
     function makeAdmin()
     {
-        let putAdmin : AxiosRequestConfig =
-            {
-                method: 'put',
-                url: "http://localhost:3001/api/channel/admin/",
-                responseType: "json",
-                headers :
-                    {
-                        "authorization" : "Bearer " + auth.user.token,
-                    },
-                data :
-                    {
-                        userId : modalWindow.subject.id,
-                        channelId : chat.getCurrentChannelID(),
-                    }
+        let putAdmin : AxiosRequestConfig = {
+            method: 'put',
+            url: `${API_URL}:${HTTP_PORT}/api/channel/admin/`,
+            responseType: "json",
+            headers : {
+                "authorization" : "Bearer " + auth.user.token,
+            },
+            data : {
+                userId : modalWindow.subject.id,
+                channelId : chat.getCurrentChannelID(),
             }
+        }
         axios(putAdmin)
             .then((answer : any) => {
-//				console.log(answer)
             })
             .catch(e => {})
             modalWindow.setIsActive(false);
     }
 
+    function deleteAdmin()
+    {
+        let putAdmin : AxiosRequestConfig = {
+            method: 'delete',
+            url: `${API_URL}:${HTTP_PORT}/api/channel/admin/`,
+            responseType: "json",
+            headers : {
+                "authorization" : "Bearer " + auth.user.token,
+            },
+            data : {
+                userId : +modalWindow.subject.id,
+                channelId : +chat.getCurrentChannelID(),
+            }
+        }
+
+        axios(putAdmin)
+            .then((answer : any) => {
+            })
+            .catch(e => {})
+        modalWindow.setIsActive(false);
+    }
+
     function AdminPart() {
         if (location.pathname.split('/')[1] !== 'channel')
-            return <></>
+            return <></>;
+        if (modalWindow.subject.isOwner) {
+            return <></>;
+        }
+
         let temp : number[] = chat.getVisibleChannelAdmins().map((e : any) : any => e.id );
         if (temp && temp.findIndex((e : any) => e === auth.user.id) > -1)
             return (
@@ -143,8 +174,15 @@ function ModalWindow()
                         </select>
                         <div onClick={() => handleSanction('ban')}>Ban</div>
                         <div onClick={() => handleSanction('mute')}>Mute</div>
+                        <div onClick={() => handleSanction('kick')}>Kick</div>
                         <hr/>
-                        <div onClick={() => makeAdmin()}>Make admin</div>
+                        {
+                            auth.user.id === modalWindow.subject.channelOwnerId ?
+                                (!modalWindow.subject.isAdmin
+                                ? <div onClick={() => makeAdmin()}>Make admin</div>
+                                : <div onClick={() => deleteAdmin()}>Kick from admin</div>)
+                                : <></>
+                        }
                     </div>
                 </div>
             )
@@ -209,20 +247,20 @@ function ModalWindow()
                  onClick={e => e.stopPropagation()}>
                 <div className='myModalContent'>
                     <h3>{modalWindow.subject.username}</h3>
+                    <div className='modal_div' onClick={() => openProfile()}>Profile</div>
                     {!isBanned ?
                         <>
-                        <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
-                        <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
-                        <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
+                            <div className='modal_div' onClick={() => openDirectChannel()}> Private </div>
+                            <div className='modal_div' onClick={() => makeDuel('modded')}>Modded Duel</div>
+                            <div className='modal_div' onClick={() => makeDuel('default')}>Classic Duel</div>
+                            <SpectateBttn />
                         </>
                         :
                         <></>
                     }
-                    <div className='modal_div' onClick={() => blacklistHandle()}>{backlistString}</div>
-                    <div className='modal_div' onClick={() => openProfile()}>Profile</div>
-                    <SpectateBttn />
                     {isFriend || isBanned ? <></> :
                         <div className='modal_div' onClick={() => friend_exit()}>Add to friends</div>}
+                    <div className='modal_div' onClick={() => blacklistHandle()}>{backlistString}</div>
                 </div>
                 <AdminPart />
             </div>

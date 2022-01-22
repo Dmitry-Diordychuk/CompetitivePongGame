@@ -48,6 +48,7 @@ export class ChatService {
             newChannel.name = "general";
             newChannel.password = null;
             newChannel.owner = null;
+            newChannel.isHasPassword = false;
             return await this.channelRepository.save(newChannel);
         }
         return general;
@@ -68,6 +69,11 @@ export class ChatService {
 
         let newChannel = new ChannelEntity();
         Object.assign(newChannel, createChannelDto);
+        if (createChannelDto.password) {
+            newChannel.isHasPassword = true;
+        } else {
+            newChannel.isHasPassword = false;
+        }
         newChannel.owner = user;
 
         user.connections = await this.userService.getChannelsByUserId(user.id);
@@ -75,6 +81,7 @@ export class ChatService {
         newChannel.visitors = [user];
 
         await this.userRepository.save(user);
+
         newChannel = await this.channelRepository.save(newChannel);
         return {
             "owner" : {
@@ -177,7 +184,13 @@ export class ChatService {
             throw new WsException("Wrong password");
         }
 
-        channel.password = await hash(updateChannelDto.newPassword, 10);
+        if (!updateChannelDto.newPassword) {
+            channel.password = null;
+            channel.isHasPassword = false;
+        } else {
+            channel.password = await hash(updateChannelDto.newPassword, 10);
+            channel.isHasPassword = true;
+        }
         await this.channelRepository.save(channel);
 
         return {
@@ -220,9 +233,11 @@ export class ChatService {
     }
 
     async isChannelPassword(channel: ChannelEntity, password: string): Promise<boolean> {
-        if (channel.password === null && password === null) {
+        if (!channel.password) {
             return true;
-        } else if (channel.password === null || password === null) {
+        }
+
+        if (!password) {
             return false;
         }
 
@@ -304,16 +319,34 @@ export class ChatService {
         return await this.channelRepository.save(channel);
     }
 
-    async isAdminOrOwner(channel: ChannelEntity, userId) {
-        let admin;
-
-        if (channel.owner.id === userId) {
-            admin = channel.owner;
-        } else {
-            admin = channel.admins.find(u => u.id === userId);
+    async removeAdmin(currentUserId, userId: number, channelId: number) {
+        if (currentUserId === userId) {
+            throw new HttpException("User is owner", HttpStatus.BAD_REQUEST);
         }
 
-        return admin;
+        const channel = await this.channelRepository.findOne(channelId, { relations: ["owner", "admins"] });
+
+        if (channel.owner.id !== currentUserId) {
+            throw new HttpException("Current user isn't channel owner", HttpStatus.BAD_REQUEST);
+        }
+
+        const user = await this.userRepository.findOne(userId);
+
+        if (!user) {
+            throw new HttpException("Such user doesn't exist", HttpStatus.BAD_REQUEST);
+        }
+
+        const userChannels = await this.userService.getChannelsByUserId(user.id);
+
+        if (!userChannels.find(ch => ch.id === channel.id)) {
+            throw new HttpException("User isn't in the channel", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!channel.admins.find(u => u.id === user.id)) {
+            throw new HttpException("User isn't admin", HttpStatus.BAD_REQUEST);
+        }
+        channel.admins = channel.admins.filter(u => u.id !== user.id);
+        return await this.channelRepository.save(channel);
     }
 
     async getChannelByName(channelName: string): Promise<ChannelEntity> {
@@ -324,21 +357,28 @@ export class ChatService {
         });
     }
 
-    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto, channel: ChannelEntity): Promise<SanctionEntity> {
-        if (!channel) {
-            throw new WsException("Channel doesn't exist");
-        }
+    checkIfOperationAllowed(currentUserId: number, targetUserId: number, channel: ChannelEntity) {
+        const isCurrentUserOwner = channel.owner.id === currentUserId;
+        const isCurrentUserAdmin = !!channel.admins.find(u => u.id === currentUserId);
+        const isTargetOwner = channel.owner.id === targetUserId;
+        const isTargetAdmin = !!channel.admins.find(u => u.id === targetUserId);
 
-        if (!await this.isAdminOrOwner(channel, currentUserId)) {
+        if (!isCurrentUserOwner && !isCurrentUserAdmin) {
             throw new WsException("You're not allowed");
         }
 
-        if (currentUserId === sanctionDto.userId) {
-            throw new WsException("You can't ban yourself");
+        if (isTargetOwner) {
+            throw new WsException("You're not allowed");
         }
 
-        if (channel.admins.find(u => u.id === sanctionDto.userId)) {
-            throw new WsException("You can't ban other admin");
+        if (isCurrentUserAdmin && isTargetAdmin) {
+            throw new WsException("You're not allowed");
+        }
+    }
+
+    async applySanctionOnUser(currentUserId: number, sanctionDto: SanctionDto, channel: ChannelEntity): Promise<SanctionEntity> {
+        if (!channel) {
+            throw new WsException("Channel doesn't exist");
         }
 
         const targetUser = channel.visitors.find(u => u.id === sanctionDto.userId);
@@ -346,6 +386,8 @@ export class ChatService {
         if (!targetUser) {
             throw new WsException("There is no such user in the chat visitors list");
         }
+
+        this.checkIfOperationAllowed(currentUserId, targetUser.id, channel);
 
         const expiryDate = new Date(sanctionDto.expiryAt);
         if ((expiryDate.getTime() - Date.now()) < 0) {

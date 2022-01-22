@@ -2,8 +2,9 @@ import React from "react";
 import { ListGroup } from "react-bootstrap";
 import {useAuth} from "../auth/auth.context";
 import {useFetch} from "usehooks-ts";
+import {API_URL, HTTP_PORT} from "../config";
 
-const url = `http://localhost:3001/api/match/user/`;
+const url = `${API_URL}:${HTTP_PORT}/api/match/user/`;
 
 type MatchesProps = {
   userId: number;

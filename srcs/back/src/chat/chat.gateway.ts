@@ -25,6 +25,7 @@ import Role from "@app/user/types/role.enum";
 import {banDto} from "@app/chat/dto/ban.dto";
 import {ClientInfoService} from "@app/clientInfo/clientInfo.service";
 import {Interval} from "@nestjs/schedule";
+import {KickDto} from "@app/chat/dto/kick.dto";
 
 
 @UseGuards(WebSocketRoleGuard(Role.User))
@@ -42,34 +43,61 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     private  logger: Logger = new Logger('ChatGateway');
 
-    async afterInit(server: any): Promise<any> {
-        this.logger.log('Chat Initialized');
-        await this.chatService.createGeneralChannel();
+    getSocket(socket) {
+        if (socket)
+            return socket[1];
+        return null;
+    }
+
+    getSocketId(socket) {
+        if (socket)
+            return socket[0];
+        return null;
+    }
+
+    getUser(socket) { // Use only id! User data is not updated
+        if (!socket || !socket[1] || !socket[1]["handshake"])
+            return null
+        return socket[1]["handshake"]["headers"]["user"];
+    }
+
+    getUserId(socket) {
+        if (this.getUser(socket))
+            return this.getUser(socket)['id'];
+        return null;
+    }
+
+    getAllSockets() {
+        return [...this.server.sockets.sockets];
     }
 
     // @Interval(1000)
     // consoleLog() {
-    //     console.log([...this.server.sockets.sockets].map(i => {
-    //
+    //     console.log(this.getAllSockets().map(s => {
+    //         const user = this.getUser(s);
     //         return {
-    //             socketId: i[0],
-    //             userId: i[1].handshake.headers.user["id"],
-    //             username: i[1].handshake.headers.user["username"]
+    //             socketId: this.getSocketId(s),
+    //             userId: user['id'],
+    //             username: user["username"]
     //         };
     //     }));
     // }
+
+    async afterInit(server: any): Promise<any> {
+        this.logger.log('Chat Initialized');
+        await this.chatService.createGeneralChannel();
+    }
 
     async handleConnection(
         @ConnectedSocket() socket: Socket
     ) {
         const user = socket.handshake.headers.user;
 
-        [...this.server.sockets.sockets].forEach(s => {
-            if (
-                s[0] !== socket.id &&
-                s[1]["handshake"]["headers"]["user"]["id"] === user["id"]
-            )
-                this.server.to(s[0]).emit('ban');
+        this.getAllSockets().forEach(s => {
+            if (socket.id !== this.getSocketId(s) && user["id"] === this.getUserId(s)) {
+                this.server.to(this.getSocketId(s)).emit('ban');
+                this.getSocket(s).disconnect();                                                         // Last change
+            }
         });
 
         // @ts-ignore
@@ -181,6 +209,21 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         })
     }
 
+    @SubscribeMessage('kick')
+    async kickUser(
+        @WSUser() user: UserEntity,
+        @MessageBody() kickDto: KickDto
+    ) {
+        const channel = await this.chatService.getChannelByName(kickDto.channel);
+        this.chatService.checkIfOperationAllowed(user.id, kickDto.userId, channel);
+
+        const socket = this.getAllSockets().find(s => this.getUserId(s) === kickDto.userId);
+        if (socket) {
+            const socketId = socket[0];
+            this.server.in(socketId).socketsLeave(kickDto.channel);
+        }
+        await this.chatService.removeUserFromChannel(kickDto.userId, kickDto.channel);
+    }
 
     @SubscribeMessage('apply-sanction')
     async applySanction(
@@ -199,8 +242,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         });
 
         if (sanction.type === "ban") {
-            const socketId = [...this.server.sockets.sockets].find(s => s[1]["handshake"]["headers"]["user"]["id"] === sanction.target.id)[0];
-            this.server.in(socketId).socketsLeave(sanctionDto.channel);
+            const socket = this.getAllSockets().find(s => this.getUserId(s) === sanction.target.id);
+            if (socket) {
+                const socketId = socket[0];
+                this.server.in(socketId).socketsLeave(sanctionDto.channel);
+            }
             await this.chatService.removeUserFromChannel(sanction.target.id, sanctionDto.channel);
         }
     }
@@ -209,7 +255,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     async isUserOnline(
         @MessageBody() isUserOnlineDto: IsUserOnlineDto
     ) {
-        if ([...this.server.sockets.sockets].find(s => s[1]["handshake"]["headers"]["user"]["id"] === +isUserOnlineDto.userId)) {
+        if (this.getAllSockets().find(s => this.getUserId(s) === +isUserOnlineDto.userId)) {
             this.server.emit('status', {
                 "info": {
                     userId: isUserOnlineDto.userId,
@@ -254,8 +300,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         @MessageBody() channelDto: LeaveChannelDto,
     ) {
         const channel = await this.chatService.getChannelByName(channelDto.name);
+
         channel?.visitors.forEach(user => {
-            if ([...this.server.sockets.sockets].find(s => s[1]["handshake"]["headers"]["user"]["id"] === user.id)) {
+            if (this.getAllSockets().find(s => this.getUserId(s) === user.id)) {
                 user.isOnline = true;
             } else {
                 user.isOnline = false;

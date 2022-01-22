@@ -1,12 +1,15 @@
 import axios from "axios";
+import {API_URL, HTTP_PORT} from "../config";
 
-const url = `http://localhost:3001/api/user/login?code=`
+const url = `${API_URL}:${HTTP_PORT}/api/user/login?code=`
 
 const ftAuthProvider = {
-    signin(code: string, successfulCallback: Function, errorCallback: VoidFunction) {
+    signin(code: string, successfulCallback: Function, errorCallback: Function) {
         axios.get(url + code)
             .then((response) => successfulCallback(response.data))
-            .catch(errorCallback)
+            .catch((error) => {
+                successfulCallback(error.response);
+            });
     },
     signout(callback: VoidFunction) {
         callback();

@@ -133,7 +133,7 @@ export class GameService {
         this.state[roomName] = null;
         this.schedulerRegistry.deleteInterval(roomName);
         server.sockets.in(roomName).emit('game-over', JSON.stringify({winner}));
-        this.clientInfoService.removeClientInfo(roomName);
+        this.clientInfoService.destroyRoom(roomName);
         delete this.state[roomName];
         callback(winner);
     }

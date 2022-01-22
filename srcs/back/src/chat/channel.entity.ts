@@ -19,6 +19,9 @@ export class ChannelEntity {
     @Column({unique: true})
     name: string;
 
+    @Column({nullable: false})
+    isHasPassword: boolean;
+
     @Column({select: false, nullable: true})
     password: string;
 

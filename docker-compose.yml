@@ -6,8 +6,9 @@ services:
     build:
       context: ./srcs/back
     volumes:
-      - ./srcs/back:/app/back
-      - /app/back/node_modules
+      - ./srcs/uploadedFiles:/app/uploadedFiles
+#      - ./srcs/back:/app/back
+#      - /app/back/node_modules
     ports:
       - 3001:3001
       - 3002:3002
@@ -40,7 +41,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./srcs/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 #    build:
 #      context: ./front
 #    volumes:

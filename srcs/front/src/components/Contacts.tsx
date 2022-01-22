@@ -1,14 +1,11 @@
-
 import React, {useEffect} from "react";
 import {useContact} from "../contexts/contact.context";
 import {useModal} from "../contexts/modal.context";
-
 import '../styles/Contacts.css'
 import ModalWindow from "./Window";
-
 import {useSocketIO} from "../contexts/socket.io.context";
-
 import { MapOrEntries, useMap, useInterval } from 'usehooks-ts';
+
 
 export default function Contacts() {
 
@@ -24,7 +21,6 @@ export default function Contacts() {
 export function OnlineLight(user : any)
 {
     const socket = useSocketIO();
-    const contact = useContact();
 
     const initialValues: MapOrEntries<number, boolean> = [[0, false]];
     const [online, setOnline] = useMap<number, boolean>(initialValues);
@@ -37,7 +33,8 @@ export function OnlineLight(user : any)
 
     useInterval(() => {
         socket.emit('is-online', newone)
-        socket.emit("is-in-game", newone.userId)}, 1000)
+        socket.emit("is-in-game", newone.userId)
+    }, 1000)
     
     useEffect(() => {
         socket.on('status', (message : any) => {
@@ -52,7 +49,7 @@ export function OnlineLight(user : any)
                 socket.off('status');
             }
         )
-    }, [])
+    }, [setOnline, setInGame, socket])
 
     function Onliner()
     {

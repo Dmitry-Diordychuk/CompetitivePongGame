@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useRef, useState} from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
 
@@ -7,6 +7,7 @@ import {useSocketIO} from "../contexts/socket.io.context";
 import {useEffectOnce, useInterval} from "usehooks-ts";
 import axios from "axios";
 import {useAuth} from "../auth/auth.context";
+import {API_URL, HTTP_PORT} from "../config";
 
 
 export default function Channels() {
@@ -28,9 +29,9 @@ function Roster(props: any) {
 
     const fetchChannels = useCallback(() => {
         if (auth.user) {
-            axios.get("http://localhost:3001/api/channel/all/current/", {
+            axios.get(`${API_URL}:${HTTP_PORT}/api/channel/all/current/`, {
                 method: 'get',
-                url: "http://localhost:3001/api/channel/all/current/",
+                url: `${API_URL}:${HTTP_PORT}/api/channel/all/current/`,
                 responseType: "json",
                 headers: {
                     "authorization": 'Bearer ' + auth.user.token,
@@ -40,15 +41,13 @@ function Roster(props: any) {
                 chat.updateChannels(response.data.channels);
             })
             .catch(
-                e => console.log('Channels fetching error: ' + e)
             );
         }
-    }, [auth.user, chat.channels, chat.currentChannelName]);
+    }, [auth.user, chat]);
 
     useEffectOnce(() => {
         if (!props.isWindowActive) {
             fetchChannels()
-            console.log('Tick');
         }
     });
 
