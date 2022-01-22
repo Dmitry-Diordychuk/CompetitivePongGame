@@ -35,10 +35,8 @@ export default function TopPanel() {
                         }
                         <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/profile">Profile</Link></Nav.Link>
                         <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/channels">Channels</Link></Nav.Link>
-{/*
                         <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/contacts">Contacts</Link></Nav.Link>
                         <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/settings">Settigs</Link></Nav.Link>
-*/}
                         <Nav.Link as="span">{location.pathname !== '/game' ? <Matchmacking/> : <></>}</Nav.Link>
                         <Nav.Link as="span">{location.pathname !== '/game' ? <Duel /> : <></>}</Nav.Link>
                     </Nav>
