@@ -22,7 +22,7 @@ export default function TopPanel() {
 
     return (
         <>
-            <Navbar bg="light" variant="light">
+            <Navbar style={{background: "#A1A1A1"}}>
                 <Container>
                     <Navbar.Brand as="span"><Link to="/" style={{ textDecoration: 'none' }}>Pong</Link></Navbar.Brand>
                     <Nav className="me-auto">
