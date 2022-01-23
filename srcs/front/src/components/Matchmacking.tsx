@@ -16,7 +16,7 @@ export default function Matchmacking() {
 
     function  startGameSearch()
     {
-        if (location.pathname === '/game')
+        if (location.pathname === '/game' || matchMakingStatusRef.current === 'accept')
             return;
         matchMakingStatusRef.current = 'Leave queue';
         setMatchMakingStatus('Leave queue');
