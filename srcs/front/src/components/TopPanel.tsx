@@ -1,60 +1,61 @@
-import React, {useEffect} from "react";
-import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
+import React, {useEffect, useState} from "react";
+import {Outlet, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useChat} from "../contexts/chat.context";
 import Matchmacking from "./Matchmacking";
-import Duel from "./Duel";
-import Navbar from "react-bootstrap/Navbar";
-import Nav from "react-bootstrap/Nav";
-import Container from "react-bootstrap/Container";
-import Button from "react-bootstrap/Button";
-import '../styles/TopPanel.css'
-import {useSocketIO} from "../contexts/socket.io.context";
+import {
+    BottomNavigation,
+    BottomNavigationAction,
+    Box,
+    Button,
+    ClickAwayListener, List, ListItem,
+    ListItemButton, ListItemIcon, Menu, MenuItem,
+    Paper
+} from "@mui/material";
+import SettingsIcon from '@mui/icons-material/Settings';
+import GroupIcon from '@mui/icons-material/Group';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ChatIcon from '@mui/icons-material/Chat';
+import FaceIcon from '@mui/icons-material/Face';
+import SportsHandballIcon from '@mui/icons-material/SportsHandball';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 
 export default function TopPanel() {
-    const chat = useChat();
     const auth = useAuth();
-    const socket = useSocketIO();
-    const location = useLocation();
+    const navigate = useNavigate();
 
-    useEffect(()=>{}, [chat.currentChannelName])
+    const [value, setValue] = useState<any>();
 
     return (
         <>
-            <Navbar style={{background: "#A1A1A1"}}>
-                <Container>
-                    <Navbar.Brand as="span"><Link to="/" style={{ textDecoration: 'none' }}>Pong</Link></Navbar.Brand>
-                    <Nav className="me-auto">
-                        {
-                            auth.user && (auth.user.role === 'Admin' || auth.user.role === 'PO')
-                                ?
-                                <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/admin">Admin</Link></Nav.Link>
-                                :
-                                <></>
+            <Paper sx={{ top: 0, left: 0, right: 0 }} elevation={3}>
+                <BottomNavigation
+                    showLabels
+                    value={value}
+                    onChange={(event, newValue) => {
+                        if (newValue !== '/game' && newValue !== '/inbox') {
+                            setValue(newValue);
+                            navigate(newValue);
                         }
-                        <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/profile">Profile</Link></Nav.Link>
-                        <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/channels">Channels</Link></Nav.Link>
-                        <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/contacts">Contacts</Link></Nav.Link>
-                        <Nav.Link as="span"><Link style={{ textDecoration: 'none' }} to="/settings">Settigs</Link></Nav.Link>
-                        <Nav.Link as="span">{location.pathname !== '/game' ? <Matchmacking/> : <></>}</Nav.Link>
-                        <Nav.Link as="span">{location.pathname !== '/game' ? <Duel /> : <></>}</Nav.Link>
-                    </Nav>
-                    <Nav>
-                        <HolddedPMC/>
-                        {auth.user ? <Nav.Link>Welcome {auth.user.username}!</Nav.Link> : <></>}
-                        {auth.user ?
-                            <Button variant="primary" onClick={() => {
-                                auth.signout(() => {
-                                    socket.disconnect();
-                                    //navigate("/logout");
-                                });
-                            }}>Sign out</Button>
-                            : <></>
-                        }
-                    </Nav>
-                </Container>
-            </Navbar>
+                    }}
+                >
+                    <BottomNavigationAction label={auth.user?.username} disabled />
+                    {(auth.user?.role === 'Admin' || auth.user?.role === 'PO') ?
+                        <BottomNavigationAction label="Admin" value="/admin" icon={<AdminPanelSettingsIcon />} /> : <></>}
+                    <BottomNavigationAction label="Pong" value="/" icon={<SportsHandballIcon />} />
+                    <BottomNavigationAction label="Profile" value="/profile" icon={<FaceIcon />} />
+                    <BottomNavigationAction label="Channels" value="/channels" icon={<ChatIcon />} />
+                    <Matchmacking />
+                    <BottomNavigationAction label="Contacts" value="/contacts" icon={<GroupIcon />} />
+                    <BottomNavigationAction label="Settings" value="/settings" icon={<SettingsIcon />} />
+                    {/*//<BottomNavigationAction label="Inbox" value="/inbox" icon={<MailIcon />} />*/}
+                    <HolddedPMC/>
+                    <BottomNavigationAction label="Signout" value="/logout" icon={<LogoutIcon />} />
+
+                </BottomNavigation>
+            </Paper>
             <Outlet />
         </>
     )
@@ -65,24 +66,75 @@ function HolddedPMC()
     const chat = useChat();
     const navigate = useNavigate();
 
-    useEffect(()=>{
-    }, [chat.privateChannels]);
+    // useEffect(()=>{
+    // }, [chat.privateChannels]);
+    //
+    // if (chat.privateChannels.length === 0) {
+    //     return (<button disabled>Inbox</button>)
+    // }
 
-    if (chat.privateChannels.length === 0) {
-        return (<></>)
-    }
 
-    return(
-        <div className="dropdown">
-            <button className="dropbtn">Private chats:</button>
-            <div className="dropdown-content">
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    return(chat.privateChannels.length ?
+        <>
+            <Button onClick={handleClick}>
+                {"Private chats"}
+            </Button>
+            <Menu
+                id="basic-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                    'aria-labelledby': 'basic-button',
+                }}
+            >
                 {chat.privateChannels.map((ch : any, i: number) : any =>
-                    <div key={i} onClick={() => {
+                    <MenuItem key={i} onClick={() => {
                         navigate("/channel/" + ch.id);
                     }}>
                         {ch.name}
-                    </div>)}
-            </div>
-        </div>
+                    </MenuItem>
+                )}
+            </Menu>
+        </> : <></>
     )
 }
+
+// <ClickAwayListener onClickAway={handleClickAway}>
+//     <Box sx={{ position: 'relative' }}>
+//         <Button onClick={handleClick}>
+//             {"Inbox"}
+//         </Button>
+//         {open ? (
+//             <Box sx={styles}>
+//                 <List>
+//                 {chat.privateChannels.map((ch : any, i: number) : any =>
+//                     <ListItem disablePadding>
+//                         <ListItemButton key={i} onClick={() => {
+//                             navigate("/channel/" + ch.id);
+//                         }}>
+//                             {ch.name}
+//                         </ListItemButton>
+//                         <ListItemButton onClick={() => {
+//                             chat.deletePrivateChannel(ch.name);
+//                         }}>
+//                             <ListItemIcon>
+//                                 <DeleteIcon />
+//                             </ListItemIcon>
+//                         </ListItemButton>
+//                     </ListItem >
+//                 )}
+//                 </List>
+//             </Box>
+//         ) : null}
+//     </Box>
+// </ClickAwayListener>

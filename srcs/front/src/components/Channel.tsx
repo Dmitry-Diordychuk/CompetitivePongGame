@@ -63,8 +63,13 @@ export default function Channel() {
                 channelId={+chat.currentChannelName}
                 channelName={currentChannel?.name}
             />
-            <button onClick={() => navigate('/channels', {replace: true})}>
-                Back
+            <button onClick={() => {
+                if (Number.isInteger(+chat.currentChannelName)) {
+                    chat.deletePrivateChannel(currentChannel.name);
+                }
+                navigate('/channels', {replace: true});
+            }}>
+                {Number.isInteger(+chat.currentChannelName) ? "Close" : "Back"}
             </button>
         </>
     )

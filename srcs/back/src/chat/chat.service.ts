@@ -278,10 +278,13 @@ export class ChatService {
         };
     }
 
-    async getAllPublicChannels(): Promise<ChannelsResponseInterface> {
-        const channels: ChannelEntity[] = await this.channelRepository.find({
-            password: null
-        });
+    async getAllPublicChannels(userId: number): Promise<ChannelsResponseInterface> {
+        let channels: ChannelEntity[] = await this.channelRepository.find();
+        const userChannels = await this.userService.getChannelsByUserId(userId);
+
+        channels = channels.filter(channel => !!!userChannels.find(i => i.id === channel.id));
+
+
         return {
             channels,
             counter: channels.length

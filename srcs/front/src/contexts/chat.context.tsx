@@ -283,7 +283,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 const messages = JSON.parse(sessionPrivateMessagesData);
                 sessionStorage.removeItem('private' + auth.getId());
                 sessionStorage.setItem('private' + auth.getId(), JSON.parse(messages.filter((i: any) => i.toChannelName !== name)));
-            } catch (e) {}
+            } catch (e: any) {
+            }
         }
         setCurrentChannelName('general');
         setPrivateChannels(privateChannels.filter((ch : any) => ch.name !== name))

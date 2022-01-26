@@ -1,30 +1,72 @@
-import React, {useCallback, useRef, useState} from "react";
+import React, {useCallback, useState} from "react";
 import {useChat} from "../contexts/chat.context";
 import {useNavigate} from "react-router-dom";
-
-import '../styles/Channels.css'
 import {useSocketIO} from "../contexts/socket.io.context";
 import {useEffectOnce, useInterval} from "usehooks-ts";
 import axios from "axios";
 import {useAuth} from "../auth/auth.context";
 import {API_URL, HTTP_PORT} from "../config";
+import DeleteIcon from '@mui/icons-material/Delete';
+import Divider from '@mui/material/Divider';
+import SearchIcon from '@mui/icons-material/Search';
 
+
+
+import {
+    Stack,
+    Container,
+    Box,
+    IconButton,
+    Avatar,
+    styled,
+    Paper,
+    Autocomplete,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogTitle,
+    TextField,
+    Alert,
+    CircularProgress,
+    Grid,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+
+
+const Item = styled(Paper)(({ theme }) => ({
+    ...theme.typography.body2,
+    padding: theme.spacing(1),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+}));
 
 export default function Channels() {
-    const [isWindowActive, setWindowActive] = useState(false)
-
     return (
-        <>
-            <AddChannelButton isWindowActive={isWindowActive} setWindowActive={setWindowActive} />
-            <Roster isWindowActive={isWindowActive} />
-        </>
+        <Container>
+            <Roster/>
+        </Container>
     )
 }
 
+interface AutocompleteOption {
+    id: number;
+    label: string;
+    isHasPassword: string;
+}
+
 function Roster(props: any) {
+    const [open, setOpen] = useState(false);
+    const [openJoin, setOpenJoin] = useState(false);
+    const [name, setName] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState();
+    const [options, setOptions] = useState<AutocompleteOption[]>([]);
+    const [key, setKey] = useState<any>();
+
     const navigate = useNavigate();
     const chat = useChat();
     const auth = useAuth();
+    const socket = useSocketIO();
 
 
     const fetchChannels = useCallback(() => {
@@ -45,200 +87,250 @@ function Roster(props: any) {
         }
     }, [auth.user, chat]);
 
-    useEffectOnce(() => {
-        if (!props.isWindowActive) {
-            fetchChannels()
+    const fetchAllChannels = useCallback(() => {
+        if (auth.user) {
+            axios.get(`${API_URL}:${HTTP_PORT}/api/channel/all/public/`, {
+                method: 'get',
+                url: `${API_URL}:${HTTP_PORT}/api/channel/all/public/`,
+                responseType: "json",
+                headers: {
+                    "authorization": 'Bearer ' + auth.user.token,
+                },
+            })
+                .then((response: any) => {
+                    const options = response.data.channels.map((ch: any) => {
+                        return {
+                            id: ch.id,
+                            label: ch.name,
+                            isHasPassword: ch.isHasPassword
+                        }
+                    })
+                    setOptions(options);
+                })
+                .catch(
+                );
         }
+    }, [auth.user]);
+
+
+    useEffectOnce(() => {
+        fetchChannels()
+        fetchAllChannels();
     });
 
     useInterval(() => {
-        if (!props.isWindowActive)
-            fetchChannels();
+        fetchChannels();
+        fetchAllChannels();
     }, 1000);
 
     if (!chat.channels.length) {
-        return <progress/>
+        return <CircularProgress />
+    }
+
+    function handleCreate() {
+        const newChannel = {
+            name: name,
+            password: password === '' ? null : password
+        }
+
+        socket.once("created_channel", (data : any) => {
+            chat.addNewChannel(data.message);
+        })
+        socket.once("exception", (data : any) => {setError(data.errors.join('\n'));})
+        socket.emit("create_channel", newChannel)
+    }
+
+    function handleAutocomplete(event: any, value: any, reason: any) {
+        if (reason === "createOption") {
+            setName(value);
+            setOpenJoin(true);
+            return;
+        } else if (reason === "selectOption") {
+            if (value?.isHasPassword) {
+                setName(value.label);
+                setOpenJoin(true);
+                return;
+            }
+
+            const newChannel = {
+                name: typeof value === 'string' ? value : value?.label,
+                password: password === '' ? null : password
+            }
+
+            socket.once("exception", (data : any) => {setError(data.errors.join('\n'));})
+            socket.once("joined_channel", (data : any) => {
+                chat.addNewChannel(data.message);
+            })
+            socket.emit("join_channel", newChannel);
+            setKey(Date.now());
+        }
+    }
+
+    function handleJoin() {
+        const newChannel = {
+            name: name,
+            password: password
+        }
+
+        socket.once("exception", (data : any) => {setError(data.errors.join('\n'));})
+        socket.once("joined_channel", (data : any) => {
+            chat.addNewChannel(data.message);
+        })
+        socket.emit("join_channel", newChannel);
+        setKey(Date.now());
     }
 
     return (
-        <>
-            <h3>Channels</h3>
-            <ul className="chat_list">
+        <Box>
+            <Alert severity="error" sx={{ display: error ? 'block' : 'none' }}>{error}</Alert>
+            <Stack  sx={{ width: 454, height: 685, bgcolor: '#C4C4C4', borderRadius: 2, margin: 2 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <Paper
+                        component="form"
+                        sx={{ p: '2px 4px', ml: 2, mr: 2, mt: 1.5, display: 'flex', alignItems: 'center', width: 422 }}
+                    >
+                        <IconButton disabled sx={{ p: '10px' }} aria-label="search">
+                            <SearchIcon />
+                        </IconButton>
+                        <Autocomplete
+                            freeSolo
+                            autoHighlight
+                            disableClearable
+                            blurOnSelect
+                            options={options}
+                            isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                            renderInput={(params) =>
+                                <TextField
+                                    {...params}
+                                    variant="standard"
+                                    sx={{ ml: 1, flex: 1, width: 288 }}
+                                    placeholder="Join"
+
+                                />
+                            }
+                            onChange={(e, value, reason) => {handleAutocomplete(e, value, reason);}}
+                            //onKeyPress={e => {handleJoin(e)}}
+                            key={key}
+                        />
+                        <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+                        <Button color="inherit" sx={{ p: '8px', backgroundColor: '#ECECEC' }} onClick={() => setOpen(true)}>
+                            <AddIcon />
+                        </Button>
+                        <Dialog open={open}>
+                            <DialogTitle>Create Channel</DialogTitle>
+                            <Box
+                                component="form"
+                            >
+                                <TextField
+                                    required
+                                    id="outlined-required"
+                                    label="Channel name"
+                                    sx={{ ml: 2, mr: 2, mt: 1.5 }}
+                                    onChange={e => setName(e.target.value)}
+                                />
+                                <TextField
+                                    id="outlined-password-input"
+                                    label="Password"
+                                    type="password"
+                                    sx={{ ml: 2, mr: 2, mt: 1.5, mb:2 }}
+                                    onChange={e => setPassword(e.target.value)}
+                                />
+                            </Box>
+                            <DialogActions>
+                                <Button onClick={() => {
+                                    handleCreate();
+                                    setOpen(false);
+                                }}>
+                                    Create
+                                </Button>
+                                <Button onClick={() => setOpen(false)}>
+                                    Cancel
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                        <Dialog open={openJoin}>
+                            <DialogTitle>Join Channel</DialogTitle>
+                            <Box
+                                component="form"
+                            >
+                                <TextField
+                                    disabled={true}
+                                    id="outlined-required"
+                                    label="Channel name"
+                                    sx={{ ml: 2, mr: 2, mt: 1.5 }}
+                                    value={name}
+                                />
+                                <TextField
+                                    id="outlined-password-input"
+                                    label="Password"
+                                    type="password"
+                                    sx={{ ml: 2, mr: 2, mt: 1.5, mb:2 }}
+                                    onChange={e => setPassword(e.target.value)}
+                                />
+                            </Box>
+                            <DialogActions>
+                                <Button onClick={() => {
+                                    handleJoin();
+                                    setOpenJoin(false);
+                                }}>
+                                    Create
+                                </Button>
+                                <Button onClick={() => {setOpenJoin(false); setKey(Date.now());}}>
+                                    Cancel
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Paper>
+                </Stack>
+                <Stack sx={{ overflow: 'auto', maxHeight: 612, "&::-webkit-scrollbar": { display: "none" } }}>
                 {chat.channels.map((ch : any, i: number) : any =>
-                    <li className="chat_item" key={i}>
-                        <span className="chat_name" onClick={(e) => {
-                            e.preventDefault();
-                            navigate("/channel/" + ch.name)}
-                        }>
-                            {ch.name}
-                        </span>
-                        {ch.name !== 'general' && <span
-                            onClick={() => {
-                                chat.deleteChannel(ch.name)
-                                navigate('/channels', {replace: true});
-                            }}
-                            className="delete_chat"
-                        >
-                            <button>x</button>
-                        </span>}
-                    </li>)}
-            </ul>
-            <h3>Private</h3>
-            <ul className="chat_list">
+                    <Item sx={{ bgcolor: '#FFFFFF', ml: 2, mr: 2, mt: 1.5, ":hover": {boxShadow: 10} }} key={i}>
+                        <Grid direction="row" alignItems="center" container spacing={2}>
+                            <Grid item xs={1} onClick={(e) => {
+                                e.preventDefault();
+                                navigate("/channel/" + ch.name);
+                            }}>
+                                <Avatar>{ch.name[0].toUpperCase()}</Avatar>
+                            </Grid>
+                            <Grid item xs={9} onClick={(e) => {
+                                e.preventDefault();
+                                navigate("/channel/" + ch.name);
+                            }}>
+                                <h4>{ch.name}</h4>
+                            </Grid>
+                            <Grid item xs={1}>
+                                {ch.name !== 'general' &&
+                                    <IconButton
+                                        aria-label="delete"
+                                        onClick={() => {
+                                            chat.deleteChannel(ch.name);
+                                            navigate('/channels', {replace: true});
+                                        }
+                                        }>
+                                        <DeleteIcon />
+                                    </IconButton>}
+                            </Grid>
+                        </Grid>
+                    </Item>)}
+                </Stack>
+            </Stack >
+            <Box>
                 {chat.privateChannels.map((ch : any, i: number) : any =>
-                    <li className="chat_item" key={i}>
-                        <span className="chat_name" onClick={(e) => {
+                    <Stack key={i}>
+                        <span onClick={(e) => {
                             e.preventDefault();
                             navigate("/channel/" + ch.id)}
                         }>
                             {ch.name}
                         </span>
-                        {ch.name !== 'general' && <span
+                        {ch.name !== 'general' && <IconButton aria-label="delete"
                             onClick={() => {
                                 chat.deletePrivateChannel(ch.name)
                                 navigate('/channels', {replace: true});
                             }}
-                            className="delete_chat"
-                        >
-                            <button>x</button>
-                        </span>}
-                    </li>)}
-            </ul>
-        </>
+                        ></IconButton>}
+                    </Stack>)}
+            </Box>
+        </Box>
     )
-}
-
-function AddChannelButton(props: any) {
-    return (
-        <div>
-            <AddChannelWindow setVisible={props.setWindowActive} visible={props.isWindowActive} />
-            <button className='new_chanel_button' onClick={() => props.setWindowActive(true)}>
-                <b> + </b>
-            </button>
-        </div>
-    );
-}
-
-interface NewChannelWindowInterface
-{
-    setVisible : any;
-    visible : any;
-}
-
-function AddChannelWindow({setVisible, visible} : NewChannelWindowInterface) {
-    const chat = useChat();
-    const socket = useSocketIO();
-
-    const [create_or_join, setCoJ] = useState(false);
-    const [have_err, setError] = useState<any>(null);
-    const [is_priv, setIs_priv] = useState(false);
-    const pass_ref = useRef<any>("");
-    const name_fer = useRef<any>("");
-
-    function PassInput()
-    {
-        if (!is_priv)
-            return (<div></div>)
-        return (
-            <div>
-                <input type='text' ref={pass_ref} placeholder='Chanel password' onKeyPress={e => (e.code === "Enter" || e.code === "NumpadEnter") ?
-                    addNewChannel() : 0} />
-            </div>
-        )
-    }
-
-    function createChannel(new_chan : any, name : string)
-    {
-        socket.once("created_channel", (data : any) =>
-        {
-            setVisible(false);
-            chat.addNewChannel(data.message);
-        })
-        socket.once("exception", (data : any) => {setError(data);})
-        socket.emit("create_channel", new_chan)
-    }
-
-    function joinChannel(new_chan : any, name : string)
-    {
-        socket.once("exception", (data : any) => {setError(data)})
-        socket.once("joined_channel", (data : any) =>
-        {
-            setVisible(false);
-            chat.addNewChannel(data.message);
-        })
-        socket.emit("join_channel", new_chan)
-    }
-
-    function addNewChannel()
-    {
-        var temp_pass;
-        var value : string = name_fer.current.value
-        name_fer.current.value = ''
-        if (pass_ref.current === null || pass_ref.current === '' )
-            temp_pass = null;
-        else
-        {
-            temp_pass = pass_ref.current.value;
-            pass_ref.current = '';
-        }
-
-        const new_chan = {
-            name: value,
-            password: temp_pass
-        }
-
-        if (!chat.channels.find((ch: any) => ch.name === value))
-        {
-            if (create_or_join)
-                createChannel(new_chan, value)
-            else
-                joinChannel(new_chan, value)
-        }
-    }
-
-    function NewChannelWindow()
-    {
-        let label = 'Join a';
-        if (create_or_join)
-            label = 'Create new';
-        return (
-            <div>
-                <div className="joinChannelBttn" onClick={() => setCoJ(!create_or_join)}>join</div>
-                <div className="createChannelBttn" onClick={() => setCoJ(!create_or_join)}>create</div>
-                <div className={create_or_join ? 'createChannelDiv' : 'joinChannelDiv'}>
-                <h3>{label} channel</h3>
-                <input placeholder='Chanel name' ref={name_fer}
-                                   onKeyPress={e =>
-                                       (e.code === "Enter" || e.code === "NumpadEnter") ?
-                                       addNewChannel() : 0} />
-                <PassInput/>
-                    <div><input type="checkbox" checked={is_priv} 
-                onChange={() => setIs_priv(!is_priv)} /> With password</div>
-                    <button onClick={() => addNewChannel()}>Do it</button>
-                </div>
-                
-            </div>
-        )
-    }
-
-    if (have_err != null)
-    {
-        return (
-        <div className={visible ? 'NC_active' : 'myModal'}>
-            <div className='NC_Content'><div>{have_err.errors[0]}</div>
-                <div>
-                    <button  onClick={() => setError(null)} >ok</button>
-                </div>
-            </div>
-        </div>)
-    }
-    else{
-        return (
-                <div className={visible ? 'NC_active' : 'myModal'}>
-                        <button className='ModalBttn' onClick={() => setVisible(false)} />
-                            <NewChannelWindow />
-                </div>
-          
-        )
-    }
 }

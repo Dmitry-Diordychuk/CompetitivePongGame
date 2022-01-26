@@ -2,7 +2,6 @@ import {useLocation, useNavigate} from "react-router-dom";
 import React, {useRef, useState} from "react";
 import {useEffectOnce} from "usehooks-ts";
 import {useSocketIO} from "../contexts/socket.io.context";
-import "../styles/Matchmacking.css";
 
 
 export default function Matchmacking() {

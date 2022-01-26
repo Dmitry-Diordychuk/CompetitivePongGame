@@ -1,25 +1,17 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import Matches from "./Matches";
 import {useAuth} from "../auth/auth.context";
 import {useParams} from "react-router-dom";
 import NotFound from "./NotFound";
 import {useInterval} from "usehooks-ts";
-import Figure from 'react-bootstrap/Figure';
-import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Accordion from 'react-bootstrap/Accordion';
 import axios from "axios";
 import Stack from "react-bootstrap/Stack";
-// import Button from "react-bootstrap/Button";
-import {useContact} from "../contexts/contact.context";
 import {API_URL, HTTP_PORT} from "../config";
 import "../styles/Profile.css";
-// import Button from '@mui/material/Button';
-import { Button } from '@mui/material';
+import { Button, Box, Container } from '@mui/material';
 
-import {Link, Outlet, useLocation, useNavigate} from "react-router-dom";
-import Nav from "react-bootstrap/Nav";
 
 const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
 
@@ -70,7 +62,7 @@ export default function Profile() {
   return (
     <Container>
 
-      <Container className='user'>
+      <Box className='user'>
         <Row>
           <Col>
             <img className='avatar' alt={"avatar"} src={data.profile.image}/>
@@ -89,101 +81,70 @@ export default function Profile() {
 
         <Row>
           <Col>
-            <Container className='stat'>
-              <Container className='stat.text'>
+            <Box className='stat'>
+              <Box className='stat.text'>
                 <Stack>
                   <div><h3 className='stat.text.name'>Stat</h3></div>
                   <div>Level: {data.profile.level}</div>
                   <div>Victories: {data.profile.victories}</div>
                   <div>Losses: {data.profile.losses}</div>
                 </Stack>
-              </Container>
-            </Container>
+              </Box>
+            </Box>
           </Col>
           <Col>
-            <Container className='matches'>
+            <Box className='matches'>
               <Stack>
                 <div><h4 className='matches.name'>Matches</h4></div>
-                <Container className='matches.history'>
+                <Box className='matches.history'>
                   <div><Matches userId={idNumber} /></div>
-                </Container>
+                </Box>
               </Stack>
-            </Container>
+            </Box>
           </Col>
         </Row>
+      </Box>
 
-      </Container>
 
-{/*
-
-      <Row>
-      <Row>
-        <Col>
-          <Figure>
-            <Figure.Image
-              width={171}
-              height={180}
-              alt="avatar"
-              src={data.profile.image}
-            />
-          </Figure>
-        </Col>
-        <Col>
-          <Stack direction="horizontal" gap={3}>
-            <h1>{data.profile.username}</h1>
-            <FriendButton userId={params.id} />
-          </Stack>
-          <div>Level: {data.profile.level}</div>
-          <div>Victories: {data.profile.victories}</div>
-          <div>Losses: {data.profile.losses}</div>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <Accordion defaultActiveKey="0">
-            {data.profile.achievements.map((a:any, i:number) => (
-              <Accordion.Item eventKey={i.toString()} key={i}>
-                <Accordion.Header>{a.description}</Accordion.Header>
-                <Accordion.Body>{a.title}</Accordion.Body>
-              </Accordion.Item>
-            ))}
-          </Accordion>
-        </Col>
-        <Col>
-          <Matches userId={idNumber} />
-        </Col>
-      </Row>
-      </Row>
-*/}
+      {/*<Box>*/}
+      {/*      <Accordion defaultActiveKey="0">*/}
+      {/*        {data.profile.achievements.map((a:any, i:number) => (*/}
+      {/*          <Accordion.Item eventKey={i.toString()} key={i}>*/}
+      {/*            <Accordion.Header>{a.description}</Accordion.Header>*/}
+      {/*            <Accordion.Body>{a.title}</Accordion.Body>*/}
+      {/*          </Accordion.Item>*/}
+      {/*        ))}*/}
+      {/*      </Accordion>*/}
+      {/*</Box>*/}
 
     </Container>
   );
 }
-
-function FriendButton(props: any) {
-  const contact = useContact();
-
-  useEffect(() => {}, [contact]);
-
-  if (!props.userId) {
-    return <></>
-  }
-
-  if (contact.isBanned({id: props.userId})) {
-    return (<Button variant={"contained"} onClick={() => {
-      contact.unban(props.userId);
-    }}>Unban</Button>);
-  }
-
-  if (!contact.isFriend({id: props.userId})) {
-    return (<Button onClick={() => {
-      contact.addFriend(props.userId);
-    }}>Add to friends</Button>);
-  }
-
-  return (
-      <Button onClick={() => {
-        contact.deleteFriend(props.userId);
-      }}>Remove from friends</Button>
-  );
-}
+//
+// function FriendButton(props: any) {
+//   const contact = useContact();
+//
+//   useEffect(() => {}, [contact]);
+//
+//   if (!props.userId) {
+//     return <></>
+//   }
+//
+//   if (contact.isBanned({id: props.userId})) {
+//     return (<Button variant={"contained"} onClick={() => {
+//       contact.unban(props.userId);
+//     }}>Unban</Button>);
+//   }
+//
+//   if (!contact.isFriend({id: props.userId})) {
+//     return (<Button onClick={() => {
+//       contact.addFriend(props.userId);
+//     }}>Add to friends</Button>);
+//   }
+//
+//   return (
+//       <Button onClick={() => {
+//         contact.deleteFriend(props.userId);
+//       }}>Remove from friends</Button>
+//   );
+// }
