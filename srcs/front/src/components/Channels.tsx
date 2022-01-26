@@ -314,23 +314,6 @@ function Roster(props: any) {
                     </Item>)}
                 </Stack>
             </Stack >
-            <Box>
-                {chat.privateChannels.map((ch : any, i: number) : any =>
-                    <Stack key={i}>
-                        <span onClick={(e) => {
-                            e.preventDefault();
-                            navigate("/channel/" + ch.id)}
-                        }>
-                            {ch.name}
-                        </span>
-                        {ch.name !== 'general' && <IconButton aria-label="delete"
-                            onClick={() => {
-                                chat.deletePrivateChannel(ch.name)
-                                navigate('/channels', {replace: true});
-                            }}
-                        ></IconButton>}
-                    </Stack>)}
-            </Box>
         </Box>
     )
 }
