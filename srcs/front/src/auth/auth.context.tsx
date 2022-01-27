@@ -69,7 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('user', JSON.stringify(response.data.user));
             setUser(response.data.user);
             // @ts-ignore
-            state.isUserTryingAuthenticate = true;
             socket.disconnect();
             socket.connect(response.data.user.token);
             successfulCallback();

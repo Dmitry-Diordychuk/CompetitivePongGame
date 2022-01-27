@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useChat} from "../contexts/chat.context";
@@ -8,8 +8,8 @@ import {
     BottomNavigationAction,
     Box,
     Button,
-    ClickAwayListener, List, ListItem,
-    ListItemButton, ListItemIcon, Menu, MenuItem,
+    Menu,
+    MenuItem,
     Paper
 } from "@mui/material";
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -19,7 +19,6 @@ import ChatIcon from '@mui/icons-material/Chat';
 import FaceIcon from '@mui/icons-material/Face';
 import SportsHandballIcon from '@mui/icons-material/SportsHandball';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import DeleteIcon from '@mui/icons-material/Delete';
 
 
 export default function TopPanel() {
@@ -29,7 +28,7 @@ export default function TopPanel() {
     const [value, setValue] = useState<any>();
 
     return (
-        <>
+        <Box>
             <Paper sx={{ top: 0, left: 0, right: 0 }} elevation={3}>
                 <BottomNavigation
                     showLabels
@@ -43,21 +42,20 @@ export default function TopPanel() {
                 >
                     <BottomNavigationAction label={auth.user?.username} disabled />
                     {(auth.user?.role === 'Admin' || auth.user?.role === 'PO') ?
-                        <BottomNavigationAction label="Admin" value="/admin" icon={<AdminPanelSettingsIcon />} /> : <></>}
+                        <BottomNavigationAction label="Admin" value="/admin" icon={<AdminPanelSettingsIcon />} /> : null}
                     <BottomNavigationAction label="Pong" value="/" icon={<SportsHandballIcon />} />
                     <BottomNavigationAction label="Profile" value="/profile" icon={<FaceIcon />} />
                     <BottomNavigationAction label="Channels" value="/channels" icon={<ChatIcon />} />
                     <Matchmacking />
                     <BottomNavigationAction label="Contacts" value="/contacts" icon={<GroupIcon />} />
                     <BottomNavigationAction label="Settings" value="/settings" icon={<SettingsIcon />} />
-                    {/*//<BottomNavigationAction label="Inbox" value="/inbox" icon={<MailIcon />} />*/}
                     <HolddedPMC/>
                     <BottomNavigationAction label="Signout" value="/logout" icon={<LogoutIcon />} />
 
                 </BottomNavigation>
             </Paper>
             <Outlet />
-        </>
+        </Box>
     )
 }
 
@@ -65,13 +63,6 @@ function HolddedPMC()
 {
     const chat = useChat();
     const navigate = useNavigate();
-
-    // useEffect(()=>{
-    // }, [chat.privateChannels]);
-    //
-    // if (chat.privateChannels.length === 0) {
-    //     return (<button disabled>Inbox</button>)
-    // }
 
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -84,7 +75,7 @@ function HolddedPMC()
     };
 
     return(chat.privateChannels.length ?
-        <>
+        <Box>
             <Button onClick={handleClick}>
                 {"Private chats"}
             </Button>
@@ -105,36 +96,6 @@ function HolddedPMC()
                     </MenuItem>
                 )}
             </Menu>
-        </> : <></>
+        </Box> : <Box></Box>
     )
 }
-
-// <ClickAwayListener onClickAway={handleClickAway}>
-//     <Box sx={{ position: 'relative' }}>
-//         <Button onClick={handleClick}>
-//             {"Inbox"}
-//         </Button>
-//         {open ? (
-//             <Box sx={styles}>
-//                 <List>
-//                 {chat.privateChannels.map((ch : any, i: number) : any =>
-//                     <ListItem disablePadding>
-//                         <ListItemButton key={i} onClick={() => {
-//                             navigate("/channel/" + ch.id);
-//                         }}>
-//                             {ch.name}
-//                         </ListItemButton>
-//                         <ListItemButton onClick={() => {
-//                             chat.deletePrivateChannel(ch.name);
-//                         }}>
-//                             <ListItemIcon>
-//                                 <DeleteIcon />
-//                             </ListItemIcon>
-//                         </ListItemButton>
-//                     </ListItem >
-//                 )}
-//                 </List>
-//             </Box>
-//         ) : null}
-//     </Box>
-// </ClickAwayListener>

@@ -5,7 +5,7 @@ import OauthPopup from 'react-oauth-popup';
 import logo from '../static/42_logo.svg';
 import {useNavigate, useLocation} from "react-router-dom";
 import {Alert} from "react-bootstrap";
-import {HTTP_PORT, LOGIN_REDIRECT} from "../config";
+import {LOGIN_REDIRECT, PORT_REDIRECT} from "../config";
 
 
 function Login()
@@ -58,7 +58,7 @@ function Login()
 				<OauthPopup
 					url={"https://api.intra.42.fr/oauth/authorize" +
 						"?client_id=28b3bd90a12b1869322ee8df91393d90bb716604da919d12f9296cb545b832de" +
-						"&redirect_uri=http%3A%2F%2F" + LOGIN_REDIRECT + "%3A" + HTTP_PORT + "%2Flogin" +
+						"&redirect_uri=http%3A%2F%2F" + LOGIN_REDIRECT + "%3A" + PORT_REDIRECT + "%2Flogin" +
 						"&response_type=code"}
 					onCode={onCode}
 					onClose={()=>{}}

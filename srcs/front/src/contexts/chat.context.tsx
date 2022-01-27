@@ -79,6 +79,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         function initChannels(data : any) {
+            setPrivateChannels([]);
+            setChannels([]);
+
             setChannels([...data.map((ch : any) : any => {
                 let messages : any = sessionStorage.getItem( 'public' + auth.user.id + '\n' + ch.name);
                 if (messages) {
@@ -214,7 +217,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         if (current) {
             current.messages = [message, ...current.messages];
-            sessionStorage.setItem('private' + auth.getId(), JSON.stringify(current.messages));
+            sessionStorage.setItem('private' + auth.user.id, JSON.stringify(current.messages));
             setPrivateChannels([...privateChannels]);
         } else {
             let newChannel: any = {
@@ -226,7 +229,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 visitors: [message.username],
                 messages: [message],
             };
-            sessionStorage.setItem('private' + auth.getId(), JSON.stringify([message]));
+            sessionStorage.setItem('private' + auth.user.id, JSON.stringify([message]));
             setPrivateChannels([...privateChannels, newChannel]);
         }
     }, [privateChannels, contact, auth]);
@@ -256,7 +259,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         {
             channels[index].messages.unshift(message);
             let pack = JSON.stringify(channels[index].messages);
-            sessionStorage.setItem('public' + auth.getId() + '\n' + message.channel, pack);
+            sessionStorage.setItem('public' + auth.user.id + '\n' + message.channel, pack);
             setChannels([...channels]);
         }
     }, [channels, contact, auth]);
@@ -277,12 +280,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, [channels, currentChannelName, socket]);
 
     const deletePrivateChannel = useCallback((name : string) => {
-        const sessionPrivateMessagesData = sessionStorage.getItem('private' + auth.getId());
+        const sessionPrivateMessagesData = sessionStorage.getItem('private' + auth.user.id);
         if (sessionPrivateMessagesData) {
             try {
                 const messages = JSON.parse(sessionPrivateMessagesData);
-                sessionStorage.removeItem('private' + auth.getId());
-                sessionStorage.setItem('private' + auth.getId(), JSON.parse(messages.filter((i: any) => i.toChannelName !== name)));
+                sessionStorage.removeItem('private' + auth.user.id);
+                sessionStorage.setItem('private' + auth.user.id, JSON.parse(messages.filter((i: any) => i.toChannelName !== name)));
             } catch (e: any) {
             }
         }

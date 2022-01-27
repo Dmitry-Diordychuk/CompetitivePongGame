@@ -2,6 +2,7 @@ import {useLocation, useNavigate} from "react-router-dom";
 import React, {useRef, useState} from "react";
 import {useEffectOnce} from "usehooks-ts";
 import {useSocketIO} from "../contexts/socket.io.context";
+import {Box, Button} from "@mui/material";
 
 
 export default function Matchmacking() {
@@ -47,19 +48,19 @@ export default function Matchmacking() {
         if (matchMakingStatusRef.current === 'Leave queue')
         {
             return (
-                <button onClick={() => {
+                <Button onClick={() => {
                     matchMakingStatusRef.current = 'false';
                     setMatchMakingStatus('false');
                     timerRef.current = -1;
                     socket.emit('matchmaking-leave-queue');
                 }}>
                     <b>{stringOfTime} </b> {matchMakingStatus}
-                </button>
+                </Button>
             )
         }
         if (matchMakingStatusRef.current === 'accept')
             return (
-                <button>
+                <Button>
                     <b onClick={() => {
                         matchMakingStatusRef.current = 'accepted';
                         setMatchMakingStatus('accepted');
@@ -69,29 +70,29 @@ export default function Matchmacking() {
                         matchMakingStatusRef.current = 'false';
                         setMatchMakingStatus('false');
                         socket.emit('matchmaking-decline-game')}}> Decline </b>
-                </button>
+                </Button>
             )
         if (matchMakingStatusRef.current === 'accepted')
         {
             if (location.pathname === '/game')
-                return (<></>)
+                return (<Box></Box>)
             else
                 return (
-                    <button>
+                    <Button>
                         <b> Accepted </b> {stringOfTime}
-                    </button>
+                    </Button>
                 )
         }
         if (matchMakingStatusRef.current === 'declined')
         {
             return (
-                <button>
+                <Button>
                     Match was {matchMakingStatus} <b onClick={() => cancelSearching()}>OK</b>
-                </button>
+                </Button>
             )
         }
         return (
-            <></>
+            <Box></Box>
         )
     }
 
@@ -162,9 +163,9 @@ export default function Matchmacking() {
     });
 
     return (
-        <>
-            <button onClick={() => startGameSearch() }>The GAME</button>
+        <Box>
+            <Button onClick={() => startGameSearch() }>The GAME</Button>
             <GameBttn />
-        </>
+        </Box>
     )
 }
