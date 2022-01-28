@@ -35,7 +35,7 @@ export default function Settings()
     )
 }
 
-function Nickname() {
+export function Nickname() {
     const auth = useAuth();
 
     const [nickname, setNickname] = useState('');
@@ -46,8 +46,8 @@ function Nickname() {
         event.preventDefault();
         auth.changeUsername(nickname,
             () => {
-                // setMessage('Username changed');
-                // setAlertVariant('success');
+                setMessage('Username changed');
+                setAlertVariant('success');
             },
             (errorMessage: any) => {
                 setMessage(errorMessage.toString());
@@ -72,7 +72,7 @@ function Nickname() {
     )
 }
 
-function Avatar() {
+export function Avatar() {
     const auth = useAuth();
     const navigate = useNavigate();
 

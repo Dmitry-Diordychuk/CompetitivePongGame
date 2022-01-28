@@ -3,6 +3,7 @@ import {Outlet, useNavigate} from "react-router-dom";
 import {useAuth} from "../auth/auth.context";
 import {useChat} from "../contexts/chat.context";
 import Matchmacking from "./Matchmacking";
+import Duel from "./Duel";
 import {
     BottomNavigation,
     BottomNavigationAction,
@@ -47,6 +48,7 @@ export default function TopPanel() {
                     <BottomNavigationAction label="Profile" value="/profile" icon={<FaceIcon />} />
                     <BottomNavigationAction label="Channels" value="/channels" icon={<ChatIcon />} />
                     <Matchmacking />
+                    <Duel />
                     <BottomNavigationAction label="Contacts" value="/contacts" icon={<GroupIcon />} />
                     <BottomNavigationAction label="Settings" value="/settings" icon={<SettingsIcon />} />
                     <HolddedPMC/>

@@ -36,7 +36,7 @@ function Login()
 
 	const handleSuccessLogin = useCallback((isAccountJustCreated: boolean | null) => {
 		if (isAccountJustCreated) {
-			navigate('/settings', {replace: true});
+			navigate('/login/settings')
 		} else {
 			navigate('/', {replace: true});
 		}

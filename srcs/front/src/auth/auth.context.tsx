@@ -73,8 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             socket.connect(response.data.user.token);
             successfulCallback();
         }).catch((e: any) => {
-            errorCallback(e.response.data.message);
-            socket.disconnect();
+            errorCallback(e.response?.data?.message);
         });
     }
 
@@ -100,7 +99,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             successfulCallback();
         }).catch((e) => {
             errorCallback(e.response.data.message.toString());
-            socket.disconnect();
         })
     }
 
@@ -193,7 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         socket.on('disconnect', ()=>{
             // @ts-ignore
-            if (!state?.isUserTryingAuthenticate) {
+            if (state && !state.isUserTryingAuthenticate) {
+                state.isUserTryingAuthenticate = false;
                 signout(()=>{
                     navigate('/login', {replace: true});
                 });

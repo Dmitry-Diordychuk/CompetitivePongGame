@@ -17,6 +17,7 @@ import SecondFa from "./components/2Fa";
 import Logout from "./components/Logout";
 import Admin from "./components/Admin";
 import AdminChannelView from "./components/AdminChannelView";
+import LoginSettings from "./components/LoginSettings";
 
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -56,6 +57,18 @@ function App()
             <Route path="/logout" element={
                 <RequireAuth>
                     <Logout/>
+                </RequireAuth>
+            } />
+
+            <Route path="/login/settings" element={
+                <RequireAuth>
+                    <LoginSettings/>
+                </RequireAuth>
+            } />
+
+            <Route path="/game" element={
+                <RequireAuth>
+                    <Game />
                 </RequireAuth>
             } />
 
@@ -108,11 +121,6 @@ function App()
                 <Route path="/settings" element={
                     <RequireAuth>
                         <Settings />
-                    </RequireAuth>
-                } />
-                <Route path="/game" element={
-                    <RequireAuth>
-                        <Game />
                     </RequireAuth>
                 } />
                 <Route path="*" element={<NotFound />}/>

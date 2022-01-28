@@ -22,7 +22,7 @@ export default function SecondFa() {
         auth.secondFactorAuthenticate(
             code,
             ()=> {
-                navigate("/settings", {replace: true});
+                navigate("/", {replace: true});
             },
             (message: string)=> {
                 setMessage(message);
