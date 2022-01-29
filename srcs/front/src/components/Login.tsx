@@ -115,6 +115,4 @@ function Login()
 	)
 }
 
-// alt={'42 school logo'} src={logo} className='logo-42' />
-
 export default Login;

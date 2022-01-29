@@ -131,7 +131,6 @@ export function Avatar() {
 function SecondFactorAuth()
 {
     const auth = useAuth();
-    const navigate = useNavigate();
 
     const [QR, setQR] = useState();
     const [code, setCode] = useState<string>();
@@ -163,9 +162,7 @@ function SecondFactorAuth()
         auth.secondFactorActivate(
             code,
             () => {
-                setMessage('Successes');
                 setAlertVariant('success');
-                navigate('/logout', {replace: true});
             },
             (message: string) => {
                 setMessage(message);
@@ -179,9 +176,7 @@ function SecondFactorAuth()
         auth.secondFactorDeactivate(
             code,
             () => {
-                setMessage('Successes');
                 setAlertVariant('success');
-                navigate('/logout', {replace: true});
             },
             (message: string) => {
                 setMessage(message);

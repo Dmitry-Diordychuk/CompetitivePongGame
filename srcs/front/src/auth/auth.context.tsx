@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 "Authorization": "Bearer " + user.token,
             },
             data: {
-                code: code.trim(),
+                code: code,
             },
         }).then((response) => {
             const updatedUser = response.data.user;
@@ -110,17 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 'Authorization': "Bearer " + user.token,
             },
             data: {
-                code: code.trim(),
+                code: code,
             },
         }).then(() => {
-            user.isTwoFactorAuthenticationEnable = true;
-            sessionStorage.setItem('user', JSON.stringify(user))
-            setUser(user);
-            socket.disconnect();
-            successfulCallback();
+            signout(()=>{});
         }).catch((e) => {
             errorCallback(e.response.data.message.toString());
-            socket.disconnect();
         })
     }
 
@@ -132,15 +127,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 'Authorization': "Bearer " + user.token,
             },
             data: {
-                code: code.trim(),
+                code: code,
             },
         }).then(() => {
-            setUser(null);
-            socket.disconnect();
-            successfulCallback();
+            signout(()=>{});
         }).catch((e) => {
             errorCallback(e.response.data.message.toString());
-            socket.disconnect();
         })
     }
 
