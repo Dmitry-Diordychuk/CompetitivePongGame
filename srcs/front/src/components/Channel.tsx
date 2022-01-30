@@ -41,7 +41,7 @@ export default function Channel() {
     return (
         <>
             <Stack direction="horizontal" gap={3}>
-                <h3>{chat.currentChannelName}</h3>
+                <h3>{Number.isInteger(+chat.currentChannelName) ? '' : chat.currentChannelName}</h3>
                 <AddPassword
                     isOwner={currentChannel?.owner?.id === auth?.user?.id}
                     currentChannelName={currentChannel?.name}

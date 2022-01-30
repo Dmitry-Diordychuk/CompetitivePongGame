@@ -13,7 +13,6 @@ import {
     MenuItem,
     Paper
 } from "@mui/material";
-import SettingsIcon from '@mui/icons-material/Settings';
 import GroupIcon from '@mui/icons-material/Group';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -46,11 +45,10 @@ export default function TopPanel() {
                         <BottomNavigationAction label="Admin" value="/admin" icon={<AdminPanelSettingsIcon />} /> : null}
                     <BottomNavigationAction label="Pong" value="/" icon={<SportsHandballIcon />} />
                     <BottomNavigationAction label="Profile" value="/profile" icon={<FaceIcon />} />
-                    <BottomNavigationAction label="Channels" value="/channels" icon={<ChatIcon />} />
                     <Matchmacking />
                     <Duel />
+                    <BottomNavigationAction label="Channels" value="/channels" icon={<ChatIcon />} />
                     <BottomNavigationAction label="Contacts" value="/contacts" icon={<GroupIcon />} />
-                    <BottomNavigationAction label="Settings" value="/settings" icon={<SettingsIcon />} />
                     <HolddedPMC/>
                     <BottomNavigationAction label="Signout" value="/logout" icon={<LogoutIcon />} />
 

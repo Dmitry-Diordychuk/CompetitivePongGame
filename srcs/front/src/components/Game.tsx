@@ -88,12 +88,12 @@ function Game()
 			}
 		} else {
 			if (game.player) {
-				contextRef.current.fillStyle = "#00a2ff";
+				contextRef.current.fillStyle = "#FFFFFF";
 				contextRef.current.fillRect(game?.player.position.x, game?.player.position.y, 1, game?.player.size);
 			}
 
 			if (game.enemy) {
-				contextRef.current.fillStyle = "#dd0025";
+				contextRef.current.fillStyle = "#FFFFFF";
 				contextRef.current.fillRect(game?.enemy.position.x, game?.enemy.position.y, 1, game?.enemy.size);
 			}
 
@@ -108,7 +108,7 @@ function Game()
 			if (game.ball) {
 				contextRef.current.beginPath();
 				contextRef.current.ellipse(game.ball.position.x + 0.5, game.ball.position.y + 0.5, 0.5, 0.75, 0, 0, Math.PI * 2);
-				contextRef.current.fillStyle = "#00dd30";
+				contextRef.current.fillStyle = "#FFFFFF";
 				contextRef.current.fill();
 				contextRef.current.closePath();
 			}

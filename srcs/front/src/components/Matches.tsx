@@ -1,8 +1,8 @@
 import React from "react";
-import { ListGroup } from "react-bootstrap";
 import {useAuth} from "../auth/auth.context";
 import {useFetch} from "usehooks-ts";
 import {API_URL, HTTP_PORT} from "../config";
+import {Paper, Stack, Typography} from "@mui/material";
 
 const url = `${API_URL}:${HTTP_PORT}/api/match/user/`;
 
@@ -34,16 +34,20 @@ export default function Matches({ userId }: MatchesProps) {
   if (!data) return <progress/>;
 
   return (
-    <ListGroup>
+    <Stack sx={{ overflow: 'auto', maxHeight: 280, "&::-webkit-scrollbar": { display: "none" } }}>
       {data.map((m, i) => (
-        <ListGroup.Item variant={m.winner_id === userId ? "success" : "danger"} key={i}>
-          {m.match_type.toUpperCase() + ' '}
+        <Paper sx={{
+          marginBottom: 1,
+          p: 1,
+          backgroundColor: m.winner_id === userId ? "#006400" : "#8B0000",
+        }} key={i}>
+          <Typography sx={{color: 'rgba(255, 255, 255, 0.87)'}}>{m.match_type.toUpperCase() + ' '}
           {m.match_create_at.toString().split("T")[0] + " "}
           {m.match_create_at.toString().split("T")[1].split(".")[0] + " "}
           {m.winner_username + " "}
-          {m.loser_username}
-        </ListGroup.Item>
+          {m.loser_username}</Typography>
+        </Paper>
       ))}
-    </ListGroup>
+    </Stack>
   );
 }

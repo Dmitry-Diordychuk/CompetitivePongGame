@@ -1,16 +1,14 @@
 import React, {useState} from "react";
 import Matches from "./Matches";
 import {useAuth} from "../auth/auth.context";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import NotFound from "./NotFound";
 import {useInterval} from "usehooks-ts";
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import axios from "axios";
 import Stack from "react-bootstrap/Stack";
 import {API_URL, HTTP_PORT} from "../config";
 import "../styles/Profile.css";
-import { Button, Box, Container, Accordion } from '@mui/material';
+import {Button, Box, Container, Accordion, AccordionSummary, AccordionDetails, Typography} from '@mui/material';
 
 
 const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
@@ -18,6 +16,7 @@ const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
 export default function Profile() {
   let params = useParams<"id">();
   const auth = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
 
@@ -61,72 +60,90 @@ export default function Profile() {
 
   return (
     <Container>
-      <Row>
-
-      {/*  todo maybe style has been beaten because of replacement "container" to "box"*/}
       <Box className='user'>
-        <Row>
-          <Col>
-            <img className='avatar' alt={"avatar"} src={data.profile.image}/>
-          </Col>
-          <Col>
+          <img className='avatar' alt={"avatar"} src={data.profile.image}/>
             <Stack>
               <div>
                 <h2 className='username'>{data.profile.username}</h2>
               </div>
               <div>
-                {/*todo styles doesn't apply*/}
-                {/*todo make the button work*/}
-                <Button /*variant="contained" */ className='settings'>settings</Button>
+                {id === auth.user.id ?
+                <Button onClick={() => navigate('/settings')} sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  padding: '6px 6px 6px 8px',
+
+                  position: 'absolute',
+                  width: '103px',
+                  height: '36px',
+                  left: '240px',
+                  top: '148px',
+
+                  background: '#525252',
+                  borderRadius: '4px',
+                  color: '#FFFFFF',
+                }}>settings</Button> : <></>}
               </div>
             </Stack>
-          </Col>
-        </Row>
 
-        <Row>
-          <Col>
             <Box className='stat'>
-              <Box className='stat.text'>
+              <Box sx={{
+                paddingLeft: '24px',
+                paddingTop: '23px',
+                paddingBottom: '10px',
+              }}>
                 <Stack>
-                  <div><h3 className='stat.text.name'>Stat</h3></div>
-                  <div>Level: {data.profile.level}</div>
-                  <div>Victories: {data.profile.victories}</div>
-                  <div>Losses: {data.profile.losses}</div>
+                  <Typography variant="h3" sx={{paddingBottom: 2}}>Stat</Typography>
+                  <Typography variant="h5">Level: {data.profile.level}</Typography>
+                  <Typography variant="h5">Victories: {data.profile.victories}</Typography>
+                  <Typography variant="h5">Losses: {data.profile.losses}</Typography>
                 </Stack>
               </Box>
             </Box>
-          </Col>
-          <Col>
+
             <Box className='matches'>
-              <Stack>
-                <div><h4 className='matches.name'>Matches</h4></div>
-                <Box className='matches.history'>
-                  <div><Matches userId={idNumber} /></div>
-                </Box>
-              </Stack>
+              <Box sx={{
+                paddingLeft: '24px',
+                paddingRight: '24px',
+                paddingTop: '23px',
+                paddingBottom: '10px',
+              }}>
+                <Stack>
+                  <Typography variant="h4" sx={{paddingBottom: 2}}>Matches</Typography>
+                  <Box className='matches.history'>
+                    <div><Matches userId={idNumber} /></div>
+                  </Box>
+                </Stack>
+              </Box>
             </Box>
-          </Col>
-        </Row>
       </Box>
 
       <Box className='achievements'>
         <Stack>
-          <div><h3 className='achievements.name'>Achievements</h3></div>
-          <Box className='achievements.history'>
-            {/*todo is it works?*/}
-            <Accordion defaultActiveKey="0">
+          <Typography variant="h3" sx={{
+            paddingLeft: '44px',
+            paddingTop: '43px',
+            paddingBottom: '10px',
+            color: 'rgba(255, 255, 255, 0.87)',
+          }}>Achievements</Typography >
+          <Box sx={{
+            paddingLeft: '44px',
+            paddingRight: '44px',
+            paddingTop: '20px',
+            overflow: 'auto',
+            maxHeight: 520,
+            "&::-webkit-scrollbar": { display: "none" },
+          }}>
               {data.profile.achievements.map((a:any, i:number) => (
-                <Accordion.Item eventKey={i.toString()} key={i}>
-                  <Accordion.Header>{a.description}</Accordion.Header>
-                  <Accordion.Body>{a.title}</Accordion.Body>
-                </Accordion.Item>
+                <Accordion>
+                  <AccordionSummary>{a.description}</AccordionSummary>
+                  <AccordionDetails>{a.title}</AccordionDetails>
+                </Accordion>
               ))}
-            </Accordion>
-            </Box>
+          </Box>
         </Stack>
       </Box>
-      </Row>
-
     </Container>
   );
 }

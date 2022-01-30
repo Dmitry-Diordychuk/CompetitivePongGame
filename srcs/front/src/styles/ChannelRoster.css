@@ -6,7 +6,7 @@
 	display: flex;
 	float: right;
   	flex-direction: column-reverse;
-	background-color: rgb(71, 224, 186);
+	background-color: #DADADA;
 }
 
 .div-online {
