@@ -108,9 +108,6 @@ function Login()
 					</Button>
 				</OauthPopup>
 			</Box>
-			<button onClick={() => auth.goBackdoor('A_user', ()=>{navigate("/", {replace: true})}, ()=>{})}>A_user</button>
-			<button onClick={() => auth.goBackdoor('B_user', ()=>{navigate("/", {replace: true})}, ()=>{})}>B_user</button>
-			<button onClick={() => auth.goBackdoor('C_user', ()=>{navigate("/", {replace: true})}, ()=>{})}>C_user</button>
 		</Box>
 	)
 }
