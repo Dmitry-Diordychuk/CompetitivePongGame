@@ -10,7 +10,7 @@ import axios from "axios";
 import Stack from "react-bootstrap/Stack";
 import {API_URL, HTTP_PORT} from "../config";
 import "../styles/Profile.css";
-import { Button, Box, Container } from '@mui/material';
+import { Button, Box, Container, Accordion } from '@mui/material';
 
 
 const url = `${API_URL}:${HTTP_PORT}/api/profile/`;
@@ -61,7 +61,9 @@ export default function Profile() {
 
   return (
     <Container>
+      <Row>
 
+      {/*  todo maybe style has been beaten because of replacement "container" to "box"*/}
       <Box className='user'>
         <Row>
           <Col>
@@ -73,6 +75,8 @@ export default function Profile() {
                 <h2 className='username'>{data.profile.username}</h2>
               </div>
               <div>
+                {/*todo styles doesn't apply*/}
+                {/*todo make the button work*/}
                 <Button /*variant="contained" */ className='settings'>settings</Button>
               </div>
             </Stack>
@@ -105,17 +109,23 @@ export default function Profile() {
         </Row>
       </Box>
 
-
-      {/*<Box>*/}
-      {/*      <Accordion defaultActiveKey="0">*/}
-      {/*        {data.profile.achievements.map((a:any, i:number) => (*/}
-      {/*          <Accordion.Item eventKey={i.toString()} key={i}>*/}
-      {/*            <Accordion.Header>{a.description}</Accordion.Header>*/}
-      {/*            <Accordion.Body>{a.title}</Accordion.Body>*/}
-      {/*          </Accordion.Item>*/}
-      {/*        ))}*/}
-      {/*      </Accordion>*/}
-      {/*</Box>*/}
+      <Box className='achievements'>
+        <Stack>
+          <div><h3 className='achievements.name'>Achievements</h3></div>
+          <Box className='achievements.history'>
+            {/*todo is it works?*/}
+            <Accordion defaultActiveKey="0">
+              {data.profile.achievements.map((a:any, i:number) => (
+                <Accordion.Item eventKey={i.toString()} key={i}>
+                  <Accordion.Header>{a.description}</Accordion.Header>
+                  <Accordion.Body>{a.title}</Accordion.Body>
+                </Accordion.Item>
+              ))}
+            </Accordion>
+            </Box>
+        </Stack>
+      </Box>
+      </Row>
 
     </Container>
   );

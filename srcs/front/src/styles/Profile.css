@@ -18,11 +18,12 @@
     left: 237px;
     top: 63px;
 
-    font-family: Roboto;
+    font-family: Roboto, regular, serif;
     font-style: normal;
     font-weight: normal;
     font-size: 60px;
     line-height: 72px;
+    text-transform: capitalize;
     /* identical to box height, or 120% */
 
     color: #ffffff;
@@ -95,11 +96,12 @@
     top: 26px;
 
     /* Headline 3 */
-    font-family: Roboto;
+    font-family: Roboto, regular, serif;
     font-style: normal;
     font-weight: normal;
     font-size: 48px;
     line-height: 56px;
+    text-transform: capitalize;
     /* identical to box height, or 117% */
 
     color: #000000;
@@ -124,11 +126,12 @@
     top: 32px;
 
     /* Headline 4 */
-    font-family: Roboto;
+    font-family: Roboto, regular, serif;
     font-style: normal;
     font-weight: normal;
     font-size: 34px;
     line-height: 36px;
+    text-transform: capitalize;
     /* identical to box height, or 106% */
 
     color: #000000;
@@ -152,4 +155,42 @@
     /* Chat backround */
     background: #C4C4C4;
     border-radius: 10px;
+}
+
+.achievements {
+    position: absolute;
+    width: 402px;
+    right: 89px;
+    top: 116px;
+    bottom: 74px;
+
+    background: #383838;
+    border-radius: 10px;
+}
+
+.achievements.name {
+    position: absolute;
+    width: 158px;
+    height: 56px;
+    left: 44px;
+    top: 43px;
+
+/* Headline 3 */
+    font-family: Roboto, regular, serif;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 48px;
+    line-height: 56px;
+    text-transform: capitalize;
+/* identical to box height, or 117% */
+
+    color: rgba(255, 255, 255, 0.87);
+}
+
+achievements.history {
+    position: absolute;
+    width: 246px;
+    height: 371px;
+    left: 44px;
+    top: 132px;
 }
